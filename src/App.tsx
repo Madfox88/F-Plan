@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
+import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MainLayout } from './components/Layout';
@@ -10,7 +10,7 @@ import { createPlan, createDefaultStages } from './lib/database';
 import './App.css';
 
 function AppContent() {
-  const { workspace, loading } = useApp();
+  const { activeWorkspace, loading } = useWorkspace();
   const [activeTab, setActiveTab] = useState('plans');
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
 
@@ -23,10 +23,10 @@ function AppContent() {
   }
 
   const handleCreatePlan = async (title: string, description: string) => {
-    if (!workspace) return;
+    if (!activeWorkspace) return;
 
     try {
-      const newPlan = await createPlan(workspace.id, title, description);
+      const newPlan = await createPlan(activeWorkspace.id, title, description);
       await createDefaultStages(newPlan.id);
       // Refresh plans view
       window.location.reload();
@@ -66,9 +66,9 @@ function AppContent() {
 
 function App() {
   return (
-    <AppProvider>
+    <WorkspaceProvider>
       <AppContent />
-    </AppProvider>
+    </WorkspaceProvider>
   );
 }
 

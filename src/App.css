@@ -1,8 +1,10 @@
 .app-container {
   width: 100%;
   height: 100vh;
-  background-color: var(--bg-color);
+  background-color: transparent;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .app-loading {

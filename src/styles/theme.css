@@ -91,19 +91,77 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html {
   width: 100%;
   height: 100%;
+  background-image: url('/background_light_theme.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Overlay for readability */
+html::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-overlay);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Dark theme background */
+[data-theme="dark"] html {
+  background-image: url('/background_dark_theme.png');
 }
 
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--text-primary);
-  background-color: var(--bg-color);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background with image - Light theme */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/background_light_theme.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -2;
+}
+
+/* Overlay for readability - Light theme */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-overlay);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Dark theme background */
+[data-theme="dark"] body::before {
+  background-image: url('/background_dark_theme.png');
 }
 
 /* Glass Surface Base Styles */

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Plan } from '../types/database';
 import { getActivePlans } from '../lib/database';
-import { useApp } from '../context/AppContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import './PlansIndex.css';
 
 interface PlansIndexProps {
@@ -10,25 +10,25 @@ interface PlansIndexProps {
 }
 
 export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
-  const { workspace } = useApp();
+  const { activeWorkspace } = useWorkspace();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   const loadPlans = useCallback(async () => {
-    if (!workspace) return;
+    if (!activeWorkspace) return;
 
     try {
       setLoading(true);
-      const activePlans = await getActivePlans(workspace.id);
+      const activePlans = await getActivePlans(activeWorkspace.id);
       setPlans(activePlans);
     } catch (error) {
       console.error('Failed to load plans:', error);
     } finally {
       setLoading(false);
     }
-  }, [workspace]);
+  }, [activeWorkspace]);
 
   useEffect(() => {
     loadPlans();

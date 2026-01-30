@@ -2,15 +2,36 @@ import { supabase } from './supabase';
 import type { Workspace, Plan, Stage, Task, Goal, StageWithTasks } from '../types/database';
 
 /* Workspace Operations */
-export async function getOrCreateWorkspace(): Promise<Workspace> {
+export async function getWorkspaces(): Promise<Workspace[]> {
   const { data, error } = await supabase
     .from('workspaces')
     .select('*')
-    .limit(1)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch workspaces: ${error.message}`);
+  return data || [];
+}
+
+export async function createWorkspace(name: string): Promise<Workspace> {
+  const { data, error } = await supabase
+    .from('workspaces')
+    .insert([{ name }])
+    .select()
     .single();
 
-  if (!error && data) {
-    return data;
+  if (error) throw new Error(`Failed to create workspace: ${error.message}`);
+  return data;
+}
+
+export async function getOrCreateWorkspace(): Promise<Workspace> {
+  // First, try to get existing workspace
+  const { data: existingWorkspaces, error: fetchError } = await supabase
+    .from('workspaces')
+    .select('*')
+    .limit(1);
+
+  if (existingWorkspaces && existingWorkspaces.length > 0) {
+    return existingWorkspaces[0];
   }
 
   // Create default workspace if none exists
