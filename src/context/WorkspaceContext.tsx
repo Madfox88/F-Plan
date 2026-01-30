@@ -1,7 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Workspace } from '../types/database';
-import { getWorkspaces, createWorkspace as createWorkspaceInDB } from '../lib/database';
+import {
+  getWorkspaces,
+  createWorkspace as createWorkspaceInDB,
+  updateWorkspace as updateWorkspaceInDB,
+  deleteWorkspace as deleteWorkspaceInDB,
+} from '../lib/database';
 
 interface WorkspaceContextType {
   workspaces: Workspace[];
@@ -11,6 +16,8 @@ interface WorkspaceContextType {
   setActiveWorkspace: (id: string) => void;
   refreshWorkspaces: () => Promise<void>;
   createWorkspace: (name: string) => Promise<Workspace>;
+  renameWorkspace: (id: string, name: string) => Promise<Workspace>;
+  deleteWorkspace: (id: string) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -76,6 +83,33 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return newWorkspace;
   };
 
+  const renameWorkspace = async (id: string, name: string): Promise<Workspace> => {
+    const updated = await updateWorkspaceInDB(id, { name });
+    setWorkspaces(workspaces.map((w) => (w.id === id ? updated : w)));
+    if (activeWorkspace?.id === id) {
+      setActiveWorkspaceState(updated);
+    }
+    return updated;
+  };
+
+  const deleteWorkspace = async (id: string): Promise<void> => {
+    if (workspaces.length === 1) {
+      throw new Error('Cannot delete the last workspace');
+    }
+
+    await deleteWorkspaceInDB(id);
+
+    const remaining = workspaces.filter((w) => w.id !== id);
+    setWorkspaces(remaining);
+
+    // If deleted workspace was active, switch to next available
+    if (activeWorkspace?.id === id) {
+      const nextWorkspace = remaining[0];
+      setActiveWorkspaceState(nextWorkspace);
+      localStorage.setItem(STORAGE_KEY, nextWorkspace.id);
+    }
+  };
+
   return (
     <WorkspaceContext.Provider
       value={{
@@ -86,6 +120,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setActiveWorkspace,
         refreshWorkspaces,
         createWorkspace,
+        renameWorkspace,
+        deleteWorkspace,
       }}
     >
       {children}

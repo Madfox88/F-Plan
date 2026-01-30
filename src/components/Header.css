@@ -17,12 +17,14 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: var(--space-lg);
 }
 
 .header-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
 }
 
 .header-title {
@@ -37,3 +39,4 @@
   color: var(--text-secondary);
   margin: 0;
 }
+

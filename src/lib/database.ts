@@ -23,9 +23,33 @@ export async function createWorkspace(name: string): Promise<Workspace> {
   return data;
 }
 
+export async function updateWorkspace(
+  id: string,
+  updates: Partial<Workspace>
+): Promise<Workspace> {
+  const { data, error } = await supabase
+    .from('workspaces')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update workspace: ${error.message}`);
+  return data;
+}
+
+export async function deleteWorkspace(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('workspaces')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(`Failed to delete workspace: ${error.message}`);
+}
+
 export async function getOrCreateWorkspace(): Promise<Workspace> {
   // First, try to get existing workspace
-  const { data: existingWorkspaces, error: fetchError } = await supabase
+  const { data: existingWorkspaces } = await supabase
     .from('workspaces')
     .select('*')
     .limit(1);

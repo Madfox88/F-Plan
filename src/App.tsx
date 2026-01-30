@@ -4,6 +4,8 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MainLayout } from './components/Layout';
 import { CreatePlanModal } from './components/CreatePlanModal';
+import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
+import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
 import { PlansIndex } from './views/PlansIndex';
 import { Dashboard } from './views/Dashboard';
 import { createPlan, createDefaultStages } from './lib/database';
@@ -13,6 +15,8 @@ function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
   const [activeTab, setActiveTab] = useState('plans');
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
+  const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] = useState(false);
+  const [renameWorkspaceId, setRenameWorkspaceId] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -44,6 +48,8 @@ function AppContent() {
         subtitle={
           activeTab === 'plans' ? 'Manage your planning projects' : 'Overview and progress'
         }
+        onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
+        onRenameWorkspace={(workspaceId) => setRenameWorkspaceId(workspaceId)}
       />
       <MainLayout>
         {activeTab === 'plans' && (
@@ -59,6 +65,17 @@ function AppContent() {
         isOpen={isCreatePlanModalOpen}
         onClose={() => setIsCreatePlanModalOpen(false)}
         onSubmit={handleCreatePlan}
+      />
+
+      <CreateWorkspaceModal
+        isOpen={isCreateWorkspaceModalOpen}
+        onClose={() => setIsCreateWorkspaceModalOpen(false)}
+      />
+
+      <RenameWorkspaceModal
+        isOpen={renameWorkspaceId !== null}
+        workspaceId={renameWorkspaceId}
+        onClose={() => setRenameWorkspaceId(null)}
       />
     </div>
   );
