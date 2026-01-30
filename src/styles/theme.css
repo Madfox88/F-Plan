@@ -1,0 +1,236 @@
+/* F-Plan Design System – Theme & Glass Tokens (Authoritative) */
+
+:root {
+  /* Light Theme Glass Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.38);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-highlight: rgba(255, 255, 255, 0.45);
+  --glass-shadow: rgba(0, 0, 0, 0.10);
+  --glass-blur: 24px;
+
+  --glass-bg-heavy: rgba(255, 255, 255, 0.48);
+  --glass-border-heavy: rgba(255, 255, 255, 0.60);
+  --glass-blur-heavy: 32px;
+
+  --bg-overlay: rgba(255, 255, 255, 0.28);
+
+  /* Light Theme Colors */
+  --text-primary: #000000;
+  --text-secondary: rgba(0, 0, 0, 0.60);
+  --text-tertiary: rgba(0, 0, 0, 0.40);
+  
+  --bg-color: #f5f5f7;
+  
+  /* Status Colors */
+  --color-active: #0071e3;
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-error: #ff3b30;
+  
+  /* Depth */
+  --shadow-sm: 0 2px 8px var(--glass-shadow);
+  --shadow-md: 0 12px 30px var(--glass-shadow);
+  --shadow-lg: 0 20px 50px var(--glass-shadow);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Transitions */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 220ms ease-out;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --glass-bg: rgba(20, 20, 22, 0.42);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.10);
+  --glass-shadow: rgba(0, 0, 0, 0.45);
+  --glass-blur: 28px;
+
+  --glass-bg-heavy: rgba(18, 18, 20, 0.55);
+  --glass-border-heavy: rgba(255, 255, 255, 0.14);
+  --glass-blur-heavy: 36px;
+
+  --bg-overlay: rgba(0, 0, 0, 0.40);
+
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-tertiary: rgba(255, 255, 255, 0.40);
+  
+  --bg-color: #0a0a0b;
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background-color: var(--bg-color);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glass Surface Base Styles */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--glass-highlight);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  pointer-events: none;
+}
+
+.glass-heavy {
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.glass-heavy::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--glass-highlight);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  pointer-events: none;
+}
+
+/* Input Styles */
+input,
+textarea,
+select {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: rgba(var(--glass-bg), 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  transition: all var(--transition-fast);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
+}
+
+/* Button Styles */
+button {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+button:hover {
+  background: var(--glass-bg-heavy);
+  border-color: var(--glass-border-heavy);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Typography Utilities */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-border-heavy);
+}
