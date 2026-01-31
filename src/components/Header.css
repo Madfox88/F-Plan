@@ -18,6 +18,7 @@
   justify-content: space-between;
   width: 100%;
   gap: var(--space-lg);
+  flex-direction: row-reverse;
 }
 
 .header-text {
