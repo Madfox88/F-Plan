@@ -11,7 +11,7 @@
   padding: 8px 12px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 8px;
+  border-radius: 16px;
   cursor: pointer;
   color: var(--text-primary);
   font-size: 14px;
@@ -52,7 +52,7 @@
   margin-top: 8px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
+  border-radius: 20px;
   min-width: 280px;
   max-width: 350px;
   box-shadow: var(--glass-shadow);
