@@ -1,3 +1,4 @@
+import Logo from '../assets/Logo.png';
 import './Sidebar.css';
 
 type NavigationItem = {
@@ -20,7 +21,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
     <aside className="sidebar glass">
       <div className="sidebar-header">
-        <h1 className="sidebar-title">F-Plan</h1>
+        <img src={Logo} alt="F-Plan" className="sidebar-logo" />
       </div>
 
       <nav className="sidebar-nav">

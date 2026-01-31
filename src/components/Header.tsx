@@ -1,5 +1,4 @@
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
-import Logo from '../assets/Logo.png';
 import './Header.css';
 
 interface HeaderProps {
@@ -18,7 +17,6 @@ export function Header({
   return (
     <header className="header glass">
       <div className="header-content">
-        <img src={Logo} alt="F-Plan" className="header-logo" />
         <WorkspaceSwitcher
           onCreateClick={onCreateWorkspace}
           onRenameClick={onRenameWorkspace}
