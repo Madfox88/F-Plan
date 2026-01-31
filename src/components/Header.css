@@ -20,6 +20,13 @@
   gap: var(--space-lg);
 }
 
+.header-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .header-text {
   display: flex;
   flex-direction: column;
