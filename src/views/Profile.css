@@ -1,14 +1,15 @@
 .profile-page {
   width: 100%;
-  height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-lg);
+  padding: var(--space-xl) 0;
 }
 
 .profile-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -61,6 +62,113 @@
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+}
+
+.profile-name-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.profile-name-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.profile-name-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profile-name-edit-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(2px);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  position: absolute;
+  left: 100%;
+  margin-left: 8px;
+}
+
+.profile-name-display:hover .profile-name-edit-button,
+.profile-name-edit-button:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.profile-name-edit-button:hover,
+.profile-name-edit-button:focus-visible {
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
+  background: rgba(52, 199, 89, 0.12);
+}
+
+.profile-name-edit-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) saturate(100%) invert(84%) sepia(8%) saturate(9%) hue-rotate(320deg)
+    brightness(95%) contrast(90%);
+  transition: filter var(--transition-fast);
+}
+
+.profile-name-edit-button:hover .profile-name-edit-icon,
+.profile-name-edit-button:focus-visible .profile-name-edit-icon {
+  filter: brightness(0) saturate(100%) invert(66%) sepia(24%) saturate(1057%) hue-rotate(85deg)
+    brightness(95%) contrast(90%);
+}
+
+.profile-name-edit {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.profile-name-input {
+  width: 100%;
+  max-width: 320px;
+  align-self: center;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  transition: all var(--transition-fast);
+}
+
+.profile-name-input:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
+}
+
+.profile-name-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.profile-guidance {
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .profile-detail {

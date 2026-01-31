@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { AvatarProvider } from './context/AvatarContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MainLayout } from './components/Layout';
+import { PageHeaderCard } from './components/PageHeaderCard';
 import { CreatePlanModal } from './components/CreatePlanModal';
 import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
@@ -15,10 +16,66 @@ import './App.css';
 
 function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
-  const [activeTab, setActiveTab] = useState('plans');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('activeTab') || 'dashboard';
+  });
+  const [userName, setUserName] = useState(() => {
+    const fullName = localStorage.getItem('userName') || 'Alex Morgan';
+    return fullName.split(' ')[0];
+  });
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
   const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] = useState(false);
   const [renameWorkspaceId, setRenameWorkspaceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const fullName = localStorage.getItem('userName') || 'Alex Morgan';
+      setUserName(fullName.split(' ')[0]);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    // Also listen for custom event from same window
+    window.addEventListener('userNameChanged', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userNameChanged', handleStorageChange);
+    };
+  }, []);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    localStorage.setItem('activeTab', tabId);
+  };
+
+  const pageMeta: Record<string, { title: string; subtitle: string }> = {
+    dashboard: {
+      title: 'Dashboard',
+      subtitle: 'Track your business overview',
+    },
+    goals: {
+      title: 'Goals',
+      subtitle: 'Define and track your objectives',
+    },
+    plans: {
+      title: 'Plans',
+      subtitle: 'Manage your planning projects',
+    },
+    tasks: {
+      title: 'Tasks',
+      subtitle: 'Organize your daily work',
+    },
+    calendar: {
+      title: 'Calendar',
+      subtitle: 'Schedule and timeline view',
+    },
+    profile: {
+      title: 'Profile',
+      subtitle: 'Your account details',
+    },
+  };
+
+  const activePage = pageMeta[activeTab] ?? pageMeta.plans;
 
   if (loading) {
     return (
@@ -44,22 +101,40 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       <Header
         onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
         onRenameWorkspace={(workspaceId) => setRenameWorkspaceId(workspaceId)}
-        onProfileClick={() => setActiveTab('profile')}
-        userName="Alex"
+        onProfileClick={() => handleTabChange('profile')}
+        userName={userName}
       />
       <MainLayout>
-        {activeTab === 'plans' && (
-          <PlansIndex
-            onCreatePlan={() => setIsCreatePlanModalOpen(true)}
-            onSelectPlan={(planId) => console.log('Selected plan:', planId)}
-          />
-        )}
-        {activeTab === 'dashboard' && <Dashboard />}
-        {activeTab === 'profile' && <Profile />}
+        <div className="page-stack">
+          <PageHeaderCard title={activePage.title} subtitle={activePage.subtitle} />
+          {activeTab === 'dashboard' && <Dashboard />}
+          {activeTab === 'goals' && (
+            <div className="placeholder-view">
+              <p>Goals view coming soon</p>
+            </div>
+          )}
+          {activeTab === 'plans' && (
+            <PlansIndex
+              onCreatePlan={() => setIsCreatePlanModalOpen(true)}
+              onSelectPlan={(planId) => console.log('Selected plan:', planId)}
+            />
+          )}
+          {activeTab === 'tasks' && (
+            <div className="placeholder-view">
+              <p>Tasks view coming soon</p>
+            </div>
+          )}
+          {activeTab === 'calendar' && (
+            <div className="placeholder-view">
+              <p>Calendar view coming soon</p>
+            </div>
+          )}
+          {activeTab === 'profile' && <Profile />}
+        </div>
       </MainLayout>
 
       <CreatePlanModal

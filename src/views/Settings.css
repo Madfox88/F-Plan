@@ -1,0 +1,205 @@
+.settings-page {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.settings-message {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  animation: slideDown 200ms ease-out;
+}
+
+.settings-message-success {
+  background: rgba(52, 199, 89, 0.15);
+  border: 1px solid rgba(52, 199, 89, 0.3);
+  color: var(--color-success);
+}
+
+.settings-message-error {
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  color: var(--color-error);
+}
+
+.settings-card {
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border-heavy);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur-heavy);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.settings-section-title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-field-danger {
+  padding: var(--space-md);
+  background: rgba(255, 59, 48, 0.05);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.settings-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.settings-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.settings-field-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.settings-value {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  flex: 1;
+}
+
+.settings-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.settings-input {
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  transition: all var(--transition-fast);
+}
+
+.settings-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
+}
+
+.settings-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+}
+
+.settings-button {
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.settings-button:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border-heavy);
+}
+
+.settings-button:active {
+  transform: scale(0.98);
+}
+
+.settings-button.small {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-xs);
+}
+
+.settings-button.primary {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.settings-button.primary:hover {
+  background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.settings-button.secondary {
+  border-color: var(--glass-border);
+}
+
+.settings-button.danger {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.settings-button.danger:hover {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: var(--color-error);
+}
+
+.settings-delete-confirm {
+  padding: var(--space-md);
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.settings-delete-confirm p {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-sm);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .settings-page {
+    max-width: 100%;
+    padding: 0 var(--space-md);
+  }
+
+  .settings-card {
+    padding: var(--space-md);
+  }
+}

@@ -107,7 +107,6 @@ export function ProfileAvatar({ onProfileClick }: ProfileAvatarProps) {
             >
               Profile
             </div>
-            <div className="profile-menu-item">Settings</div>
             <div className="profile-menu-item">Sign out</div>
           </div>,
           document.body

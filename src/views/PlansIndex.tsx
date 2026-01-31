@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import type { Plan } from '../types/database';
 import { getActivePlans } from '../lib/database';
 import { useWorkspace } from '../context/WorkspaceContext';
+import ListViewIcon from '../assets/icons/list-view.svg';
+import GridViewIcon from '../assets/icons/grid.svg';
 import './PlansIndex.css';
 
 interface PlansIndexProps {
@@ -63,14 +65,14 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
               onClick={() => setViewMode('list')}
               title="List view"
             >
-              ☰
+              <img src={ListViewIcon} alt="" className="toggle-icon" />
             </button>
             <button
               className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
               onClick={() => setViewMode('grid')}
               title="Grid view"
             >
-              ⊞
+              <img src={GridViewIcon} alt="" className="toggle-icon" />
             </button>
           </div>
           <button className="btn-primary" onClick={onCreatePlan}>

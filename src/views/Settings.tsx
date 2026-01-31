@@ -1,112 +1,33 @@
-import { useRef, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAvatar } from '../context/AvatarContext';
-import { useWorkspace } from '../context/WorkspaceContext';
-import { AvatarCropperModal } from '../components/AvatarCropperModal';
-import PenSquareIcon from '../assets/icons/pen-square.svg';
-import './Profile.css';
+import { useState } from 'react';
 import './Settings.css';
 
-const profileData = {
-  name: 'Alex Morgan',
-};
-
-interface AccountData {
+interface SettingsData {
   email: string;
   createdAt: string;
 }
 
-const defaultAccountData: AccountData = {
+const defaultSettings: SettingsData = {
   email: 'alex@fplan.com',
   createdAt: 'January 31, 2026',
 };
 
-export function Profile() {
-  const { avatarUrl, setAvatarUrl } = useAvatar();
-  const { activeWorkspace } = useWorkspace();
-  const workspaceId = activeWorkspace?.id ?? null;
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [accountData, setAccountData] = useState<AccountData>(() => {
-    const saved = localStorage.getItem('accountData');
-    return saved ? JSON.parse(saved) : defaultAccountData;
-  });
+export function Settings() {
+  const [settings, setSettings] = useState<SettingsData>(defaultSettings);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [editEmail, setEditEmail] = useState(() => {
-    const saved = localStorage.getItem('accountData');
-    return saved ? JSON.parse(saved).email : defaultAccountData.email;
-  });
+  const [editEmail, setEditEmail] = useState(settings.email);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [name, setName] = useState(() => {
-    return localStorage.getItem('userName') || profileData.name;
-  });
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editName, setEditName] = useState(() => {
-    return localStorage.getItem('userName') || profileData.name;
-  });
-
-  const handleAvatarClick = () => {
-    if (!workspaceId) return;
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCropSrc(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
-  };
-
-  const handleSaveCrop = async (blob: Blob) => {
-    if (!workspaceId) return;
-    setIsUploading(true);
-    const path = `avatars/${workspaceId}/avatar.jpg`;
-    const { error } = await supabase.storage
-      .from('avatars')
-      .upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '0' });
-
-    if (!error) {
-      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-      setAvatarUrl(data.publicUrl);
-    }
-
-    setIsUploading(false);
-    setCropSrc(null);
-  };
 
   const handleEmailSave = () => {
     if (!editEmail.trim()) {
       setMessage({ type: 'error', text: 'Email cannot be empty' });
       return;
     }
-    const updatedData = { ...accountData, email: editEmail };
-    setAccountData(updatedData);
-    localStorage.setItem('accountData', JSON.stringify(updatedData));
+    setSettings({ ...settings, email: editEmail });
     setIsEditingEmail(false);
     setMessage({ type: 'success', text: 'Email updated successfully' });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handleNameSave = () => {
-    if (!editName.trim()) {
-      setMessage({ type: 'error', text: 'Name cannot be empty' });
-      return;
-    }
-    const trimmedName = editName.trim();
-    setName(trimmedName);
-    localStorage.setItem('userName', trimmedName);
-    window.dispatchEvent(new Event('userNameChanged'));
-    setIsEditingName(false);
-    setMessage({ type: 'success', text: 'Name updated successfully' });
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -131,7 +52,7 @@ export function Profile() {
 
   const handleExportData = () => {
     const data = {
-      account: accountData,
+      account: settings,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -148,6 +69,7 @@ export function Profile() {
   };
 
   const handleDeleteAccount = () => {
+    // In a real app, this would delete the user account from the database
     setShowDeleteConfirm(false);
     setMessage({ type: 'success', text: 'Account deleted. Redirecting...' });
     setTimeout(() => {
@@ -156,70 +78,14 @@ export function Profile() {
   };
 
   return (
-    <div className="profile-page settings-page">
+    <div className="settings-page">
       {message && (
         <div className={`settings-message settings-message-${message.type}`}>
           {message.text}
         </div>
       )}
-      <div className="profile-card">
-        <button
-          className="profile-avatar-large"
-          onClick={handleAvatarClick}
-          aria-label="Change avatar"
-          disabled={!workspaceId || isUploading}
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="profile-avatar-image" />
-          ) : (
-            <div className="profile-avatar-placeholder" aria-hidden="true" />
-          )}
-        </button>
-        <div className="profile-name-row">
-          {isEditingName ? (
-            <div className="profile-name-edit">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="profile-name-input"
-                aria-label="Name"
-              />
-              <div className="profile-name-actions">
-                <button
-                  className="settings-button secondary small"
-                  onClick={() => {
-                    setEditName(name);
-                    setIsEditingName(false);
-                  }}
-                >
-                  Cancel
-                </button>
-                <button className="settings-button primary small" onClick={handleNameSave}>
-                  Save
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="profile-name-display">
-              <div className="profile-name-wrap">
-                <span className="profile-name">{name}</span>
-                <button
-                  className="profile-name-edit-button"
-                  onClick={() => setIsEditingName(true)}
-                  aria-label="Edit name"
-                >
-                  <img src={PenSquareIcon} alt="" className="profile-name-edit-icon" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-        <p className="profile-guidance">
-          Hover your name to edit it, or click your avatar to upload and crop a new picture.
-        </p>
-      </div>
 
+      {/* Account Info Section */}
       <div className="settings-card">
         <h2 className="settings-section-title">Account Information</h2>
 
@@ -244,7 +110,7 @@ export function Profile() {
             </div>
           ) : (
             <div className="settings-field-display">
-              <span className="settings-value">{accountData.email}</span>
+              <span className="settings-value">{settings.email}</span>
               <button
                 className="settings-button secondary small"
                 onClick={() => setIsEditingEmail(true)}
@@ -258,7 +124,7 @@ export function Profile() {
         <div className="settings-field">
           <label className="settings-label">Account Created</label>
           <div className="settings-field-display">
-            <span className="settings-value">{accountData.createdAt}</span>
+            <span className="settings-value">{settings.createdAt}</span>
           </div>
         </div>
 
@@ -307,6 +173,7 @@ export function Profile() {
         </div>
       </div>
 
+      {/* Account Management Section */}
       <div className="settings-card">
         <h2 className="settings-section-title">Account Management</h2>
 
@@ -346,23 +213,6 @@ export function Profile() {
           )}
         </div>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="profile-avatar-input"
-      />
-
-      {cropSrc && (
-        <AvatarCropperModal
-          isOpen={!!cropSrc}
-          imageSrc={cropSrc}
-          onClose={() => setCropSrc(null)}
-          onConfirm={handleSaveCrop}
-        />
-      )}
     </div>
   );
 }
