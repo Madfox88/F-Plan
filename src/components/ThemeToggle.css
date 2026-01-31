@@ -1,0 +1,27 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 200ms var(--transition-timing);
+  backdrop-filter: var(--glass-blur);
+}
+
+.theme-toggle:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--primary-color);
+}
+
+.theme-icon {
+  transition: transform 200ms var(--transition-timing);
+}
+
+.theme-toggle:active .theme-icon {
+  transform: scale(0.95);
+}

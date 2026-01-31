@@ -21,6 +21,13 @@
   flex-direction: row-reverse;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-shrink: 0;
+}
+
 .header-text {
   display: flex;
   flex-direction: column;

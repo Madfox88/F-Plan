@@ -1,4 +1,5 @@
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { ThemeToggle } from './ThemeToggle';
 import './Header.css';
 
 interface HeaderProps {
@@ -17,10 +18,13 @@ export function Header({
   return (
     <header className="header glass">
       <div className="header-content">
-        <WorkspaceSwitcher
-          onCreateClick={onCreateWorkspace}
-          onRenameClick={onRenameWorkspace}
-        />
+        <div className="header-controls">
+          <WorkspaceSwitcher
+            onCreateClick={onCreateWorkspace}
+            onRenameClick={onRenameWorkspace}
+          />
+          <ThemeToggle />
+        </div>
         <div className="header-text">
           <h1 className="header-title">{title}</h1>
           {subtitle && <p className="header-subtitle">{subtitle}</p>}
