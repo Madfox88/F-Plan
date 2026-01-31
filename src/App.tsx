@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
+import { AvatarProvider } from './context/AvatarContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MainLayout } from './components/Layout';
@@ -8,6 +9,7 @@ import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
 import { PlansIndex } from './views/PlansIndex';
 import { Dashboard } from './views/Dashboard';
+import { Profile } from './views/Profile';
 import { createPlan, createDefaultStages } from './lib/database';
 import './App.css';
 
@@ -44,12 +46,10 @@ function AppContent() {
     <div className="app-container">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <Header
-        title={activeTab === 'plans' ? 'Plans' : 'Dashboard'}
-        subtitle={
-          activeTab === 'plans' ? 'Manage your planning projects' : 'Overview and progress'
-        }
         onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
         onRenameWorkspace={(workspaceId) => setRenameWorkspaceId(workspaceId)}
+        onProfileClick={() => setActiveTab('profile')}
+        userName="Alex"
       />
       <MainLayout>
         {activeTab === 'plans' && (
@@ -59,6 +59,7 @@ function AppContent() {
           />
         )}
         {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'profile' && <Profile />}
       </MainLayout>
 
       <CreatePlanModal
@@ -84,7 +85,9 @@ function AppContent() {
 function App() {
   return (
     <WorkspaceProvider>
-      <AppContent />
+      <AvatarProvider>
+        <AppContent />
+      </AvatarProvider>
     </WorkspaceProvider>
   );
 }

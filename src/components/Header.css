@@ -4,6 +4,7 @@
   left: 240px;
   right: 0;
   height: 80px;
+  margin-left: 3px;
   display: flex;
   align-items: center;
   padding: 0 var(--space-lg);

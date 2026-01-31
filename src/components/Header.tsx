@@ -1,19 +1,21 @@
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { ThemeToggle } from './ThemeToggle';
+import { ProfileAvatar } from './ProfileAvatar';
+import { HeaderGreeting } from './HeaderGreeting';
 import './Header.css';
 
 interface HeaderProps {
-  title: string;
-  subtitle?: string;
   onCreateWorkspace: () => void;
   onRenameWorkspace: (workspaceId: string) => void;
+  onProfileClick: () => void;
+  userName?: string;
 }
 
 export function Header({
-  title,
-  subtitle,
   onCreateWorkspace,
   onRenameWorkspace,
+  onProfileClick,
+  userName = 'User',
 }: HeaderProps) {
   return (
     <header className="header glass">
@@ -24,10 +26,10 @@ export function Header({
             onRenameClick={onRenameWorkspace}
           />
           <ThemeToggle />
+          <ProfileAvatar onProfileClick={onProfileClick} />
         </div>
         <div className="header-text">
-          <h1 className="header-title">{title}</h1>
-          {subtitle && <p className="header-subtitle">{subtitle}</p>}
+          <HeaderGreeting userName={userName} />
         </div>
       </div>
     </header>

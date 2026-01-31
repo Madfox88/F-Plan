@@ -1,0 +1,20 @@
+.header-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-greeting-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.header-greeting-name {
+  color: rgb(255, 127, 80);
+}
+
+.header-greeting-datetime {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}

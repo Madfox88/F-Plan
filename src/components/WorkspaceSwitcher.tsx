@@ -1,6 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import './WorkspaceSwitcher.css';
+import WorkspaceIcon from '../assets/icons/workspace.svg';
+import AngleDownIcon from '../assets/icons/angle-small-down.svg';
+import AngleUpIcon from '../assets/icons/angle-small-up.svg';
+import TrashIcon from '../assets/icons/trash.svg';
+import PenSquareIcon from '../assets/icons/pen-square.svg';
+
+const CLOSE_MENUS_EVENT = 'fplan:close-menus';
 
 interface WorkspaceSwitcherProps {
   onCreateClick: () => void;
@@ -24,8 +31,19 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
       }
     };
 
+    const handleCloseMenus = (event: Event) => {
+      const customEvent = event as CustomEvent<string>;
+      if (customEvent.detail !== 'workspace') {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener(CLOSE_MENUS_EVENT, handleCloseMenus);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener(CLOSE_MENUS_EVENT, handleCloseMenus);
+    };
   }, []);
 
   const handleDeleteWorkspace = async (workspaceId: string, e: React.MouseEvent) => {
@@ -59,20 +77,24 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     <div className="workspace-switcher" ref={dropdownRef}>
       <button
         className="workspace-button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen((prev) => {
+            const next = !prev;
+            if (next) {
+              window.dispatchEvent(new CustomEvent(CLOSE_MENUS_EVENT, { detail: 'workspace' }));
+            }
+            return next;
+          });
+        }}
         title={activeWorkspace.name}
       >
+        <img src={WorkspaceIcon} alt="" className="workspace-icon" />
         <span className="workspace-name">{activeWorkspace.name}</span>
-        <svg
-          className={`chevron-icon ${isOpen ? 'open' : ''}`}
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-        >
-          <path d="M6 8L10 12L14 8" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <img 
+          src={isOpen ? AngleUpIcon : AngleDownIcon} 
+          alt="" 
+          className="chevron-icon" 
+        />
       </button>
 
       {isOpen && (
@@ -96,15 +118,7 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     title="Rename"
                     aria-label="Rename workspace"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                    >
-                      <path d="M3 14h10M11 2L14 5M2 13L5 10L14 1" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
+                    <img src={PenSquareIcon} alt="" />
                   </button>
                   <button
                     className="action-button delete-button"
@@ -112,20 +126,14 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     title="Delete"
                     aria-label="Delete workspace"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      stroke="currentColor"
-                    >
-                      <path d="M13 3H3M6 6v5M10 6v5M2 3h12v11c0 0.5-0.5 1-1 1H3c-0.5 0-1-0.5-1-1V3Z" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
+                    <img src={TrashIcon} alt="" />
                   </button>
                 </div>
               </div>
             ))}
           </div>
+
+          <div className="separator"></div>
 
           <button className="create-workspace-button" onClick={onCreateClick}>
             <span>+ New Workspace</span>
