@@ -65,17 +65,17 @@
 
 /* Dark Theme */
 [data-theme="dark"] {
-  --glass-bg: rgba(20, 20, 22, 0.42);
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --glass-highlight: rgba(255, 255, 255, 0.10);
-  --glass-shadow: rgba(0, 0, 0, 0.45);
-  --glass-blur: 28px;
+  --glass-bg: rgba(28, 28, 32, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --glass-shadow: rgba(0, 0, 0, 0.35);
+  --glass-blur: 22px;
 
-  --glass-bg-heavy: rgba(18, 18, 20, 0.55);
-  --glass-border-heavy: rgba(255, 255, 255, 0.14);
-  --glass-blur-heavy: 36px;
+  --glass-bg-heavy: rgba(32, 32, 36, 0.72);
+  --glass-border-heavy: rgba(255, 255, 255, 0.22);
+  --glass-blur-heavy: 26px;
 
-  --bg-overlay: rgba(0, 0, 0, 0.40);
+  --bg-overlay: rgba(0, 0, 0, 0.32);
 
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.60);
