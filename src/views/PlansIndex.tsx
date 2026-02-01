@@ -1,14 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Plan } from '../types/database';
-import { getActivePlansWithMetadata } from '../lib/database';
+import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan } from '../lib/database';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { PlanCardMenu } from '../components/PlanCardMenu';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
+import SearchIcon from '../assets/icons/search.svg';
+import PinIcon from '../assets/icons/pin.svg';
+import PinFilledIcon from '../assets/icons/pin-filled.svg';
 import './PlansIndex.css';
 
 interface PlansIndexProps {
   onCreatePlan: () => void;
   onSelectPlan: (planId: string) => void;
+  onPinToggle?: () => void;
 }
 
 interface PlanWithMetadata extends Plan {
@@ -16,30 +21,96 @@ interface PlanWithMetadata extends Plan {
   taskCount: number;
 }
 
-export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
+export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansIndexProps) {
   const { activeWorkspace } = useWorkspace();
   const [plans, setPlans] = useState<PlanWithMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   const loadPlans = useCallback(async () => {
     if (!activeWorkspace) return;
 
     try {
       setLoading(true);
-      const activePlans = await getActivePlansWithMetadata(activeWorkspace.id);
-      setPlans(activePlans);
+      const status = showArchived ? 'archived' : 'active';
+      const loadedPlans = showArchived
+        ? await getPlansWithMetadataByStatus(activeWorkspace.id, status)
+        : await getActivePlansWithMetadata(activeWorkspace.id);
+      setPlans(loadedPlans);
     } catch (error) {
       console.error('Failed to load plans:', error);
     } finally {
       setLoading(false);
     }
-  }, [activeWorkspace]);
+  }, [activeWorkspace, showArchived]);
 
   useEffect(() => {
     loadPlans();
   }, [loadPlans]);
+
+  const handleTogglePin = async (e: React.MouseEvent, planId: string, currentPinState: boolean) => {
+    e.stopPropagation();
+    try {
+      await togglePlanPin(planId, !currentPinState);
+      await loadPlans();
+      if (onPinToggle) {
+        onPinToggle();
+      }
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+    }
+  };
+
+  const handleOpenPlan = (planId: string) => {
+    onSelectPlan(planId);
+  };
+
+  const handleRenamePlan = (planId: string) => {
+    const plan = plans.find((p) => p.id === planId);
+    if (!plan) return;
+    const newTitle = prompt('Enter new plan name:', plan.title);
+    if (newTitle && newTitle.trim()) {
+      renamePlan(planId, newTitle.trim()).then(() => loadPlans()).catch((error) => console.error('Failed to rename plan:', error));
+    }
+  };
+
+  const handleTogglePinFromMenu = async (planId: string, isPinned: boolean) => {
+    try {
+      await togglePlanPin(planId, isPinned);
+      await loadPlans();
+      if (onPinToggle) {
+        onPinToggle();
+      }
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+    }
+  };
+
+  const handleHidePlan = (planId: string, status: Plan['status']) => {
+    if (status === 'archived') {
+      if (window.confirm('Unhide this plan?')) {
+        updatePlan(planId, { status: 'active' })
+          .then(() => loadPlans())
+          .catch((error) => console.error('Failed to unhide plan:', error));
+      }
+      return;
+    }
+
+    if (window.confirm('Hide this plan?')) {
+      archivePlan(planId)
+        .then(() => loadPlans())
+        .catch((error) => console.error('Failed to hide plan:', error));
+    }
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    if (window.confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
+      deletePlan(planId).then(() => loadPlans()).catch((error) => console.error('Failed to delete plan:', error));
+    }
+  };
 
   const filteredPlans = plans.filter((plan) =>
     plan.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -56,14 +127,52 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
   return (
     <div className="plans-index">
       <div className="plans-toolbar">
-        <input
-          type="text"
-          placeholder="Search plans..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="plans-search"
-        />
+        <div className={`search-wrapper ${searchOpen ? 'open' : ''}`}>
+          <button
+            className="search-icon-btn"
+            onClick={() => setSearchOpen(!searchOpen)}
+            title="Search plans"
+          >
+            <img src={SearchIcon} alt="Search" className="search-icon-img" />
+          </button>
+          <input
+            type="text"
+            placeholder="Search plans..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`search-input ${searchOpen ? 'open' : ''}`}
+            onBlur={() => {
+              if (!searchTerm) {
+                setSearchOpen(false);
+              }
+            }}
+          />
+        </div>
         <div className="toolbar-actions">
+          <div className="toggle-container" title={showArchived ? 'Show active plans' : 'Show hidden plans'}>
+            <div className="toggle-wrap">
+              <input
+                id="archive-toggle"
+                className="toggle-input"
+                type="checkbox"
+                checked={showArchived}
+                onChange={() => setShowArchived(!showArchived)}
+              />
+              <label className="toggle-track" htmlFor="archive-toggle">
+                <span className="track-lines">
+                  <span className="track-line" />
+                </span>
+                <span className="toggle-thumb">
+                  <span className="thumb-core" />
+                  <span className="thumb-inner" />
+                </span>
+                <span className="toggle-data">
+                  <span className="data-text on">Active</span>
+                  <span className="data-text off">Hidden</span>
+                </span>
+              </label>
+            </div>
+          </div>
           <div className="view-toggle">
             <button
               className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -80,9 +189,6 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
               <img src={GridViewIcon} alt="" className="toggle-icon" />
             </button>
           </div>
-          <button className="btn-primary" onClick={onCreatePlan}>
-            + New Plan
-          </button>
         </div>
       </div>
 
@@ -113,6 +219,28 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
             >
               <div className="plan-card-header">
                 <h3 className="plan-card-title">{plan.title}</h3>
+                <div className="plan-card-actions">
+                  <button
+                    className="plan-pin-btn"
+                    onClick={(e) => handleTogglePin(e, plan.id, plan.is_pinned)}
+                    aria-label={plan.is_pinned ? 'Unpin plan' : 'Pin plan'}
+                    title={plan.is_pinned ? 'Unpin plan' : 'Pin plan'}
+                  >
+                    <img
+                      src={plan.is_pinned ? PinFilledIcon : PinIcon}
+                      alt=""
+                      className="plan-pin-icon"
+                    />
+                  </button>
+                  <PlanCardMenu
+                    plan={plan}
+                    onOpen={handleOpenPlan}
+                    onRename={handleRenamePlan}
+                    onPin={handleTogglePinFromMenu}
+                    onHide={handleHidePlan}
+                    onDelete={handleDeletePlan}
+                  />
+                </div>
               </div>
               {plan.description && (
                 <p className="plan-card-description">{plan.description}</p>

@@ -79,6 +79,62 @@ html[data-theme='light'] .sidebar-logo-light {
   border-color: var(--glass-border);
 }
 
+.pinned-plans-section {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.pinned-section-header {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.pinned-plans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pinned-plan-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  border-radius: var(--radius-sm);
+}
+
+.pinned-plan-item:hover {
+  color: var(--text-primary);
+  background: var(--glass-bg);
+}
+
+.pinned-plan-bullet {
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  flex-shrink: 0;
+}
+
+.pinned-plan-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
 .nav-icon {
   font-size: var(--font-size-lg);
   min-width: 24px;

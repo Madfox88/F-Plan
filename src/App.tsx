@@ -30,6 +30,7 @@ function AppContent() {
   const [renameWorkspaceId, setRenameWorkspaceId] = useState<string | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -67,6 +68,12 @@ function AppContent() {
     setSelectedPlanId(null);
     setSelectedPlan(null);
     localStorage.setItem('activeTab', tabId);
+  };
+
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlanId(planId);
+    setActiveTab('plans');
+    localStorage.setItem('activeTab', 'plans');
   };
 
   const pageMeta: Record<string, { title: string; subtitle: string }> = {
@@ -139,7 +146,12 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange}
+        onPlanSelect={handlePlanSelect}
+        refreshKey={refreshKey}
+      />
       <Header
         onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
         onRenameWorkspace={(workspaceId) => setRenameWorkspaceId(workspaceId)}
@@ -151,7 +163,12 @@ function AppContent() {
           <PlanDetail planId={selectedPlanId} plan={selectedPlan} />
         ) : (
           <div className="page-stack">
-            <PageHeaderCard title={activePage.title} subtitle={activePage.subtitle} />
+            <PageHeaderCard 
+              title={activePage.title} 
+              subtitle={activePage.subtitle}
+              actionLabel={activeTab === 'plans' ? '+ New Plan' : undefined}
+              onAction={activeTab === 'plans' ? () => setIsCreatePlanModalOpen(true) : undefined}
+            />
             {activeTab === 'dashboard' && <Dashboard />}
             {activeTab === 'goals' && (
               <div className="placeholder-view">
@@ -162,6 +179,7 @@ function AppContent() {
               <PlansIndex
                 onCreatePlan={() => setIsCreatePlanModalOpen(true)}
                 onSelectPlan={(planId) => setSelectedPlanId(planId)}
+                onPinToggle={() => setRefreshKey((k) => k + 1)}
               />
             )}
             {activeTab === 'tasks' && (

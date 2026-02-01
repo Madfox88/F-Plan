@@ -1,3 +1,7 @@
+import { useState, useEffect } from 'react';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { getPinnedPlans } from '../lib/database';
+import type { Plan } from '../types/database';
 import Logo from '../assets/Logo.png';
 import LogoDark from '../assets/logo_dark.png';
 import LogoutIcon from '../assets/icons/logout.svg';
@@ -26,9 +30,27 @@ const NAV_ITEMS: NavigationItem[] = [
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  onPlanSelect?: (planId: string) => void;
+  refreshKey?: number;
 }
 
-export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey }: SidebarProps) {
+  const { activeWorkspace } = useWorkspace();
+  const [pinnedPlans, setPinnedPlans] = useState<Plan[]>([]);
+
+  useEffect(() => {
+    const loadPinnedPlans = async () => {
+      if (!activeWorkspace) return;
+      try {
+        const plans = await getPinnedPlans(activeWorkspace.id);
+        setPinnedPlans(plans);
+      } catch (error) {
+        console.error('Failed to load pinned plans:', error);
+      }
+    };
+
+    loadPinnedPlans();
+  }, [activeWorkspace, refreshKey]);
   return (
     <aside className="sidebar glass">
       <div className="sidebar-header">
@@ -47,6 +69,25 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <span className="nav-label">{item.label}</span>
           </button>
         ))}
+        
+        {pinnedPlans.length > 0 && (
+          <div className="pinned-plans-section">
+            <div className="pinned-section-header">Pinned</div>
+            <div className="pinned-plans-list">
+              {pinnedPlans.map((plan) => (
+                <button
+                  key={plan.id}
+                  className="pinned-plan-item"
+                  onClick={() => onPlanSelect && onPlanSelect(plan.id)}
+                  title={plan.title}
+                >
+                  <span className="pinned-plan-bullet">•</span>
+                  <span className="pinned-plan-title">{plan.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="sidebar-footer">

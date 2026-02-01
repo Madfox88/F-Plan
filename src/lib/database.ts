@@ -129,6 +129,43 @@ export async function getActivePlansWithMetadata(
   });
 }
 
+export async function getPlansWithMetadataByStatus(
+  workspaceId: string,
+  status: 'active' | 'archived'
+): Promise<Array<Plan & { stageCount: number; taskCount: number }>> {
+  const { data, error } = await supabase
+    .from('plans')
+    .select(
+      `
+      *,
+      stages (
+        id,
+        tasks (id)
+      )
+    `
+    )
+    .eq('workspace_id', workspaceId)
+    .eq('status', status)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
+
+  return (data || []).map((plan: any) => {
+    const stageCount = plan.stages?.length || 0;
+    const taskCount = plan.stages?.reduce(
+      (sum: number, stage: any) => sum + (stage.tasks?.length || 0),
+      0
+    ) || 0;
+
+    return {
+      ...plan,
+      stageCount,
+      taskCount,
+      stages: undefined,
+    };
+  });
+}
+
 export async function getPlanById(id: string): Promise<Plan> {
   const { data, error } = await supabase
     .from('plans')
@@ -138,6 +175,31 @@ export async function getPlanById(id: string): Promise<Plan> {
 
   if (error) throw new Error(`Failed to fetch plan: ${error.message}`);
   return data;
+}
+
+export async function togglePlanPin(planId: string, isPinned: boolean): Promise<Plan> {
+  const { data, error } = await supabase
+    .from('plans')
+    .update({ is_pinned: isPinned })
+    .eq('id', planId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to toggle plan pin: ${error.message}`);
+  return data;
+}
+
+export async function getPinnedPlans(workspaceId: string): Promise<Plan[]> {
+  const { data, error } = await supabase
+    .from('plans')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .eq('is_pinned', true)
+    .eq('status', 'active')
+    .order('created_at', { ascending: true });
+
+  if (error) throw new Error(`Failed to fetch pinned plans: ${error.message}`);
+  return data || [];
 }
 
 export async function createPlan(
@@ -182,6 +244,15 @@ export async function updatePlan(
 
 export async function archivePlan(id: string): Promise<Plan> {
   return updatePlan(id, { status: 'archived' });
+}
+
+export async function deletePlan(id: string): Promise<void> {
+  const { error } = await supabase.from('plans').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function renamePlan(id: string, newTitle: string): Promise<Plan> {
+  return updatePlan(id, { title: newTitle });
 }
 
 /* Stage Operations */

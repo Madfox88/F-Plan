@@ -140,6 +140,8 @@
   cursor: pointer;
   accent-color: var(--primary-color);
 }
+
+.form-checkbox input[type='checkbox']:focus {
   outline: none;
   border-color: var(--glass-border-heavy);
   box-shadow: 0 0 0 2px var(--glass-highlight);

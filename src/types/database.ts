@@ -13,6 +13,7 @@ export type Plan = {
   description: string | null;
   intent: string | null;
   status: 'active' | 'archived' | 'draft';
+  is_pinned: boolean;
   created_at: string;
 };
 
