@@ -5,10 +5,33 @@
   gap: var(--space-lg);
 }
 
+.add-stage-btn {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.add-stage-btn:hover {
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  border-color: var(--glass-border-heavy);
+}
+
 .plan-detail-subheader {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: var(--space-md);
 }
 
 .view-switcher {
@@ -19,6 +42,7 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
+  height: 44px;
 }
 
 .view-switcher-btn {
@@ -101,6 +125,25 @@ html[data-theme='dark'] .view-switcher-icon {
   font-weight: var(--font-weight-semibold);
 }
 
+.add-task-btn {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.add-task-btn:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border-color: var(--glass-border-heavy);
+}
+
 .plan-list-tasks {
   list-style: none;
   padding: 0;
@@ -151,6 +194,13 @@ html[data-theme='dark'] .view-switcher-icon {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+.plan-grid-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
 }
 
 .plan-grid-meta {
@@ -295,6 +345,11 @@ html[data-theme='dark'] .view-switcher-icon {
 }
 
 @media (max-width: 1024px) {
+.task-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
   .plan-board {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
@@ -302,6 +357,9 @@ html[data-theme='dark'] .view-switcher-icon {
 
 @media (max-width: 640px) {
   .plan-board {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
     grid-template-columns: 1fr;
   }
 

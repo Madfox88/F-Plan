@@ -30,7 +30,14 @@ export type Task = {
   stage_id: string;
   title: string;
   completed: boolean;
+  status?: 'not_started' | 'in_progress' | 'completed';
+  priority?: 'urgent' | 'important' | 'medium' | 'low';
+  start_date?: string | null;
   due_date: string | null;
+  repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
+  description?: string | null;
+  checklists?: string[] | null;
+  labels?: Array<{ id: string; name: string; color: string }> | null;
   created_at: string;
 };
 

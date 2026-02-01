@@ -1,26 +1,171 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Plan, StageWithTasks } from '../types/database';
-import { getStagesByPlan } from '../lib/database';
+import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
+import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
+import { TaskCreateModal } from '../components/TaskCreateModal';
+import type { TaskCreatePayload } from '../components/TaskCreateModal';
+import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
+import SearchIcon from '../assets/icons/search.svg';
 import './PlanDetail.css';
 
 interface PlanDetailProps {
   planId: string;
   plan: Plan;
+  onPlanUpdated?: () => void;
+  onPlanDeleted?: () => void;
 }
 
-export function PlanDetail({ planId, plan }: PlanDetailProps) {
+export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanDetailProps) {
   const [stages, setStages] = useState<StageWithTasks[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'boards' | 'grid'>('boards');
+  const [currentPlan, setCurrentPlan] = useState<Plan>(plan);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedStageId, setSelectedStageId] = useState<string | undefined>(undefined);
+
+  const resolveTaskStatus = (task: { status?: 'not_started' | 'in_progress' | 'completed'; completed?: boolean }) => {
+    if (task.status) return task.status;
+    return task.completed ? 'completed' : 'not_started';
+  };
+
+  const handleRenamePlan = (planId: string) => {
+    const newTitle = prompt('Enter new plan name:', currentPlan.title);
+    if (newTitle && newTitle.trim()) {
+      renamePlan(planId, newTitle.trim()).then(() => {
+        setCurrentPlan({ ...currentPlan, title: newTitle.trim() });
+        if (onPlanUpdated) onPlanUpdated();
+      }).catch((error) => console.error('Failed to rename plan:', error));
+    }
+  };
+
+  const handleTogglePin = async (planId: string, isPinned: boolean) => {
+    try {
+      await togglePlanPin(planId, isPinned);
+      setCurrentPlan({ ...currentPlan, is_pinned: isPinned });
+      if (onPlanUpdated) onPlanUpdated();
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+    }
+  };
+
+  const handleHidePlan = (planId: string, status: Plan['status']) => {
+    if (status === 'archived') {
+      if (window.confirm('Unhide this plan?')) {
+        updatePlan(planId, { status: 'active' })
+          .then(() => {
+            setCurrentPlan({ ...currentPlan, status: 'active' });
+            if (onPlanUpdated) onPlanUpdated();
+          })
+          .catch((error) => console.error('Failed to unhide plan:', error));
+      }
+      return;
+    }
+    if (window.confirm('Hide this plan?')) {
+      archivePlan(planId)
+        .then(() => {
+          setCurrentPlan({ ...currentPlan, status: 'archived' });
+          if (onPlanUpdated) onPlanUpdated();
+        })
+        .catch((error) => console.error('Failed to hide plan:', error));
+    }
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    deletePlan(planId)
+      .then(() => {
+        if (onPlanDeleted) onPlanDeleted();
+      })
+      .catch((error) => console.error('Failed to delete plan:', error));
+  };
+
+  const fetchStages = useCallback(async () => {
+    try {
+      setLoading(true);
+      const fetchedStages = await getStagesByPlan(planId);
+      setStages(fetchedStages);
+    } catch (error) {
+      console.error('Failed to load stages:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [planId]);
+
+  const handleAddStage = async () => {
+    const stageName = prompt('Enter stage name:');
+    if (stageName && stageName.trim()) {
+      try {
+        await createStage(planId, stageName);
+        await fetchStages();
+      } catch (error) {
+        console.error('Failed to create stage:', error);
+      }
+    }
+  };
+
+  const handleOpenTaskModal = (stageId?: string) => {
+    setSelectedStageId(stageId);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCreateTask = async (payload: TaskCreatePayload) => {
+    await createTask({
+      stageId: payload.stageId,
+      title: payload.title,
+      status: payload.status,
+      priority: payload.priority,
+      startDate: payload.startDate,
+      dueDate: payload.dueDate,
+      repeat: payload.repeat,
+      description: payload.description,
+      checklists: payload.checklists,
+      labels: payload.labels,
+    });
+    await fetchStages();
+  };
 
   const headerContent = (
     <>
-      <PageHeaderCard title={plan.title} subtitle={plan.intent || 'Plan overview'} />
+      <PageHeaderCard 
+        title="Plan overview" 
+        subtitle={currentPlan.title}
+        subtitleMenu={
+          <PlanHeaderMenu
+            plan={currentPlan}
+            onRename={handleRenamePlan}
+            onTogglePin={handleTogglePin}
+            onHide={handleHidePlan}
+            onDelete={handleDeletePlan}
+          />
+        }
+      />
       <div className="plan-detail-subheader">
+        <div className={`search-wrapper ${searchOpen ? 'open' : ''}`}>
+          <button
+            className="search-icon-btn"
+            onClick={() => setSearchOpen(!searchOpen)}
+            title="Search tasks"
+          >
+            <img src={SearchIcon} alt="Search" className="search-icon-img" />
+          </button>
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`search-input ${searchOpen ? 'open' : ''}`}
+            onBlur={() => {
+              if (!searchTerm) {
+                setSearchOpen(false);
+              }
+            }}
+          />
+        </div>
         <div className="view-switcher" role="group" aria-label="Plan view">
           <button
             type="button"
@@ -50,25 +195,14 @@ export function PlanDetail({ planId, plan }: PlanDetailProps) {
             Grid
           </button>
         </div>
+        <button className="add-stage-btn" onClick={handleAddStage}>+ Add Stage</button>
       </div>
     </>
   );
 
   useEffect(() => {
-    const loadStages = async () => {
-      try {
-        setLoading(true);
-        const fetchedStages = await getStagesByPlan(planId);
-        setStages(fetchedStages);
-      } catch (error) {
-        console.error('Failed to load stages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadStages();
-  }, [planId]);
+    fetchStages();
+  }, [fetchStages]);
 
   if (loading) {
     return (
@@ -92,23 +226,36 @@ export function PlanDetail({ planId, plan }: PlanDetailProps) {
 
   const stagePreviewLimit = 3;
 
+  // Filter stages and tasks based on search term
+  const filteredStages = searchTerm.trim() === '' 
+    ? stages 
+    : stages.map(stage => ({
+        ...stage,
+        tasks: stage.tasks?.filter(task => 
+          task.title.toLowerCase().includes(searchTerm.toLowerCase())
+        ) || []
+      })).filter(stage => stage.tasks.length > 0);
+
   return (
     <div className="plan-detail-wrapper">
       {headerContent}
 
       {viewMode === 'boards' && (
         <div className="plan-board">
-          {stages.map((stage) => (
+          {filteredStages.map((stage) => (
             <div key={stage.id} className="stage-column glass">
               <div className="stage-header">
                 <h2 className="stage-title">{stage.title}</h2>
-                <span className="stage-count">{stage.tasks?.length || 0}</span>
+                <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
               </div>
               <div className="stage-tasks">
                 {stage.tasks && stage.tasks.length > 0 ? (
                   stage.tasks.map((task) => (
                     <div key={task.id} className="task-card">
-                      <p className="task-title">{task.title}</p>
+                      <div className="task-card-header">
+                        <TaskStatusIndicator status={resolveTaskStatus(task)} />
+                        <p className="task-title">{task.title}</p>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -122,17 +269,17 @@ export function PlanDetail({ planId, plan }: PlanDetailProps) {
 
       {viewMode === 'list' && (
         <div className="plan-list">
-          {stages.map((stage) => (
+          {filteredStages.map((stage) => (
             <section key={stage.id} className="plan-list-stage glass">
               <div className="plan-list-header">
                 <h2 className="plan-list-title">{stage.title}</h2>
-                <span className="plan-list-count">{stage.tasks?.length || 0}</span>
+                <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
               </div>
               {stage.tasks && stage.tasks.length > 0 ? (
                 <ul className="plan-list-tasks">
                   {stage.tasks.map((task) => (
                     <li key={task.id} className="plan-list-item">
-                      <span className="plan-list-bullet" />
+                      <TaskStatusIndicator status={resolveTaskStatus(task)} />
                       <span className="plan-list-text">{task.title}</span>
                     </li>
                   ))}
@@ -147,18 +294,18 @@ export function PlanDetail({ planId, plan }: PlanDetailProps) {
 
       {viewMode === 'grid' && (
         <div className="plan-grid">
-          {stages.map((stage) => (
+          {filteredStages.map((stage) => (
             <div key={stage.id} className="plan-grid-card glass">
-              <div className="plan-grid-meta">Stage</div>
-              <div className="plan-grid-title">{stage.title}</div>
-              <div className="plan-grid-count">
-                {stage.tasks?.length || 0} tasks
+              <div className="plan-grid-header">
+                <div className="plan-grid-title">{stage.title}</div>
+                <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
               </div>
               {stage.tasks && stage.tasks.length > 0 ? (
                 <ul className="plan-grid-tasks">
                   {stage.tasks.slice(0, stagePreviewLimit).map((task) => (
                     <li key={task.id} className="plan-grid-task">
-                      {task.title}
+                      <TaskStatusIndicator status={resolveTaskStatus(task)} />
+                      <span>{task.title}</span>
                     </li>
                   ))}
                   {stage.tasks.length > stagePreviewLimit && (
@@ -174,6 +321,18 @@ export function PlanDetail({ planId, plan }: PlanDetailProps) {
           ))}
         </div>
       )}
+
+      <TaskCreateModal
+        isOpen={isTaskModalOpen}
+        planId={planId}
+        stages={stages}
+        defaultStageId={selectedStageId}
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setSelectedStageId(undefined);
+        }}
+        onSubmit={handleCreateTask}
+      />
     </div>
   );
 }

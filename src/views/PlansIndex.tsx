@@ -48,7 +48,12 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   }, [activeWorkspace, showArchived]);
 
   useEffect(() => {
-    loadPlans();
+    // Defer data loading to allow toggle animation to complete (220ms + 30ms buffer)
+    const timeoutId = setTimeout(() => {
+      loadPlans();
+    }, 250);
+    
+    return () => clearTimeout(timeoutId);
   }, [loadPlans]);
 
   const handleTogglePin = async (e: React.MouseEvent, planId: string, currentPinState: boolean) => {
@@ -152,24 +157,49 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
           <div className="toggle-container" title={showArchived ? 'Show active plans' : 'Show hidden plans'}>
             <div className="toggle-wrap">
               <input
-                id="archive-toggle"
                 className="toggle-input"
+                id="archive-toggle"
                 type="checkbox"
                 checked={showArchived}
                 onChange={() => setShowArchived(!showArchived)}
               />
               <label className="toggle-track" htmlFor="archive-toggle">
-                <span className="track-lines">
-                  <span className="track-line" />
-                </span>
-                <span className="toggle-thumb">
-                  <span className="thumb-core" />
-                  <span className="thumb-inner" />
-                </span>
-                <span className="toggle-data">
-                  <span className="data-text on">Active</span>
-                  <span className="data-text off">Hidden</span>
-                </span>
+                <div className="track-lines">
+                  <div className="track-line" />
+                </div>
+                <div className="toggle-thumb">
+                  <div className="thumb-core" />
+                  <div className="thumb-inner" />
+                  <div className="thumb-scan" />
+                  <div className="thumb-particles">
+                    <div className="thumb-particle" />
+                    <div className="thumb-particle" />
+                    <div className="thumb-particle" />
+                    <div className="thumb-particle" />
+                    <div className="thumb-particle" />
+                  </div>
+                </div>
+                <div className="toggle-data">
+                  <div className="data-text off">Hidden</div>
+                  <div className="data-text on">Active</div>
+                  <div className="status-indicator off" />
+                  <div className="status-indicator on" />
+                </div>
+                <div className="energy-rings">
+                  <div className="energy-ring" />
+                  <div className="energy-ring" />
+                  <div className="energy-ring" />
+                </div>
+                <div className="interface-lines">
+                  <div className="interface-line" />
+                  <div className="interface-line" />
+                  <div className="interface-line" />
+                  <div className="interface-line" />
+                  <div className="interface-line" />
+                  <div className="interface-line" />
+                </div>
+                <div className="toggle-reflection" />
+                <div className="holo-glow" />
               </label>
             </div>
           </div>

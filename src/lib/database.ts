@@ -340,6 +340,37 @@ export async function createCustomStages(
   return data || [];
 }
 
+export async function createStage(planId: string, title: string): Promise<Stage> {
+  // Get the highest position to add the new stage at the end
+  const { data: existingStages, error: fetchError } = await supabase
+    .from('stages')
+    .select('position')
+    .eq('plan_id', planId)
+    .order('position', { ascending: false })
+    .limit(1);
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    throw new Error(`Failed to fetch stages: ${fetchError.message}`);
+  }
+
+  const position = existingStages && existingStages.length > 0 
+    ? (existingStages[0].position || 0) + 1
+    : 0;
+
+  const { data, error } = await supabase
+    .from('stages')
+    .insert([{
+      plan_id: planId,
+      title: title.trim(),
+      position,
+    }])
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to create stage: ${error.message}`);
+  return data;
+}
+
 export async function updateStagePosition(id: string, position: number): Promise<Stage> {
   const { data, error } = await supabase
     .from('stages')
@@ -373,23 +404,57 @@ export async function getTasksByStage(stageId: string): Promise<Task[]> {
   return data || [];
 }
 
-export async function createTask(
-  stageId: string,
-  title: string,
-  dueDate?: string
-): Promise<Task> {
+export async function createTask(payload: {
+  stageId: string;
+  title: string;
+  status?: 'not_started' | 'in_progress' | 'completed';
+  priority?: 'urgent' | 'important' | 'medium' | 'low';
+  startDate?: string;
+  dueDate?: string;
+  repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
+  description?: string;
+  checklists?: string[];
+  labels?: Array<{ id: string; name: string; color: string }>;
+}): Promise<Task> {
+  // First, try to insert with all new fields
   const { data, error } = await supabase
     .from('tasks')
     .insert([
       {
-        stage_id: stageId,
-        title,
-        due_date: dueDate || null,
-        completed: false,
+        stage_id: payload.stageId,
+        title: payload.title,
+        status: payload.status || 'not_started',
+        priority: payload.priority || 'medium',
+        start_date: payload.startDate || null,
+        due_date: payload.dueDate || null,
+        repeat: payload.repeat || 'none',
+        description: payload.description || null,
+        checklists: payload.checklists || [],
+        labels: payload.labels || [],
+        completed: payload.status === 'completed',
       },
     ])
     .select()
     .single();
+
+  // If it fails due to missing columns, try with basic fields only
+  if (error && error.message.includes('column')) {
+    const { data: basicData, error: basicError } = await supabase
+      .from('tasks')
+      .insert([
+        {
+          stage_id: payload.stageId,
+          title: payload.title,
+          due_date: payload.dueDate || null,
+          completed: payload.status === 'completed',
+        },
+      ])
+      .select()
+      .single();
+
+    if (basicError) throw new Error(`Failed to create task: ${basicError.message}`);
+    return basicData;
+  }
 
   if (error) throw new Error(`Failed to create task: ${error.message}`);
   return data;

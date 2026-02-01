@@ -1,0 +1,30 @@
+.task-status-indicator {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.task-status-indicator.not_started {
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
+.task-status-indicator.in_progress {
+  background-color: #ffd95e;
+  animation: taskStatusPulse 1.4s infinite ease-out;
+}
+
+.task-status-indicator.completed {
+  background-color: #69ffa8;
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes taskStatusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 217, 94, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(255, 217, 94, 0);
+  }
+}

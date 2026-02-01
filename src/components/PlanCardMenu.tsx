@@ -4,7 +4,8 @@ import MoreIcon from '../assets/icons/more.svg';
 import PinIcon from '../assets/icons/pin.svg';
 import PinFilledIcon from '../assets/icons/pin-filled.svg';
 import PenIcon from '../assets/icons/pen-square.svg';
-import EyeIcon from '../assets/icons/search.svg';
+import HideIcon from '../assets/icons/hide.svg';
+import ShowIcon from '../assets/icons/show.svg';
 import TrashIcon from '../assets/icons/trash.svg';
 import './PlanCardMenu.css';
 
@@ -88,8 +89,8 @@ export function PlanCardMenu({ plan, onOpen, onRename, onPin, onHide, onDelete }
             className="menu-item"
             onClick={(e) => handleMenuItemClick(() => onHide(plan.id, plan.status), e)}
           >
-            <img src={EyeIcon} alt="" className="menu-item-icon" />
-            <span>{plan.status === 'archived' ? 'Unhide' : 'Hide'}</span>
+            <img src={plan.status === 'archived' ? ShowIcon : HideIcon} alt="" className="menu-item-icon" />
+            <span>{plan.status === 'archived' ? 'Show' : 'Hide'}</span>
           </button>
 
           <button
