@@ -11,7 +11,8 @@ export type Plan = {
   workspace_id: string;
   title: string;
   description: string | null;
-  status: 'active' | 'archived';
+  intent: string | null;
+  status: 'active' | 'archived' | 'draft';
   created_at: string;
 };
 

@@ -93,6 +93,42 @@ export async function getActivePlans(workspaceId: string): Promise<Plan[]> {
   return data || [];
 }
 
+export async function getActivePlansWithMetadata(
+  workspaceId: string
+): Promise<Array<Plan & { stageCount: number; taskCount: number }>> {
+  const { data, error } = await supabase
+    .from('plans')
+    .select(
+      `
+      *,
+      stages (
+        id,
+        tasks (id)
+      )
+    `
+    )
+    .eq('workspace_id', workspaceId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
+
+  return (data || []).map((plan: any) => {
+    const stageCount = plan.stages?.length || 0;
+    const taskCount = plan.stages?.reduce(
+      (sum: number, stage: any) => sum + (stage.tasks?.length || 0),
+      0
+    ) || 0;
+
+    return {
+      ...plan,
+      stageCount,
+      taskCount,
+      stages: undefined, // Remove nested data
+    };
+  });
+}
+
 export async function getPlanById(id: string): Promise<Plan> {
   const { data, error } = await supabase
     .from('plans')
@@ -107,7 +143,9 @@ export async function getPlanById(id: string): Promise<Plan> {
 export async function createPlan(
   workspaceId: string,
   title: string,
-  description?: string
+  description?: string,
+  intent?: string,
+  status: 'active' | 'draft' = 'active'
 ): Promise<Plan> {
   const { data, error } = await supabase
     .from('plans')
@@ -116,7 +154,8 @@ export async function createPlan(
         workspace_id: workspaceId,
         title,
         description: description || null,
-        status: 'active',
+        intent: intent || null,
+        status,
       },
     ])
     .select()
@@ -183,6 +222,50 @@ export async function createDefaultStages(planId: string): Promise<Stage[]> {
     .select();
 
   if (error) throw new Error(`Failed to create default stages: ${error.message}`);
+  return data || [];
+}
+
+export async function createSuggestedStages(planId: string): Promise<Stage[]> {
+  const suggestedStages = ['Thinking', 'Planning', 'Execution', 'Review'];
+
+  const stagesToInsert = suggestedStages.map((title, position) => ({
+    plan_id: planId,
+    title,
+    position,
+  }));
+
+  const { data, error } = await supabase
+    .from('stages')
+    .insert(stagesToInsert)
+    .select();
+
+  if (error) throw new Error(`Failed to create suggested stages: ${error.message}`);
+  return data || [];
+}
+
+export async function createCustomStages(
+  planId: string,
+  stageNames: string[]
+): Promise<Stage[]> {
+  const stagesToInsert = stageNames
+    .filter((name) => name.trim())
+    .slice(0, 6)
+    .map((title, position) => ({
+      plan_id: planId,
+      title: title.trim(),
+      position,
+    }));
+
+  if (stagesToInsert.length === 0) {
+    throw new Error('At least one stage name is required');
+  }
+
+  const { data, error } = await supabase
+    .from('stages')
+    .insert(stagesToInsert)
+    .select();
+
+  if (error) throw new Error(`Failed to create custom stages: ${error.message}`);
   return data || [];
 }
 

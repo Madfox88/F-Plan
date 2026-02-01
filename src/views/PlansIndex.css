@@ -106,6 +106,11 @@ html[data-theme='dark'] .toggle-icon {
   transform: scale(0.98);
 }
 
+.btn-large {
+  padding: var(--space-lg) var(--space-xl);
+  font-size: var(--font-size-lg);
+}
+
 .plans-empty {
   display: flex;
   align-items: center;
@@ -113,10 +118,27 @@ html[data-theme='dark'] .toggle-icon {
   min-height: 400px;
 }
 
-.empty-message {
-  color: var(--text-secondary);
-  font-size: var(--font-size-lg);
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
   text-align: center;
+  max-width: 400px;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.empty-message {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
 }
 
 .plans-container {
@@ -193,6 +215,28 @@ html[data-theme='dark'] .toggle-icon {
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.plan-card-metadata {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.metadata-item {
+  display: inline;
+}
+
+.metadata-separator {
+  opacity: 0.5;
+}
+
+.metadata-empty {
+  display: inline;
+  color: var(--text-tertiary);
+  font-style: italic;
 }
 
 .plan-card-footer {

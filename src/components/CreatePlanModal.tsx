@@ -4,14 +4,47 @@ import './CreatePlanModal.css';
 interface CreatePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (title: string, description: string) => Promise<void>;
+  onSubmit: (
+    title: string,
+    description: string,
+    intent: string,
+    useSuggestedStages: boolean,
+    isDraft: boolean,
+    customStages?: string[]
+  ) => Promise<void>;
 }
 
 export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalProps) {
   const [title, setTitle] = useState('');
+  const [intent, setIntent] = useState('');
   const [description, setDescription] = useState('');
+  const [useSuggestedStages, setUseSuggestedStages] = useState(true);
+  const [isDraft, setIsDraft] = useState(false);
+  const [customStages, setCustomStages] = useState<string[]>(['']);
+  const [stageAddError, setStageAddError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleAddStage = () => {
+    if (customStages.length >= 6) {
+      setStageAddError('Maximum 6 custom stages allowed');
+      return;
+    }
+    setStageAddError(null);
+    setCustomStages([...customStages, '']);
+  };
+
+  const handleRemoveStage = (index: number) => {
+    setStageAddError(null);
+    setCustomStages(customStages.filter((_, i) => i !== index));
+  };
+
+  const handleStageChange = (index: number, value: string) => {
+    setStageAddError(null);
+    const newStages = [...customStages];
+    newStages[index] = value;
+    setCustomStages(newStages);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +54,32 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
       return;
     }
 
+    if (!useSuggestedStages && customStages.length === 0) {
+      setError('Please add at least one custom stage or select suggested stages');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      await onSubmit(title, description);
+      const customStagesToPass = !useSuggestedStages
+        ? customStages.filter((s) => s.trim())
+        : undefined;
+      await onSubmit(
+        title,
+        description,
+        intent,
+        useSuggestedStages,
+        isDraft,
+        customStagesToPass
+      );
       setTitle('');
+      setIntent('');
       setDescription('');
+      setUseSuggestedStages(true);
+      setIsDraft(false);
+      setCustomStages(['']);
+      setStageAddError(null);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create plan');
@@ -64,6 +117,20 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
           </div>
 
           <div className="form-group">
+            <label htmlFor="plan-intent" className="form-label">
+              Intent (optional)
+            </label>
+            <input
+              id="plan-intent"
+              type="text"
+              value={intent}
+              onChange={(e) => setIntent(e.target.value)}
+              placeholder="What is the purpose of this plan?"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
             <label htmlFor="plan-description" className="form-label">
               Description (optional)
             </label>
@@ -72,9 +139,98 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details about your plan..."
-              rows={4}
+              rows={3}
               disabled={loading}
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Start Mode</label>
+            <div className="form-radio-group">
+              <label className="form-radio">
+                <input
+                  type="radio"
+                  checked={!useSuggestedStages}
+                  onChange={() => setUseSuggestedStages(false)}
+                  disabled={loading}
+                />
+                <span>Blank plan (start from scratch)</span>
+              </label>
+              <label className="form-radio">
+                <input
+                  type="radio"
+                  checked={useSuggestedStages}
+                  onChange={() => setUseSuggestedStages(true)}
+                  disabled={loading}
+                />
+                <span>Suggested stages (Thinking, Planning, Execution, Review)</span>
+              </label>
+              <label className="form-radio">
+                <input
+                  type="radio"
+                  checked={!useSuggestedStages && customStages.length > 0}
+                  onChange={() => setUseSuggestedStages(false)}
+                  disabled={loading}
+                />
+                <span>Custom stages</span>
+              </label>
+            </div>
+          </div>
+
+          {!useSuggestedStages && (
+            <div className="form-group">
+              <label className="form-label">
+                Custom Stages ({customStages.filter((s) => s.trim()).length}/6)
+              </label>
+              <div className="custom-stages-container">
+                {customStages.map((stage, index) => (
+                  <div key={index} className="stage-input-row">
+                    <input
+                      type="text"
+                      value={stage}
+                      onChange={(e) => handleStageChange(index, e.target.value)}
+                      placeholder={`Stage ${index + 1}`}
+                      disabled={loading}
+                      className="stage-input"
+                    />
+                    {customStages.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStage(index)}
+                        className="btn-remove-stage"
+                        disabled={loading}
+                        aria-label="Remove stage"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleAddStage}
+                className="btn-add-stage"
+                disabled={loading || customStages.length >= 6}
+              >
+                + Add Stage
+              </button>
+              {stageAddError && (
+                <div className="form-error">{stageAddError}</div>
+              )}
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="form-checkbox">
+              <input
+                type="checkbox"
+                checked={isDraft}
+                onChange={(e) => setIsDraft(e.target.checked)}
+                disabled={loading}
+              />
+              <span>Save as draft</span>
+            </label>
           </div>
 
           {error && <div className="form-error">{error}</div>}

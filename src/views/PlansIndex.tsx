@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Plan } from '../types/database';
-import { getActivePlans } from '../lib/database';
+import { getActivePlansWithMetadata } from '../lib/database';
 import { useWorkspace } from '../context/WorkspaceContext';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
@@ -11,9 +11,14 @@ interface PlansIndexProps {
   onSelectPlan: (planId: string) => void;
 }
 
+interface PlanWithMetadata extends Plan {
+  stageCount: number;
+  taskCount: number;
+}
+
 export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
   const { activeWorkspace } = useWorkspace();
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plans, setPlans] = useState<PlanWithMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
@@ -23,7 +28,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
 
     try {
       setLoading(true);
-      const activePlans = await getActivePlans(activeWorkspace.id);
+      const activePlans = await getActivePlansWithMetadata(activeWorkspace.id);
       setPlans(activePlans);
     } catch (error) {
       console.error('Failed to load plans:', error);
@@ -83,7 +88,13 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
 
       {filteredPlans.length === 0 ? (
         <div className="plans-empty">
-          <p className="empty-message">No plans yet. Create one to get started.</p>
+          <div className="empty-container">
+            <p className="empty-title">No plans yet</p>
+            <p className="empty-message">Plans help you organize your work into stages and track progress on your goals.</p>
+            <button className="btn-primary btn-large" onClick={onCreatePlan}>
+              + Create Your First Plan
+            </button>
+          </div>
         </div>
       ) : (
         <div className={`plans-container plans-${viewMode}`}>
@@ -106,6 +117,21 @@ export function PlansIndex({ onCreatePlan, onSelectPlan }: PlansIndexProps) {
               {plan.description && (
                 <p className="plan-card-description">{plan.description}</p>
               )}
+              <div className="plan-card-metadata">
+                {plan.stageCount > 0 || plan.taskCount > 0 ? (
+                  <>
+                    <span className="metadata-item">
+                      {plan.stageCount} {plan.stageCount === 1 ? 'stage' : 'stages'}
+                    </span>
+                    <span className="metadata-separator">•</span>
+                    <span className="metadata-item">
+                      {plan.taskCount} {plan.taskCount === 1 ? 'task' : 'tasks'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="metadata-empty">No stages yet</span>
+                )}
+              </div>
               <div className="plan-card-footer">
                 <span className="plan-status">{plan.status}</span>
                 <span className="plan-date">
