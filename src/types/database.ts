@@ -39,6 +39,8 @@ export type Task = {
   checklists?: string[] | null;
   labels?: Array<{ id: string; name: string; color: string }> | null;
   created_at: string;
+  // Dynamic fields added for grouping display
+  stage_name?: string;
 };
 
 export type Goal = {

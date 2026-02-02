@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { Plan, StageWithTasks } from '../types/database';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import type { Plan, StageWithTasks, Task } from '../types/database';
 import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
@@ -10,7 +10,17 @@ import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
 import SearchIcon from '../assets/icons/search.svg';
+import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './PlanDetail.css';
+
+type GroupingType = 'stages' | 'progress' | 'due_date' | 'priority';
+
+interface TaskGroup {
+  id: string;
+  title: string;
+  tasks: Task[];
+  color?: string;
+}
 
 interface PlanDetailProps {
   planId: string;
@@ -23,6 +33,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   const [stages, setStages] = useState<StageWithTasks[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'boards' | 'grid'>('boards');
+  const [groupingMode, setGroupingMode] = useState<GroupingType>('stages');
+  const [isGroupingOpen, setIsGroupingOpen] = useState(false);
   const [currentPlan, setCurrentPlan] = useState<Plan>(plan);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,6 +45,146 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     if (task.status) return task.status;
     return task.completed ? 'completed' : 'not_started';
   };
+
+  // Load grouping preference from localStorage
+  useEffect(() => {
+    const savedGrouping = localStorage.getItem(`plan-${planId}-grouping`) as GroupingType | null;
+    if (savedGrouping) {
+      setGroupingMode(savedGrouping);
+    }
+  }, [planId]);
+
+  // Save grouping preference to localStorage
+  useEffect(() => {
+    localStorage.setItem(`plan-${planId}-grouping`, groupingMode);
+  }, [planId, groupingMode]);
+
+  // Handle click outside for grouping dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.grouping-selector')) {
+        setIsGroupingOpen(false);
+      }
+    };
+
+    if (isGroupingOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isGroupingOpen]);
+
+  // Group tasks based on selected grouping mode
+  const groupedStages = useMemo(() => {
+    const allTasks = stages.flatMap(stage => 
+      (stage.tasks || []).map(task => ({ ...task, stage_name: stage.title, stage_id: stage.id }))
+    );
+
+    if (groupingMode === 'stages') {
+      return stages;
+    }
+
+    if (groupingMode === 'progress') {
+      const groups: TaskGroup[] = [
+        { id: 'not_started', title: 'Not Started', tasks: [], color: '#808080' },
+        { id: 'in_progress', title: 'In Progress', tasks: [], color: '#ffd95e' },
+        { id: 'completed', title: 'Completed', tasks: [], color: '#ffd95e' },
+      ];
+
+      allTasks.forEach(task => {
+        const status = resolveTaskStatus(task);
+        const group = groups.find(g => g.id === status);
+        if (group) group.tasks.push(task);
+      });
+
+      return groups.map(group => ({
+        id: group.id,
+        title: group.title,
+        position: 0,
+        plan_id: planId,
+        created_at: '',
+        tasks: group.tasks,
+      }));
+    }
+
+    if (groupingMode === 'priority') {
+      const groups: TaskGroup[] = [
+        { id: 'urgent', title: 'Urgent', tasks: [], color: '#FF4757' },
+        { id: 'important', title: 'Important', tasks: [], color: '#FF4757' },
+        { id: 'medium', title: 'Medium', tasks: [], color: '#2ED573' },
+        { id: 'low', title: 'Low', tasks: [], color: '#5BC0DE' },
+      ];
+
+      allTasks.forEach(task => {
+        const priority = task.priority || 'medium';
+        const group = groups.find(g => g.id === priority);
+        if (group) group.tasks.push(task);
+      });
+
+      return groups.map(group => ({
+        id: group.id,
+        title: group.title,
+        position: 0,
+        plan_id: planId,
+        created_at: '',
+        tasks: group.tasks,
+      }));
+    }
+
+    if (groupingMode === 'due_date') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const weekEnd = new Date(today);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      const monthEnd = new Date(today);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+
+      const groups: TaskGroup[] = [
+        { id: 'overdue', title: 'Overdue', tasks: [] },
+        { id: 'today', title: 'Today', tasks: [] },
+        { id: 'this_week', title: 'This Week', tasks: [] },
+        { id: 'next_week', title: 'Next Week', tasks: [] },
+        { id: 'this_month', title: 'This Month', tasks: [] },
+        { id: 'later', title: 'Later', tasks: [] },
+        { id: 'no_due_date', title: 'No Due Date', tasks: [] },
+      ];
+
+      allTasks.forEach(task => {
+        if (!task.due_date) {
+          groups.find(g => g.id === 'no_due_date')?.tasks.push(task);
+          return;
+        }
+
+        const dueDate = new Date(task.due_date);
+        if (dueDate < today) {
+          groups.find(g => g.id === 'overdue')?.tasks.push(task);
+        } else if (dueDate.getTime() === today.getTime()) {
+          groups.find(g => g.id === 'today')?.tasks.push(task);
+        } else if (dueDate <= weekEnd) {
+          groups.find(g => g.id === 'this_week')?.tasks.push(task);
+        } else if (dueDate <= new Date(weekEnd.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+          groups.find(g => g.id === 'next_week')?.tasks.push(task);
+        } else if (dueDate <= monthEnd) {
+          groups.find(g => g.id === 'this_month')?.tasks.push(task);
+        } else {
+          groups.find(g => g.id === 'later')?.tasks.push(task);
+        }
+      });
+
+      return groups.map(group => ({
+        id: group.id,
+        title: group.title,
+        position: 0,
+        plan_id: planId,
+        created_at: '',
+        tasks: group.tasks,
+      }));
+    }
+
+    return stages;
+  }, [stages, groupingMode, planId]);
 
   const handleRenamePlan = (planId: string) => {
     const newTitle = prompt('Enter new plan name:', currentPlan.title);
@@ -145,28 +297,30 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         }
       />
       <div className="plan-detail-subheader">
-        <div className={`search-wrapper ${searchOpen ? 'open' : ''}`}>
-          <button
-            className="search-icon-btn"
-            onClick={() => setSearchOpen(!searchOpen)}
-            title="Search tasks"
-          >
-            <img src={SearchIcon} alt="Search" className="search-icon-img" />
-          </button>
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`search-input ${searchOpen ? 'open' : ''}`}
-            onBlur={() => {
-              if (!searchTerm) {
-                setSearchOpen(false);
-              }
-            }}
-          />
-        </div>
-        <div className="view-switcher" role="group" aria-label="Plan view">
+        <div className="plan-detail-controls">
+          <div className={`search-wrapper ${searchOpen ? 'open' : ''}`}>
+            <button
+              className="search-icon-btn"
+              onClick={() => setSearchOpen(!searchOpen)}
+              title="Search tasks"
+            >
+              <img src={SearchIcon} alt="Search" className="search-icon-img" />
+            </button>
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`search-input ${searchOpen ? 'open' : ''}`}
+              onBlur={() => {
+                if (!searchTerm) {
+                  setSearchOpen(false);
+                }
+              }}
+            />
+          </div>
+
+          <div className="view-switcher" role="group" aria-label="Plan view">
           <button
             type="button"
             className={`view-switcher-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -195,7 +349,70 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             Grid
           </button>
         </div>
-        <button className="add-stage-btn" onClick={handleAddStage}>+ Add Stage</button>
+          {groupingMode === 'stages' && (
+            <button className="add-stage-btn" onClick={handleAddStage}>+ Add Stage</button>
+          )}
+        </div>
+
+        <div className="grouping-selector">
+          <button
+            type="button"
+            className="grouping-selector-trigger"
+            onClick={() => setIsGroupingOpen(!isGroupingOpen)}
+          >
+            <span>
+              Group by: {groupingMode === 'stages' ? 'Stages' 
+                : groupingMode === 'progress' ? 'Progress' 
+                : groupingMode === 'due_date' ? 'Due Date' 
+                : 'Priority'}
+            </span>
+            <img src={ChevronDownIcon} alt="" className="grouping-selector-icon" />
+          </button>
+          {isGroupingOpen && (
+            <div className="grouping-selector-menu">
+              <button
+                type="button"
+                className={`grouping-selector-option ${groupingMode === 'stages' ? 'active' : ''}`}
+                onClick={() => {
+                  setGroupingMode('stages');
+                  setIsGroupingOpen(false);
+                }}
+              >
+                Stages
+              </button>
+              <button
+                type="button"
+                className={`grouping-selector-option ${groupingMode === 'progress' ? 'active' : ''}`}
+                onClick={() => {
+                  setGroupingMode('progress');
+                  setIsGroupingOpen(false);
+                }}
+              >
+                Progress
+              </button>
+              <button
+                type="button"
+                className={`grouping-selector-option ${groupingMode === 'due_date' ? 'active' : ''}`}
+                onClick={() => {
+                  setGroupingMode('due_date');
+                  setIsGroupingOpen(false);
+                }}
+              >
+                Due Date
+              </button>
+              <button
+                type="button"
+                className={`grouping-selector-option ${groupingMode === 'priority' ? 'active' : ''}`}
+                onClick={() => {
+                  setGroupingMode('priority');
+                  setIsGroupingOpen(false);
+                }}
+              >
+                Priority
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
@@ -228,8 +445,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
 
   // Filter stages and tasks based on search term
   const filteredStages = searchTerm.trim() === '' 
-    ? stages 
-    : stages.map(stage => ({
+    ? groupedStages 
+    : groupedStages.map(stage => ({
         ...stage,
         tasks: stage.tasks?.filter(task => 
           task.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -246,7 +463,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             <div key={stage.id} className="stage-column glass">
               <div className="stage-header">
                 <h2 className="stage-title">{stage.title}</h2>
-                <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
+                {groupingMode === 'stages' && (
+                  <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
+                )}
               </div>
               <div className="stage-tasks">
                 {stage.tasks && stage.tasks.length > 0 ? (
@@ -256,6 +475,12 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
                         <TaskStatusIndicator status={resolveTaskStatus(task)} />
                         <p className="task-title">{task.title}</p>
                       </div>
+                      {groupingMode !== 'stages' && task.stage_name && (
+                        <div className="task-card-meta">
+                          <span className="task-meta-label">Stage:</span>
+                          <span className="task-meta-value">{task.stage_name}</span>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -273,7 +498,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             <section key={stage.id} className="plan-list-stage glass">
               <div className="plan-list-header">
                 <h2 className="plan-list-title">{stage.title}</h2>
-                <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
+                {groupingMode === 'stages' && (
+                  <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
+                )}
               </div>
               {stage.tasks && stage.tasks.length > 0 ? (
                 <ul className="plan-list-tasks">
@@ -281,6 +508,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
                     <li key={task.id} className="plan-list-item">
                       <TaskStatusIndicator status={resolveTaskStatus(task)} />
                       <span className="plan-list-text">{task.title}</span>
+                      {groupingMode !== 'stages' && task.stage_name && (
+                        <span className="plan-list-meta">· {task.stage_name}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -298,7 +528,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             <div key={stage.id} className="plan-grid-card glass">
               <div className="plan-grid-header">
                 <div className="plan-grid-title">{stage.title}</div>
-                <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
+                {groupingMode === 'stages' && (
+                  <button className="add-task-btn" onClick={() => handleOpenTaskModal(stage.id)}>+ Add task</button>
+                )}
               </div>
               {stage.tasks && stage.tasks.length > 0 ? (
                 <ul className="plan-grid-tasks">
