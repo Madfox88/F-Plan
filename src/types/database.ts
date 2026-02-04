@@ -25,6 +25,12 @@ export type Stage = {
   created_at: string;
 };
 
+export type ChecklistItem = {
+  id: string;
+  text: string;
+  completed?: boolean;
+};
+
 export type Task = {
   id: string;
   stage_id: string;
@@ -36,7 +42,7 @@ export type Task = {
   due_date: string | null;
   repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
   description?: string | null;
-  checklists?: string[] | null;
+  checklists?: ChecklistItem[] | null;
   labels?: Array<{ id: string; name: string; color: string }> | null;
   created_at: string;
   // Dynamic fields added for grouping display

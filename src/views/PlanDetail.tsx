@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import type { Plan, StageWithTasks, Task } from '../types/database';
-import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask } from '../lib/database';
+import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
 import { TaskCreateModal } from '../components/TaskCreateModal';
 import type { TaskCreatePayload } from '../components/TaskCreateModal';
 import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
+import Checkbox from '../components/Checkbox';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
@@ -40,6 +41,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   const [searchTerm, setSearchTerm] = useState('');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState<string | undefined>(undefined);
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
 
   const resolveTaskStatus = (task: { status?: 'not_started' | 'in_progress' | 'completed'; completed?: boolean }) => {
     if (task.status) return task.status;
@@ -261,24 +263,126 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   };
 
   const handleOpenTaskModal = (stageId?: string) => {
+    setEditingTask(undefined);
     setSelectedStageId(stageId);
     setIsTaskModalOpen(true);
   };
 
-  const handleCreateTask = async (payload: TaskCreatePayload) => {
-    await createTask({
-      stageId: payload.stageId,
-      title: payload.title,
-      status: payload.status,
-      priority: payload.priority,
-      startDate: payload.startDate,
-      dueDate: payload.dueDate,
-      repeat: payload.repeat,
-      description: payload.description,
-      checklists: payload.checklists,
-      labels: payload.labels,
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setSelectedStageId(task.stage_id);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleSaveTask = async (payload: TaskCreatePayload, existingTaskId?: string) => {
+    if (existingTaskId) {
+      await updateTask(existingTaskId, {
+        stage_id: payload.stageId,
+        title: payload.title,
+        status: payload.status,
+        priority: payload.priority,
+        start_date: payload.startDate || null,
+        due_date: payload.dueDate || null,
+        repeat: payload.repeat,
+        description: payload.description || null,
+        checklists: payload.checklists,
+        labels: payload.labels,
+        completed: payload.status === 'completed',
+      });
+    } else {
+      await createTask({
+        stageId: payload.stageId,
+        title: payload.title,
+        status: payload.status,
+        priority: payload.priority,
+        startDate: payload.startDate,
+        dueDate: payload.dueDate,
+        repeat: payload.repeat,
+        description: payload.description,
+        checklists: payload.checklists,
+        labels: payload.labels,
+      });
+    }
+    setEditingTask(undefined);
+    await fetchStages();
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!window.confirm('Delete this task?')) return;
+    await deleteTask(taskId);
+    await fetchStages();
+  };
+
+  const handleCompleteTask = async (task: Task) => {
+    const normalized = Array.isArray(task.checklists)
+      ? task.checklists.map((item, index) => ({
+          id: item.id || `${index}-${Date.now()}`,
+          text: item.text,
+          completed: !!item.completed,
+        }))
+      : [];
+
+    const updatedChecklists = normalized.map((item) => ({ ...item, completed: true }));
+
+    await updateTask(task.id, {
+      status: 'completed',
+      completed: true,
+      checklists: updatedChecklists,
     });
     await fetchStages();
+  };
+
+  const handleToggleChecklistItem = async (task: Task, itemId: string) => {
+    if (!task.checklists) return;
+
+    const normalized = task.checklists.map((item, index) => ({
+      id: item.id || `${index}-${Date.now()}`,
+      text: item.text,
+      completed: !!item.completed,
+    }));
+
+    const nextChecklists = normalized.map((item) =>
+      item.id === itemId ? { ...item, completed: !item.completed } : item
+    );
+
+    const completedCount = nextChecklists.filter((item) => item.completed).length;
+    const allChecked = nextChecklists.length > 0 && completedCount === nextChecklists.length;
+    const someChecked = completedCount > 0 && !allChecked;
+    const newStatus = allChecked ? 'completed' : someChecked ? 'in_progress' : 'not_started';
+
+    await updateTask(task.id, {
+      checklists: nextChecklists,
+      status: newStatus,
+      completed: allChecked,
+    });
+
+    await fetchStages();
+  };
+
+  const handleToggleTaskCheckbox = async (task: Task, nextChecked: boolean) => {
+    const normalized = Array.isArray(task.checklists)
+      ? task.checklists.map((item, index) => ({
+          id: item.id || `${index}-${Date.now()}`,
+          text: item.text,
+          completed: !!item.completed,
+        }))
+      : [];
+
+    const updatedChecklists = normalized.map((item) => ({ ...item, completed: nextChecked }));
+
+    await updateTask(task.id, {
+      status: nextChecked ? 'completed' : 'not_started',
+      completed: nextChecked,
+      checklists: updatedChecklists,
+    });
+
+    await fetchStages();
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return '';
+    const date = new Date(value);
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
   const headerContent = (
@@ -453,6 +557,168 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         ) || []
       })).filter(stage => stage.tasks.length > 0);
 
+  const AnimatedCheckbox = ({ id, checked, onToggle }: { id: string; checked: boolean; onToggle: () => void }) => {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      const input = ref.current?.querySelector('input');
+      const label = ref.current?.querySelector('label');
+      if (input) {
+        input.id = id;
+        (input as HTMLInputElement).checked = checked;
+      }
+      if (label) {
+        (label as HTMLLabelElement).htmlFor = id;
+      }
+    }, [id, checked]);
+
+    return (
+      <div
+        ref={ref}
+        className="task-checkbox-wrap"
+        role="checkbox"
+        tabIndex={0}
+        aria-checked={checked}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle();
+          }
+        }}
+      >
+        <Checkbox />
+      </div>
+    );
+  };
+
+  const renderTaskCard = (task: Task) => {
+    const status = resolveTaskStatus(task);
+    const checklists = Array.isArray(task.checklists)
+      ? task.checklists.map((item, index) => ({
+          id: item.id || `${task.id}-${index}`,
+          text: item.text,
+          completed: !!item.completed,
+        }))
+      : [];
+    const completedCount = checklists.filter((item) => item.completed).length;
+    const checklistProgress = checklists.length ? `${completedCount}/${checklists.length}` : null;
+    const priorityLabel = task.priority
+      ? task.priority === 'urgent'
+        ? 'Urgent'
+        : task.priority === 'important'
+          ? 'Important'
+          : task.priority === 'low'
+            ? 'Low'
+            : 'Medium'
+      : 'Medium';
+    const stageName = task.stage_name || stages.find((stage) => stage.id === task.stage_id)?.title;
+    const labels = Array.isArray(task.labels) ? task.labels : [];
+
+    const taskChecked = status === 'completed';
+
+    return (
+      <div
+        key={task.id}
+        className={`task-card ${status}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => handleEditTask(task)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleEditTask(task);
+        }}
+      >
+        <div className="task-top-row">
+          <AnimatedCheckbox
+            id={`task-${task.id}`}
+            checked={taskChecked}
+            onToggle={() => handleToggleTaskCheckbox(task, !taskChecked)}
+          />
+          <div className="task-card-title-block">
+            <p className="task-title" title={task.title}>{task.title}</p>
+          </div>
+          <div className="task-priority-wrap">
+            <TaskStatusIndicator status={status} />
+            <span className={`task-priority ${task.priority || 'medium'}`}>{priorityLabel}</span>
+          </div>
+        </div>
+
+        {checklists.length > 0 && (
+          <div className="task-checklist stacked">
+            {checklists.slice(0, stagePreviewLimit).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`task-checklist-item ${item.completed ? 'checked' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleChecklistItem(task, item.id);
+                }}
+              >
+                <AnimatedCheckbox
+                  id={`item-${task.id}-${item.id}`}
+                  checked={item.completed}
+                  onToggle={() => handleToggleChecklistItem(task, item.id)}
+                />
+                <span className="checklist-text">{item.text}</span>
+              </button>
+            ))}
+            {checklists.length > stagePreviewLimit && (
+              <div className="task-checklist-more">+{checklists.length - stagePreviewLimit} more</div>
+            )}
+          </div>
+        )}
+
+        <div className="task-meta-row">
+          <div className="task-meta-left">
+            {task.due_date && (
+              <span className="task-meta-chip due">Due {formatDate(task.due_date)}</span>
+            )}
+            {checklistProgress && (
+              <span className="task-meta-chip checklist">{checklistProgress}</span>
+            )}
+          </div>
+          <div className="task-meta-tags">
+            {labels.map((label) => (
+              <span key={label.id} className="task-label" style={{ backgroundColor: label.color }}>
+                {label.name}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="task-actions-bar" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="task-action"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCompleteTask(task);
+            }}
+            disabled={status === 'completed'}
+          >
+            {status === 'completed' ? 'Done' : 'Complete'}
+          </button>
+          <button type="button" className="task-action" onClick={() => handleEditTask(task)}>Edit</button>
+          <button
+            type="button"
+            className="task-action danger"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteTask(task.id);
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="plan-detail-wrapper">
       {headerContent}
@@ -469,20 +735,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
               </div>
               <div className="stage-tasks">
                 {stage.tasks && stage.tasks.length > 0 ? (
-                  stage.tasks.map((task) => (
-                    <div key={task.id} className="task-card">
-                      <div className="task-card-header">
-                        <TaskStatusIndicator status={resolveTaskStatus(task)} />
-                        <p className="task-title">{task.title}</p>
-                      </div>
-                      {groupingMode !== 'stages' && task.stage_name && (
-                        <div className="task-card-meta">
-                          <span className="task-meta-label">Stage:</span>
-                          <span className="task-meta-value">{task.stage_name}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))
+                  stage.tasks.map((task) => renderTaskCard(task))
                 ) : (
                   <div className="stage-empty">No tasks</div>
                 )}
@@ -503,17 +756,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
                 )}
               </div>
               {stage.tasks && stage.tasks.length > 0 ? (
-                <ul className="plan-list-tasks">
-                  {stage.tasks.map((task) => (
-                    <li key={task.id} className="plan-list-item">
-                      <TaskStatusIndicator status={resolveTaskStatus(task)} />
-                      <span className="plan-list-text">{task.title}</span>
-                      {groupingMode !== 'stages' && task.stage_name && (
-                        <span className="plan-list-meta">· {task.stage_name}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                <div className="plan-list-tasks task-list-mode">
+                  {stage.tasks.map((task) => renderTaskCard(task))}
+                </div>
               ) : (
                 <div className="plan-list-empty">No tasks</div>
               )}
@@ -559,11 +804,13 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         planId={planId}
         stages={stages}
         defaultStageId={selectedStageId}
+        editingTask={editingTask}
         onClose={() => {
           setIsTaskModalOpen(false);
           setSelectedStageId(undefined);
+          setEditingTask(undefined);
         }}
-        onSubmit={handleCreateTask}
+        onSubmit={handleSaveTask}
       />
     </div>
   );

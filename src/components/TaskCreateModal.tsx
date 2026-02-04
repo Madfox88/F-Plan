@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Stage } from '../types/database';
+import type { Stage, Task, ChecklistItem } from '../types/database';
 import { TaskStatusIndicator } from './TaskStatusIndicator';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import CalendarIcon from '../assets/icons/calendar.svg';
@@ -24,7 +24,7 @@ export type TaskCreatePayload = {
   dueDate?: string;
   repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
   description?: string;
-  checklists: string[];
+  checklists: ChecklistItem[];
   labels: TaskLabel[];
 };
 
@@ -33,8 +33,9 @@ interface TaskCreateModalProps {
   planId: string;
   stages: Stage[];
   defaultStageId?: string;
+  editingTask?: Task;
   onClose: () => void;
-  onSubmit: (payload: TaskCreatePayload) => Promise<void>;
+  onSubmit: (payload: TaskCreatePayload, existingTaskId?: string) => Promise<void>;
 }
 
 const defaultLabelSet: TaskLabel[] = [
@@ -44,7 +45,7 @@ const defaultLabelSet: TaskLabel[] = [
   { id: 'learning', name: 'Learning', color: '#ffd37a' },
 ];
 
-export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClose, onSubmit }: TaskCreateModalProps) {
+export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editingTask, onClose, onSubmit }: TaskCreateModalProps) {
   const [title, setTitle] = useState('');
   const [stageId, setStageId] = useState('');
   const [status, setStatus] = useState<TaskCreatePayload['status']>('not_started');
@@ -53,7 +54,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
   const [dueDate, setDueDate] = useState('');
   const [repeat, setRepeat] = useState<TaskCreatePayload['repeat']>('none');
   const [description, setDescription] = useState('');
-  const [checklists, setChecklists] = useState<Array<{ id: string; text: string }>>([{ id: '0', text: '' }]);
+  const [checklists, setChecklists] = useState<ChecklistItem[]>([{ id: '0', text: '', completed: false }]);
   const [labels, setLabels] = useState<TaskLabel[]>([]);
   const [assignedLabelIds, setAssignedLabelIds] = useState<Set<string>>(new Set());
   const [newLabelName, setNewLabelName] = useState('');
@@ -89,9 +90,45 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
 
   useEffect(() => {
     if (!isOpen) return;
-    const defaultId = defaultStageId || stages[0]?.id || '';
-    setStageId(defaultId);
-  }, [isOpen, defaultStageId, stages]);
+
+    if (editingTask) {
+      setTitle(editingTask.title || '');
+      setStageId(editingTask.stage_id || defaultStageId || stages[0]?.id || '');
+      const statusFromTask = editingTask.status || (editingTask.completed ? 'completed' : 'not_started');
+      setStatus(statusFromTask);
+      setPriority(editingTask.priority || 'medium');
+      setStartDate(editingTask.start_date || '');
+      setDueDate(editingTask.due_date || '');
+      setRepeat(editingTask.repeat || 'none');
+      setDescription(editingTask.description || '');
+
+      const checklistItems: ChecklistItem[] = (editingTask.checklists || []).map((item: any, index: number) => {
+        if (typeof item === 'string') {
+          return { id: `${index}-${Date.now()}`, text: item, completed: false };
+        }
+        return {
+          id: item.id || `${index}-${Date.now()}`,
+          text: item.text || '',
+          completed: !!item.completed,
+        };
+      });
+      setChecklists(checklistItems.length ? checklistItems : [{ id: '0', text: '', completed: false }]);
+
+      const taskLabels = editingTask.labels || [];
+      setLabels((prev) => {
+        const merged = [...prev];
+        taskLabels.forEach((label) => {
+          if (!merged.some((existing) => existing.id === label.id)) {
+            merged.push(label);
+          }
+        });
+        return merged;
+      });
+      setAssignedLabelIds(new Set(taskLabels.map((label) => label.id)));
+    } else {
+      resetForm();
+    }
+  }, [isOpen, editingTask, defaultStageId, stages]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -126,7 +163,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
     setDueDate('');
     setRepeat('none');
     setDescription('');
-    setChecklists([{ id: '0', text: '' }]);
+    setChecklists([{ id: '0', text: '', completed: false }]);
     setAssignedLabelIds(new Set());
     setNewLabelName('');
     setNewLabelColor('#7aa2ff');
@@ -147,7 +184,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
   const handleAddChecklist = () => {
     if (checklists.length >= 10) return;
     const newId = `${Date.now()}-${Math.random()}`;
-    setChecklists([...checklists, { id: newId, text: '' }]);
+    setChecklists([...checklists, { id: newId, text: '', completed: false }]);
   };
 
   const handleChecklistChange = (index: number, value: string) => {
@@ -158,6 +195,12 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
 
   const handleChecklistRemove = (index: number) => {
     setChecklists(checklists.filter((_, i) => i !== index));
+  };
+
+  const handleChecklistToggleComplete = (index: number) => {
+    const next = [...checklists];
+    next[index] = { ...next[index], completed: !next[index].completed };
+    setChecklists(next);
   };
 
   const toggleLabel = (labelId: string) => {
@@ -213,13 +256,19 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
         dueDate: dueDate || undefined,
         repeat,
         description: description || undefined,
-        checklists: checklists.map(item => item.text).filter((text) => text.trim()),
+        checklists: checklists
+          .filter((item) => item.text.trim())
+          .map((item) => ({
+            id: item.id,
+            text: item.text.trim(),
+            completed: !!item.completed,
+          })),
         labels: assignedLabels,
-      });
+      }, editingTask?.id);
       resetForm();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create task');
+      setError(err instanceof Error ? err.message : 'Failed to save task');
     } finally {
       setLoading(false);
     }
@@ -231,7 +280,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
     <div className="modal-overlay" role="dialog" aria-modal="true">
       <div className="modal-content task-modal">
         <div className="modal-header">
-          <h2>Create task</h2>
+          <h2>{editingTask ? 'Edit task' : 'Create task'}</h2>
           <button className="modal-close" onClick={onClose} aria-label="Close modal">
             ×
           </button>
@@ -513,6 +562,14 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
             <div className="checklist-list">
               {checklists.map((item, index) => (
                 <div key={item.id} className="checklist-row">
+                  <button
+                    type="button"
+                    className={`checklist-complete-toggle ${item.completed ? 'done' : ''}`}
+                    onClick={() => handleChecklistToggleComplete(index)}
+                    aria-label="Toggle checklist item"
+                  >
+                    <span className="checklist-complete-dot" />
+                  </button>
                   <input
                     className="form-input"
                     type="text"
@@ -587,7 +644,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, onClos
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Creating...' : 'Create task'}
+              {loading ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? 'Save changes' : 'Create task')}
             </button>
           </div>
         </form>

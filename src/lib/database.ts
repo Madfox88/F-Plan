@@ -393,6 +393,22 @@ export async function deleteStage(id: string): Promise<void> {
 }
 
 /* Task Operations */
+type ChecklistPayloadItem = { id?: string; text: string; completed?: boolean } | string;
+
+const normalizeChecklistPayload = (items?: ChecklistPayloadItem[]) => {
+  if (!items) return [];
+  return items.map((item, index) => {
+    if (typeof item === 'string') {
+      return { id: `${index}-${Date.now()}`, text: item, completed: false };
+    }
+    return {
+      id: item.id || `${index}-${Date.now()}`,
+      text: item.text,
+      completed: !!item.completed,
+    };
+  });
+};
+
 export async function getTasksByStage(stageId: string): Promise<Task[]> {
   const { data, error } = await supabase
     .from('tasks')
@@ -413,7 +429,7 @@ export async function createTask(payload: {
   dueDate?: string;
   repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
   description?: string;
-  checklists?: string[];
+  checklists?: ChecklistPayloadItem[];
   labels?: Array<{ id: string; name: string; color: string }>;
 }): Promise<Task> {
   // First, try to insert with all new fields
@@ -429,7 +445,7 @@ export async function createTask(payload: {
         due_date: payload.dueDate || null,
         repeat: payload.repeat || 'none',
         description: payload.description || null,
-        checklists: payload.checklists || [],
+        checklists: normalizeChecklistPayload(payload.checklists),
         labels: payload.labels || [],
         completed: payload.status === 'completed',
       },

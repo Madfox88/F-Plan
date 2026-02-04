@@ -161,6 +161,37 @@ html[data-theme='dark'] .dropdown-chevron {
   gap: var(--space-sm);
 }
 
+.checklist-complete-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.checklist-complete-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid var(--text-secondary);
+}
+
+.checklist-complete-toggle.done {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.checklist-complete-toggle.done .checklist-complete-dot {
+  background: #22c55e;
+  border-color: #22c55e;
+}
+
 .icon-btn {
   width: 28px;
   height: 28px;
