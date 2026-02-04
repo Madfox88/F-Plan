@@ -602,7 +602,8 @@ html[data-theme='dark'] .view-switcher-icon {
 }
 
 .task-priority-wrap .task-status-indicator {
-  margin-left: -8px;
+  transform: translateX(-8px);
+  display: inline-block;
 }
 
 .task-labels {
@@ -721,7 +722,7 @@ html[data-theme='dark'] .view-switcher-icon {
 }
 
 .task-card .task-status-indicator {
-  transform: scale(0.9);
+  transform: translateX(-8px) scale(0.9);
 }
 
 .task-list-mode {

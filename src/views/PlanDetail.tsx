@@ -545,7 +545,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     );
   }
 
-  const stagePreviewLimit = 3;
+  const stagePreviewLimit = Number.POSITIVE_INFINITY;
 
   // Filter stages and tasks based on search term
   const filteredStages = searchTerm.trim() === '' 
@@ -649,7 +649,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
 
         {checklists.length > 0 && (
           <div className="task-checklist stacked">
-            {checklists.slice(0, stagePreviewLimit).map((item) => (
+            {checklists.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -667,9 +667,6 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
                 <span className="checklist-text">{item.text}</span>
               </button>
             ))}
-            {checklists.length > stagePreviewLimit && (
-              <div className="task-checklist-more">+{checklists.length - stagePreviewLimit} more</div>
-            )}
           </div>
         )}
 
