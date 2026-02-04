@@ -197,12 +197,6 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
     setChecklists(checklists.filter((_, i) => i !== index));
   };
 
-  const handleChecklistToggleComplete = (index: number) => {
-    const next = [...checklists];
-    next[index] = { ...next[index], completed: !next[index].completed };
-    setChecklists(next);
-  };
-
   const toggleLabel = (labelId: string) => {
     const next = new Set(assignedLabelIds);
     if (next.has(labelId)) {
@@ -562,24 +556,20 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
             <div className="checklist-list">
               {checklists.map((item, index) => (
                 <div key={item.id} className="checklist-row">
-                  <button
-                    type="button"
-                    className={`checklist-complete-toggle ${item.completed ? 'done' : ''}`}
-                    onClick={() => handleChecklistToggleComplete(index)}
-                    aria-label="Toggle checklist item"
-                  >
-                    <span className="checklist-complete-dot" />
-                  </button>
                   <input
-                    className="form-input"
+                    className="form-input checklist-input"
                     type="text"
                     value={item.text}
                     onChange={(e) => handleChecklistChange(index, e.target.value)}
                     placeholder={`Checklist item ${index + 1}`}
                   />
                   {checklists.length > 1 && (
-                    <button type="button" className="icon-btn" onClick={() => handleChecklistRemove(index)}>
-                      ×
+                    <button
+                      type="button"
+                      className="checklist-remove"
+                      onClick={() => handleChecklistRemove(index)}
+                    >
+                      Remove
                     </button>
                   )}
                 </div>
