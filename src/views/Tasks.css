@@ -22,12 +22,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .add-task-button {
   white-space: nowrap;
   align-self: flex-start;
+  flex-shrink: 0;
 }
 
 .control-group {
