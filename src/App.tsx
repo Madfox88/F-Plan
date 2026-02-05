@@ -13,6 +13,7 @@ import { Dashboard } from './views/Dashboard';
 import { Profile } from './views/Profile';
 import { PlanDetail } from './views/PlanDetail';
 import { Tasks } from './views/Tasks';
+import { supabaseConfigured } from './lib/supabase';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
 import type { Plan } from './types/database';
 import './App.css';
@@ -147,6 +148,11 @@ function AppContent() {
 
   return (
     <div className="app-container">
+      {!supabaseConfigured && (
+        <div className="env-warning" role="alert">
+          Supabase credentials are missing. Demo mode is active and data will not persist.
+        </div>
+      )}
       <Sidebar 
         activeTab={activeTab} 
         onTabChange={handleTabChange}

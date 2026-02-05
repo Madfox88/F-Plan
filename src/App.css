@@ -7,6 +7,25 @@
   z-index: 1;
 }
 
+.env-warning {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+[data-theme="dark"] .env-warning {
+  background: rgba(28, 28, 32, 0.85);
+  color: #fff;
+}
+
 .app-loading {
   display: flex;
   align-items: center;
