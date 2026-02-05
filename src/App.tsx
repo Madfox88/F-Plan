@@ -12,6 +12,7 @@ import { PlansIndex } from './views/PlansIndex';
 import { Dashboard } from './views/Dashboard';
 import { Profile } from './views/Profile';
 import { PlanDetail } from './views/PlanDetail';
+import { Tasks } from './views/Tasks';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
 import type { Plan } from './types/database';
 import './App.css';
@@ -183,9 +184,7 @@ function AppContent() {
               />
             )}
             {activeTab === 'tasks' && (
-              <div className="placeholder-view">
-                <p>Tasks view coming soon</p>
-              </div>
+              <Tasks />
             )}
             {activeTab === 'calendar' && (
               <div className="placeholder-view">
