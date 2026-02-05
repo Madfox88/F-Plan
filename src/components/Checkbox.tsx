@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 const Checkbox = () => {
@@ -14,6 +14,48 @@ const Checkbox = () => {
         </label>
       </div>
     </StyledWrapper>
+  );
+};
+
+export const AnimatedCheckbox = ({ id, checked, onToggle, disabled }: { id: string; checked: boolean; onToggle: () => void; disabled?: boolean }) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const input = ref.current?.querySelector('input');
+    const label = ref.current?.querySelector('label');
+    if (input) {
+      input.id = id;
+      (input as HTMLInputElement).checked = checked;
+      (input as HTMLInputElement).disabled = !!disabled;
+    }
+    if (label) {
+      (label as HTMLLabelElement).htmlFor = id;
+    }
+  }, [id, checked, disabled]);
+
+  return (
+    <div
+      ref={ref}
+      className="task-checkbox-wrap"
+      role="checkbox"
+      tabIndex={disabled ? -1 : 0}
+      aria-checked={checked}
+      aria-disabled={disabled}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!disabled) onToggle();
+      }}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggle();
+        }
+      }}
+    >
+      <Checkbox />
+    </div>
   );
 };
 

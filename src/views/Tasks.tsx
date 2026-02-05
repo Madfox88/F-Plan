@@ -89,7 +89,6 @@ export function Tasks() {
   const [editChecklist, setEditChecklist] = useState<ChecklistItem[]>([]);
   const [createPlanId, setCreatePlanId] = useState<string | null>(null);
   const [createStageId, setCreateStageId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Load persisted filters for the session
@@ -307,7 +306,6 @@ export function Tasks() {
 
   const handleCreateSubmit = useCallback(
     async (payload: TaskCreatePayload) => {
-      setCreating(true);
       setError(null);
       try {
         const newTask = await createTask({
@@ -340,8 +338,6 @@ export function Tasks() {
         setShowCreateModal(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create task');
-      } finally {
-        setCreating(false);
       }
     },
     [createPlanId, plans, stageOptions, stagesByPlan]

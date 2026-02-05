@@ -616,7 +616,6 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             ? 'Low'
             : 'Medium'
       : 'Medium';
-    const stageName = task.stage_name || stages.find((stage) => stage.id === task.stage_id)?.title;
     const labels = Array.isArray(task.labels) ? task.labels : [];
 
     const taskChecked = status === 'completed';
