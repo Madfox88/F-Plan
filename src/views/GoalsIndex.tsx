@@ -133,6 +133,14 @@ export function GoalsIndex() {
     });
   }, [goals, searchTerm, dueFilter, selectedTags]);
 
+  if (loading) {
+    return <div className="goals-index"><div className="goals-loading">Loading goals…</div></div>;
+  }
+
+  if (error) {
+    return <div className="goals-index"><div className="goals-error">{error}</div></div>;
+  }
+
   return (
     <div className="goals-index">
       <div className="goals-toolbar">
