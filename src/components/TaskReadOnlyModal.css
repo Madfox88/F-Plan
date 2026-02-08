@@ -1,0 +1,105 @@
+/* TaskReadOnlyModal.css — Read-only task popup styles */
+
+.task-readonly-modal {
+  max-width: 480px;
+}
+
+.tro-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.tro-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.tro-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tro-meta-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.tro-meta-value {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.tro-priority--urgent { color: var(--color-error); }
+.tro-priority--important { color: var(--color-warning); }
+.tro-priority--medium { color: var(--color-active); }
+.tro-priority--low { color: var(--text-secondary); }
+
+.tro-section {
+  margin-bottom: var(--space-md);
+}
+
+.tro-section-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-xs);
+}
+
+.tro-description {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.tro-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.tro-label {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  border-left-width: 3px;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+.tro-checklist-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tro-checklist-fill {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 3px;
+  transition: width var(--transition-normal);
+}
+
+.tro-footer-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  margin-top: var(--space-sm);
+  display: flex;
+  gap: var(--space-md);
+}

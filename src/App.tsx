@@ -14,6 +14,7 @@ import { Dashboard } from './views/Dashboard';
 import { Profile } from './views/Profile';
 import { PlanDetail } from './views/PlanDetail';
 import { Tasks } from './views/Tasks';
+import { Calendar } from './views/Calendar';
 import { supabaseConfigured } from './lib/supabase';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
 import type { Plan } from './types/database';
@@ -192,9 +193,7 @@ function AppContent() {
               <Tasks />
             )}
             {activeTab === 'calendar' && (
-              <div className="placeholder-view">
-                <p>Calendar view coming soon</p>
-              </div>
+              <Calendar />
             )}
             {activeTab === 'profile' && <Profile />}
           </div>

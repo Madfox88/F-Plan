@@ -72,6 +72,43 @@ export type PlanGoal = {
   goal_id: string;
 };
 
+/* Calendar-native types (CALENDAR_RULES.md §10) */
+
+export type RepeatRule =
+  | 'none'
+  | 'daily'
+  | 'bi_daily'
+  | 'weekly'
+  | 'bi_weekly'
+  | 'monthly'
+  | 'bi_monthly'
+  | 'yearly'
+  | 'bi_yearly';
+
+export type CalendarEvent = {
+  id: string;
+  workspace_id: string;
+  title: string;
+  notes: string | null;
+  location: string | null;
+  start_at: string; // ISO timestamptz
+  end_at: string;   // ISO timestamptz
+  repeat_rule: RepeatRule;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Reminder = {
+  id: string;
+  workspace_id: string;
+  title: string;
+  notes: string | null;
+  remind_at: string; // ISO timestamptz
+  repeat_rule: RepeatRule;
+  created_at: string;
+  updated_at: string;
+};
+
 /* Extended types for API responses with relations */
 export type PlanWithRelations = Plan & {
   stages?: Stage[];

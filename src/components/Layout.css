@@ -2,5 +2,6 @@
   margin-left: 240px;
   margin-top: 80px;
   padding: var(--space-lg);
-  min-height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
+  overflow-y: auto;
 }

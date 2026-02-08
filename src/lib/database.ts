@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Workspace, Plan, Stage, Task, Goal, StageWithTasks } from '../types/database';
+import type { Workspace, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule } from '../types/database';
 
 /* Workspace Operations */
 export async function getWorkspaces(): Promise<Workspace[]> {
@@ -756,4 +756,222 @@ export async function getGoalsByPlan(planId: string): Promise<Goal[]> {
     .map((row: any) => row.goals)
     .flat()
     .filter((goal: any): goal is Goal => goal !== null && goal !== undefined);
+}
+
+/* ──────────────────────────────────────────────
+   Calendar — Event Operations (CALENDAR_RULES.md §10.2)
+   ────────────────────────────────────────────── */
+
+export async function getEvents(
+  workspaceId: string,
+  rangeStart: string,
+  rangeEnd: string
+): Promise<CalendarEvent[]> {
+  // Fetch events that either fall within the range OR are recurring
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .or(`and(start_at.lte.${rangeEnd},end_at.gte.${rangeStart}),repeat_rule.neq.none`);
+
+  if (error) throw new Error(`Failed to fetch events: ${error.message}`);
+  return data || [];
+}
+
+export async function createEvent(payload: {
+  workspaceId: string;
+  title: string;
+  notes?: string;
+  location?: string;
+  startAt: string;
+  endAt: string;
+  repeatRule: RepeatRule;
+}): Promise<CalendarEvent> {
+  const { data, error } = await supabase
+    .from('events')
+    .insert([{
+      workspace_id: payload.workspaceId,
+      title: payload.title,
+      notes: payload.notes || null,
+      location: payload.location || null,
+      start_at: payload.startAt,
+      end_at: payload.endAt,
+      repeat_rule: payload.repeatRule,
+    }])
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to create event: ${error.message}`);
+  return data;
+}
+
+export async function updateEvent(
+  id: string,
+  updates: Partial<{
+    title: string;
+    notes: string | null;
+    location: string | null;
+    start_at: string;
+    end_at: string;
+    repeat_rule: RepeatRule;
+  }>
+): Promise<CalendarEvent> {
+  const { data, error } = await supabase
+    .from('events')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update event: ${error.message}`);
+  return data;
+}
+
+export async function deleteEvent(id: string): Promise<void> {
+  const { error } = await supabase.from('events').delete().eq('id', id);
+  if (error) throw new Error(`Failed to delete event: ${error.message}`);
+}
+
+/* ──────────────────────────────────────────────
+   Calendar — Reminder Operations (CALENDAR_RULES.md §10.3)
+   ────────────────────────────────────────────── */
+
+export async function getReminders(
+  workspaceId: string,
+  rangeStart: string,
+  rangeEnd: string
+): Promise<Reminder[]> {
+  const { data, error } = await supabase
+    .from('reminders')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .or(`and(remind_at.gte.${rangeStart},remind_at.lte.${rangeEnd}),repeat_rule.neq.none`);
+
+  if (error) throw new Error(`Failed to fetch reminders: ${error.message}`);
+  return data || [];
+}
+
+export async function createReminder(payload: {
+  workspaceId: string;
+  title: string;
+  notes?: string;
+  remindAt: string;
+  repeatRule: RepeatRule;
+}): Promise<Reminder> {
+  const { data, error } = await supabase
+    .from('reminders')
+    .insert([{
+      workspace_id: payload.workspaceId,
+      title: payload.title,
+      notes: payload.notes || null,
+      remind_at: payload.remindAt,
+      repeat_rule: payload.repeatRule,
+    }])
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to create reminder: ${error.message}`);
+  return data;
+}
+
+export async function updateReminder(
+  id: string,
+  updates: Partial<{
+    title: string;
+    notes: string | null;
+    remind_at: string;
+    repeat_rule: RepeatRule;
+  }>
+): Promise<Reminder> {
+  const { data, error } = await supabase
+    .from('reminders')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update reminder: ${error.message}`);
+  return data;
+}
+
+export async function deleteReminder(id: string): Promise<void> {
+  const { error } = await supabase.from('reminders').delete().eq('id', id);
+  if (error) throw new Error(`Failed to delete reminder: ${error.message}`);
+}
+
+/* ──────────────────────────────────────────────
+   Calendar — Load tasks & goals with due dates
+   ────────────────────────────────────────────── */
+
+export type TaskWithContext = Task & {
+  plan_title: string;
+  stage_title: string;
+};
+
+export async function getTasksWithDueDatesInRange(
+  workspaceId: string,
+  _rangeStart: string,
+  _rangeEnd: string
+): Promise<TaskWithContext[]> {
+  // Load all active plans for workspace, then their stages + tasks
+  const { data: plans, error: plansError } = await supabase
+    .from('plans')
+    .select('id, title')
+    .eq('workspace_id', workspaceId)
+    .eq('status', 'active');
+
+  if (plansError) throw new Error(`Failed to fetch plans: ${plansError.message}`);
+  if (!plans || plans.length === 0) return [];
+
+  const planIds = plans.map((p: any) => p.id);
+  const planMap: Record<string, string> = {};
+  plans.forEach((p: any) => { planMap[p.id] = p.title; });
+
+  const { data: stages, error: stagesError } = await supabase
+    .from('stages')
+    .select('id, plan_id, title')
+    .in('plan_id', planIds);
+
+  if (stagesError) throw new Error(`Failed to fetch stages: ${stagesError.message}`);
+  if (!stages || stages.length === 0) return [];
+
+  const stageIds = stages.map((s: any) => s.id);
+  const stageMap: Record<string, { title: string; planId: string }> = {};
+  stages.forEach((s: any) => { stageMap[s.id] = { title: s.title, planId: s.plan_id }; });
+
+  const { data: tasks, error: tasksError } = await supabase
+    .from('tasks')
+    .select('*')
+    .in('stage_id', stageIds)
+    .not('due_date', 'is', null);
+
+  if (tasksError) throw new Error(`Failed to fetch tasks: ${tasksError.message}`);
+  if (!tasks) return [];
+
+  return tasks.map((t: any) => {
+    const stageInfo = stageMap[t.stage_id] || { title: 'Unknown', planId: '' };
+    return {
+      ...t,
+      plan_title: planMap[stageInfo.planId] || 'Unknown',
+      stage_title: stageInfo.title,
+    };
+  });
+}
+
+export type GoalForCalendar = Goal & {
+  linkedPlanNames: string[];
+  totalTasks: number;
+  completedTasks: number;
+  progress: number;
+};
+
+export async function getGoalsWithDueDatesInRange(
+  workspaceId: string
+): Promise<GoalForCalendar[]> {
+  const goalsWithProgress = await getGoalsWithProgress(workspaceId);
+  return goalsWithProgress
+    .filter((g) => g.due_date)
+    .map((g) => ({
+      ...g,
+    }));
 }

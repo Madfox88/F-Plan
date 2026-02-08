@@ -1,0 +1,58 @@
+/* CalendarChooserModal.css */
+
+.calendar-chooser-modal {
+  max-width: 360px;
+}
+
+.chooser-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.chooser-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+  font-family: var(--font-family);
+  width: 100%;
+}
+
+.chooser-option:hover {
+  border-color: var(--glass-border-heavy);
+  background: var(--glass-bg-heavy);
+}
+
+.chooser-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .chooser-icon {
+  filter: invert(1);
+}
+
+.chooser-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chooser-option-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.chooser-option-desc {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
