@@ -14,6 +14,7 @@ export type Plan = {
   intent: string | null;
   status: 'active' | 'archived' | 'draft';
   is_pinned: boolean;
+  due_date: string | null;
   created_at: string;
 };
 

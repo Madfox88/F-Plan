@@ -122,7 +122,8 @@ function AppContent() {
     intent: string,
     useSuggestedStages: boolean,
     isDraft: boolean,
-    customStages?: string[]
+    customStages?: string[],
+    dueDate?: string
   ) => {
     if (!activeWorkspace) return;
 
@@ -132,7 +133,8 @@ function AppContent() {
         title,
         description,
         intent,
-        isDraft ? 'draft' : 'active'
+        isDraft ? 'draft' : 'active',
+        dueDate
       );
       if (useSuggestedStages) {
         await createSuggestedStages(newPlan.id);

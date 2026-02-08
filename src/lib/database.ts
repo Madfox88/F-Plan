@@ -207,7 +207,8 @@ export async function createPlan(
   title: string,
   description?: string,
   intent?: string,
-  status: 'active' | 'draft' = 'active'
+  status: 'active' | 'draft' = 'active',
+  dueDate?: string
 ): Promise<Plan> {
   const { data, error } = await supabase
     .from('plans')
@@ -218,6 +219,7 @@ export async function createPlan(
         description: description || null,
         intent: intent || null,
         status,
+        due_date: dueDate || null,
       },
     ])
     .select()

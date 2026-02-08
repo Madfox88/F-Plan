@@ -10,7 +10,8 @@ interface CreatePlanModalProps {
     intent: string,
     useSuggestedStages: boolean,
     isDraft: boolean,
-    customStages?: string[]
+    customStages?: string[],
+    dueDate?: string
   ) => Promise<void>;
 }
 
@@ -18,6 +19,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
   const [title, setTitle] = useState('');
   const [intent, setIntent] = useState('');
   const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
   const [useSuggestedStages, setUseSuggestedStages] = useState(true);
   const [isDraft, setIsDraft] = useState(false);
   const [customStages, setCustomStages] = useState<string[]>(['']);
@@ -71,11 +73,13 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
         intent,
         useSuggestedStages,
         isDraft,
-        customStagesToPass
+        customStagesToPass,
+        dueDate || undefined
       );
       setTitle('');
       setIntent('');
       setDescription('');
+      setDueDate('');
       setUseSuggestedStages(true);
       setIsDraft(false);
       setCustomStages(['']);
@@ -148,6 +152,22 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add details about your plan..."
               rows={3}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="plan-due-date" className="form-label">
+              Due date (optional)
+            </label>
+            <input
+              id="plan-due-date"
+              type="date"
+              value={dueDate}
+              onChange={(e) => {
+                setDueDate(e.target.value);
+                e.target.blur();
+              }}
               disabled={loading}
             />
           </div>

@@ -589,27 +589,25 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
           </div>
 
           <div className="form-group">
-            <div className="form-section-header">
-              <label className="form-label">Labels</label>
-              <div className="label-create">
-                <input
-                  className="form-input"
-                  type="text"
-                  value={newLabelName}
-                  onChange={(e) => setNewLabelName(e.target.value)}
-                  placeholder="New label"
-                />
-                <input
-                  className="color-input"
-                  type="color"
-                  value={newLabelColor}
-                  onChange={(e) => setNewLabelColor(e.target.value)}
-                  title="Choose color"
-                />
-                <button type="button" className="form-link" onClick={handleCreateLabel}>
-                  Add
-                </button>
-              </div>
+            <label className="form-label">Labels</label>
+            <div className="label-create">
+              <input
+                className="form-input"
+                type="text"
+                value={newLabelName}
+                onChange={(e) => setNewLabelName(e.target.value)}
+                placeholder="New label"
+              />
+              <input
+                className="color-input"
+                type="color"
+                value={newLabelColor}
+                onChange={(e) => setNewLabelColor(e.target.value)}
+                title="Choose color"
+              />
+              <button type="button" className="btn-secondary" onClick={handleCreateLabel}>
+                Add
+              </button>
             </div>
 
             <div className="label-grid">

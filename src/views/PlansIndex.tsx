@@ -295,9 +295,11 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
               </div>
               <div className="plan-card-footer">
                 <span className="plan-status">{plan.status}</span>
-                <span className="plan-date">
-                  {new Date(plan.created_at).toLocaleDateString()}
-                </span>
+                {plan.due_date && (
+                  <span className="plan-due-pill">
+                    Due: {new Date(plan.due_date + 'T00:00:00').toLocaleDateString()}
+                  </span>
+                )}
               </div>
             </div>
           ))}

@@ -199,8 +199,27 @@ html[data-theme='dark'] .dropdown-chevron {
   height: 36px;
   padding: 0;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
   background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  overflow: hidden;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.color-input::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
 }
 
 .label-grid {

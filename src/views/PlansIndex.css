@@ -393,7 +393,7 @@ html[data-theme='dark'] .toggle-icon {
 
 .plans-container {
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-xl);
   animation: fadeIn 200ms ease-out;
 }
 
@@ -402,12 +402,12 @@ html[data-theme='dark'] .toggle-icon {
 }
 
 .plans-grid {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
 }
 
 @media (max-width: 1024px) {
   .plans-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -419,19 +419,18 @@ html[data-theme='dark'] .toggle-icon {
 
 .plan-card {
   position: relative;
-  padding: var(--space-md);
+  padding: var(--space-xl);
   cursor: pointer;
   transition: all var(--transition-fast);
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  min-height: 180px;
+  min-height: 220px;
 }
 
 .plan-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 40px var(--glass-shadow);
   border-color: var(--glass-border-heavy);
+  background: var(--glass-bg-heavy);
 }
 
 .plan-card:focus-visible {
@@ -561,9 +560,18 @@ html[data-theme='dark'] .plan-pin-icon {
   text-transform: capitalize;
 }
 
-.plan-date {
-  color: var(--text-tertiary);
+.plan-due-pill {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
 }
 
 .plans-loading {
