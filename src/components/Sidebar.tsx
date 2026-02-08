@@ -21,8 +21,8 @@ type NavigationItem = {
 
 const NAV_ITEMS: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { id: 'goals', label: 'Goals', icon: GoalsIcon },
   { id: 'plans', label: 'Plans', icon: PlansIcon },
+  { id: 'goals', label: 'Goals', icon: GoalsIcon },
   { id: 'tasks', label: 'Tasks', icon: TasksIcon },
   { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
 ];

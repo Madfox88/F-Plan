@@ -1,0 +1,144 @@
+/* GoalDetailModal — extends base modal styles */
+
+.goal-detail-modal {
+  max-width: 560px;
+}
+
+.goal-detail-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.goal-detail-description {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Progress bar */
+.goal-detail-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.goal-detail-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--glass-bg-heavy);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.goal-detail-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--color-active);
+  transition: width var(--transition-normal);
+}
+
+.goal-detail-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+/* Linked Plans section */
+.goal-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.goal-detail-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goal-detail-section-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.goal-detail-link-btn {
+  font-size: var(--font-size-sm) !important;
+  padding: 6px 12px !important;
+}
+
+.goal-detail-plans-loading,
+.goal-detail-plans-empty {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  padding: var(--space-md) 0;
+}
+
+.goal-detail-plans-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.goal-detail-plan-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+}
+
+.goal-detail-plan-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goal-detail-plan-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goal-detail-plan-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.goal-detail-plan-sep {
+  color: var(--text-tertiary);
+}
+
+.goal-detail-plan-bar-track {
+  width: 100%;
+  height: 4px;
+  background: var(--glass-bg-heavy);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.goal-detail-plan-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-active);
+  transition: width var(--transition-normal);
+}

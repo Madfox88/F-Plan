@@ -1,0 +1,287 @@
+/* CreateGoalModal — inherits .modal-overlay, .modal-content, .modal-header,
+   .close-button, .form-group, .error-message, .modal-actions from
+   CreateWorkspaceModal.css / CreatePlanModal.css.
+
+   Only goal-specific overrides live here. */
+
+.create-goal-modal .form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-family);
+  resize: vertical;
+  transition: all 200ms ease-out;
+  box-sizing: border-box;
+}
+
+.create-goal-modal .form-group textarea:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
+}
+
+.create-goal-modal .form-group textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.create-goal-modal .form-group textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Plan picker */
+.plan-picker-loading,
+.plan-picker-empty {
+  padding: 12px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.plan-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.plan-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: all 200ms ease-out;
+  user-select: none;
+}
+
+.plan-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border-heavy);
+}
+
+.plan-picker-item.selected {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-primary, var(--glass-border-heavy));
+}
+
+.plan-picker-check {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: all 200ms ease-out;
+}
+
+.plan-picker-check.checked {
+  background: var(--accent-primary, rgba(255, 255, 255, 0.2));
+  border-color: var(--accent-primary, var(--glass-border-heavy));
+}
+
+.plan-picker-title {
+  font-size: 14px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Date input */
+.create-goal-modal .form-group input[type="date"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-family);
+  box-sizing: border-box;
+  transition: all 200ms ease-out;
+}
+
+.create-goal-modal .form-group input[type="date"]:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
+}
+
+/* Tag input row */
+.tag-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag-label-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-family);
+  box-sizing: border-box;
+  transition: all 200ms ease-out;
+}
+
+.tag-label-input:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
+}
+
+/* Color picker (matches TaskCreateModal) */
+.create-goal-modal .color-input {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  overflow: hidden;
+}
+
+.create-goal-modal .color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.create-goal-modal .color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.create-goal-modal .color-input::-moz-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.tag-add-btn {
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+/* Tag pills (shared between create modal and goal cards) */
+.tag-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.goal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid;
+  background: rgba(255, 255, 255, 0.06);
+  line-height: 1.4;
+}
+
+/* Color variants — border + text tone only */
+.goal-tag--neutral {
+  border-color: var(--glass-border-heavy);
+  color: var(--text-secondary);
+}
+
+.goal-tag--blue {
+  border-color: rgba(59, 130, 246, 0.5);
+  color: rgb(96, 165, 250);
+}
+
+.goal-tag--green {
+  border-color: rgba(34, 197, 94, 0.5);
+  color: rgb(74, 222, 128);
+}
+
+.goal-tag--orange {
+  border-color: rgba(249, 115, 22, 0.5);
+  color: rgb(251, 146, 60);
+}
+
+.goal-tag--red {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgb(248, 113, 113);
+}
+
+.goal-tag--purple {
+  border-color: rgba(168, 85, 247, 0.5);
+  color: rgb(192, 132, 252);
+}
+
+html[data-theme='light'] .goal-tag--blue {
+  border-color: rgba(37, 99, 235, 0.4);
+  color: rgb(37, 99, 235);
+}
+
+html[data-theme='light'] .goal-tag--green {
+  border-color: rgba(22, 163, 74, 0.4);
+  color: rgb(22, 163, 74);
+}
+
+html[data-theme='light'] .goal-tag--orange {
+  border-color: rgba(234, 88, 12, 0.4);
+  color: rgb(234, 88, 12);
+}
+
+html[data-theme='light'] .goal-tag--red {
+  border-color: rgba(220, 38, 38, 0.4);
+  color: rgb(220, 38, 38);
+}
+
+html[data-theme='light'] .goal-tag--purple {
+  border-color: rgba(147, 51, 234, 0.4);
+  color: rgb(147, 51, 234);
+}
+
+html[data-theme='light'] .goal-tag--neutral {
+  border-color: var(--glass-border-heavy);
+  color: var(--text-secondary);
+}
+
+.tag-remove-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  opacity: 0.6;
+  transition: opacity 150ms ease;
+}
+
+.tag-remove-btn:hover {
+  opacity: 1;
+}

@@ -9,6 +9,7 @@ import { CreatePlanModal } from './components/CreatePlanModal';
 import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
 import { PlansIndex } from './views/PlansIndex';
+import { GoalsIndex } from './views/GoalsIndex';
 import { Dashboard } from './views/Dashboard';
 import { Profile } from './views/Profile';
 import { PlanDetail } from './views/PlanDetail';
@@ -177,11 +178,7 @@ function AppContent() {
               onAction={activeTab === 'plans' ? () => setIsCreatePlanModalOpen(true) : undefined}
             />
             {activeTab === 'dashboard' && <Dashboard />}
-            {activeTab === 'goals' && (
-              <div className="placeholder-view">
-                <p>Goals view coming soon</p>
-              </div>
-            )}
+            {activeTab === 'goals' && <GoalsIndex />}
             {activeTab === 'plans' && (
               <PlansIndex
                 onCreatePlan={() => setIsCreatePlanModalOpen(true)}

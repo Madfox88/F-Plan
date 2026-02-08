@@ -6,6 +6,7 @@ import { AnimatedCheckbox } from '../components/Checkbox';
 import { TaskCreateModal, type TaskCreatePayload } from '../components/TaskCreateModal';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import TrashIcon from '../assets/icons/trash.svg';
+import SearchIcon from '../assets/icons/search.svg';
 import './Tasks.css';
 
 type Grouping = 'due_date' | 'plan' | 'status' | 'priority';
@@ -75,6 +76,7 @@ export function Tasks() {
   const [stageOptions, setStageOptions] = useState<Array<{ id: string; title: string; planId: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [grouping, setGrouping] = useState<Grouping>('due_date');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [dueFilter, setDueFilter] = useState<DueFilter>('all');
@@ -413,16 +415,28 @@ export function Tasks() {
     <div className="tasks-view">
       <div className="tasks-header-row">
         <div className="tasks-header-top">
+          <div className={`search-wrapper ${searchOpen ? 'open' : ''}`}>
+            <button
+              className="search-icon-btn"
+              onClick={() => setSearchOpen(!searchOpen)}
+              title="Search tasks"
+            >
+              <img src={SearchIcon} alt="Search" className="search-icon-img" />
+            </button>
+            <input
+              type="text"
+              placeholder="Search tasks or labels"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`search-input ${searchOpen ? 'open' : ''}`}
+              onBlur={() => {
+                if (!search) {
+                  setSearchOpen(false);
+                }
+              }}
+            />
+          </div>
           <div className="tasks-controls">
-            <div className="control-group">
-              <input
-                className="form-input search-input"
-                type="text"
-                placeholder="Search tasks or labels"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
             <div className="control-group">
               <label className="control-label">Group by</label>
               <select

@@ -1,0 +1,108 @@
+/* LinkPlanModal — extends base modal styles */
+
+.link-plan-modal {
+  max-width: 520px;
+}
+
+.link-plan-body {
+  padding: 16px 24px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.link-plan-loading,
+.link-plan-empty {
+  text-align: center;
+  padding: var(--space-lg);
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.link-plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.link-plan-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  transition: border-color var(--transition-fast);
+}
+
+.link-plan-item:hover {
+  border-color: var(--glass-border-heavy);
+}
+
+.link-plan-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.link-plan-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-plan-desc {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-plan-toggle {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+.link-plan-toggle:hover:not(:disabled) {
+  background: var(--glass-bg-heavy);
+  border-color: var(--glass-border-heavy);
+}
+
+.link-plan-toggle.linked {
+  border-color: var(--color-active);
+  color: var(--color-active);
+}
+
+.link-plan-toggle.linked:hover:not(:disabled) {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.link-plan-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.link-plan-footer {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--glass-border);
+}

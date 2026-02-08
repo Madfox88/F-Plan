@@ -520,10 +520,112 @@ export async function getGoalsByWorkspace(workspaceId: string): Promise<Goal[]> 
   return data || [];
 }
 
+export type GoalWithProgress = Goal & {
+  linkedPlanCount: number;
+  linkedPlanNames: string[];
+  totalTasks: number;
+  completedTasks: number;
+  progress: number; // 0–100
+};
+
+export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWithProgress[]> {
+  // 1. Fetch all goals for this workspace
+  const goals = await getGoalsByWorkspace(workspaceId);
+  if (goals.length === 0) return [];
+
+  // 2. Fetch all plan-goal links
+  const { data: links, error: linksError } = await supabase
+    .from('plan_goals')
+    .select('plan_id, goal_id');
+
+  if (linksError) throw new Error(`Failed to fetch plan-goal links: ${linksError.message}`);
+
+  const goalLinks = links || [];
+
+  // 3. Get unique plan IDs that are linked to any goal
+  const linkedPlanIds = [...new Set(goalLinks.map((l: any) => l.plan_id))];
+
+  // 3b. Fetch plan names for all linked plans
+  const planNamesMap: Record<string, string> = {};
+  if (linkedPlanIds.length > 0) {
+    const { data: plans } = await supabase
+      .from('plans')
+      .select('id, title')
+      .in('id', linkedPlanIds);
+    (plans || []).forEach((p: any) => { planNamesMap[p.id] = p.title; });
+  }
+
+  // 4. For each linked plan, load stages and tasks to compute progress
+  const tasksByPlan: Record<string, { total: number; completed: number }> = {};
+  await Promise.all(
+    linkedPlanIds.map(async (planId: string) => {
+      try {
+        const stages = await getStagesByPlan(planId);
+        let total = 0;
+        let completed = 0;
+        stages.forEach((stage) => {
+          (stage.tasks || []).forEach((task) => {
+            total++;
+            if (task.completed) completed++;
+          });
+        });
+        tasksByPlan[planId] = { total, completed };
+      } catch {
+        tasksByPlan[planId] = { total: 0, completed: 0 };
+      }
+    })
+  );
+
+  // 5. Compute per-goal progress
+  return goals.map((goal) => {
+    const goalPlanIds = goalLinks
+      .filter((l: any) => l.goal_id === goal.id)
+      .map((l: any) => l.plan_id);
+
+    let totalTasks = 0;
+    let completedTasks = 0;
+    goalPlanIds.forEach((planId: string) => {
+      const stats = tasksByPlan[planId];
+      if (stats) {
+        totalTasks += stats.total;
+        completedTasks += stats.completed;
+      }
+    });
+
+    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Ensure tags is always an array of {label, color}
+    let tags = [];
+    if (Array.isArray(goal.tags)) {
+      tags = goal.tags;
+    } else if (typeof goal.tags === 'string') {
+      try {
+        tags = JSON.parse(goal.tags);
+      } catch {
+        tags = [];
+      }
+    } else if (goal.tags) {
+      tags = [goal.tags];
+    }
+
+    return {
+      ...goal,
+      tags,
+      linkedPlanCount: goalPlanIds.length,
+      linkedPlanNames: goalPlanIds.map((id: string) => planNamesMap[id]).filter(Boolean),
+      totalTasks,
+      completedTasks,
+      progress,
+    };
+  });
+}
+
 export async function createGoal(
   workspaceId: string,
   title: string,
-  description?: string
+  description?: string,
+  dueDate?: string,
+  tags?: Array<{ label: string; color: string }>
 ): Promise<Goal> {
   const { data, error } = await supabase
     .from('goals')
@@ -532,6 +634,8 @@ export async function createGoal(
         workspace_id: workspaceId,
         title,
         description: description || null,
+        due_date: dueDate || null,
+        tags: tags && tags.length > 0 ? tags : [],
       },
     ])
     .select()
@@ -582,6 +686,49 @@ export async function unlinkGoalFromPlan(planId: string, goalId: string): Promis
     .eq('goal_id', goalId);
 
   if (error) throw new Error(`Failed to unlink goal from plan: ${error.message}`);
+}
+
+export async function getLinkedPlanIdsForGoal(goalId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('plan_goals')
+    .select('plan_id')
+    .eq('goal_id', goalId);
+
+  if (error) throw new Error(`Failed to fetch linked plans: ${error.message}`);
+  return (data || []).map((row: any) => row.plan_id);
+}
+
+export type LinkedPlanWithProgress = Plan & {
+  totalTasks: number;
+  completedTasks: number;
+  progress: number;
+};
+
+export async function getLinkedPlansWithProgress(goalId: string, workspaceId: string): Promise<LinkedPlanWithProgress[]> {
+  const linkedPlanIds = await getLinkedPlanIdsForGoal(goalId);
+  if (linkedPlanIds.length === 0) return [];
+
+  const activePlans = await getActivePlans(workspaceId);
+  const linkedPlans = activePlans.filter((p) => linkedPlanIds.includes(p.id));
+
+  return Promise.all(
+    linkedPlans.map(async (plan) => {
+      try {
+        const stages = await getStagesByPlan(plan.id);
+        let total = 0;
+        let completed = 0;
+        stages.forEach((stage) => {
+          (stage.tasks || []).forEach((task) => {
+            total++;
+            if (task.completed) completed++;
+          });
+        });
+        return { ...plan, totalTasks: total, completedTasks: completed, progress: total > 0 ? Math.round((completed / total) * 100) : 0 };
+      } catch {
+        return { ...plan, totalTasks: 0, completedTasks: 0, progress: 0 };
+      }
+    })
+  );
 }
 
 export async function getGoalsByPlan(planId: string): Promise<Goal[]> {

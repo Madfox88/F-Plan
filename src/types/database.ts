@@ -49,11 +49,20 @@ export type Task = {
   stage_name?: string;
 };
 
+export type GoalTagColor = 'neutral' | 'blue' | 'green' | 'orange' | 'red' | 'purple';
+
+export type GoalTag = {
+  label: string;
+  color: GoalTagColor;
+};
+
 export type Goal = {
   id: string;
   workspace_id: string;
   title: string;
   description: string | null;
+  due_date: string | null;
+  tags: GoalTag[];
   created_at: string;
 };
 
