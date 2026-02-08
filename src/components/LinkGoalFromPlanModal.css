@@ -1,24 +1,24 @@
-/* LinkPlanModal — uses ModalBase.css for all base styles. */
+/* LinkGoalFromPlanModal — extends base modal styles */
 
-.link-plan-modal {
+.link-goal-modal {
   max-width: 520px;
 }
 
-.link-plan-body {
+.link-goal-body {
   padding: 16px 24px;
   max-height: 360px;
   overflow-y: auto;
 }
 
-.link-plan-loading,
-.link-plan-empty {
+.link-goal-loading,
+.link-goal-empty {
   text-align: center;
   padding: var(--space-lg);
   color: var(--text-secondary);
   font-size: var(--font-size-base);
 }
 
-.link-plan-list {
+.link-goal-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -27,7 +27,7 @@
   gap: var(--space-sm);
 }
 
-.link-plan-item {
+.link-goal-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,19 +39,18 @@
   transition: border-color var(--transition-fast);
 }
 
-.link-plan-item:hover {
+.link-goal-item:hover {
   border-color: var(--glass-border-heavy);
 }
 
-.link-plan-info {
+.link-goal-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  flex: 1;
 }
 
-.link-plan-title {
+.link-goal-title {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
@@ -60,7 +59,7 @@
   text-overflow: ellipsis;
 }
 
-.link-plan-desc {
+.link-goal-desc {
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
   white-space: nowrap;
@@ -68,7 +67,7 @@
   text-overflow: ellipsis;
 }
 
-.link-plan-toggle {
+.link-goal-toggle {
   flex-shrink: 0;
   padding: 6px 14px;
   border-radius: var(--radius-sm);
@@ -81,22 +80,22 @@
   color: var(--text-primary);
 }
 
-.link-plan-toggle:hover:not(:disabled) {
+.link-goal-toggle:hover:not(:disabled) {
   background: var(--glass-bg-heavy);
   border-color: var(--glass-border-heavy);
 }
 
-.link-plan-toggle.linked {
+.link-goal-toggle.linked {
   border-color: var(--color-active);
   color: var(--color-active);
 }
 
-.link-plan-toggle.linked:hover:not(:disabled) {
+.link-goal-toggle.linked:hover:not(:disabled) {
   border-color: var(--color-error);
   color: var(--color-error);
 }
 
-.link-plan-toggle:disabled {
+.link-goal-toggle:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

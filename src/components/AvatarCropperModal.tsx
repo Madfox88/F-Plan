@@ -112,15 +112,23 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="avatar-cropper-overlay" onClick={onClose}>
-      <div className="avatar-cropper-modal glass" onClick={(e) => e.stopPropagation()}>
-        <div className="avatar-cropper-header">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="avatar-cropper-modal modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
           <h2>Crop Avatar</h2>
-          <button className="avatar-cropper-close" onClick={onClose} aria-label="Close">
-            ×
+          <button className="close-button" onClick={onClose} aria-label="Close">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path d="M18 6L6 18M6 6L18 18" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
-        <div className="avatar-cropper-body">
+        <div className="modal-body">
           <div className="avatar-cropper-viewport" onMouseDown={handlePointerDown}>
             <img
               ref={imageRef}
@@ -150,9 +158,9 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
             />
           </div>
         </div>
-        <div className="avatar-cropper-actions">
-          <button className="avatar-cropper-button" onClick={onClose}>Cancel</button>
-          <button className="avatar-cropper-button primary" onClick={handleConfirm}>Save</button>
+        <div className="modal-footer">
+          <button className="btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-primary" onClick={handleConfirm}>Save</button>
         </div>
       </div>
     </div>,

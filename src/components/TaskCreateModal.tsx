@@ -271,12 +271,20 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true">
-      <div className="modal-content task-modal">
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal-content task-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{editingTask ? 'Edit task' : 'Create task'}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close modal">
-            ×
+          <button className="close-button" onClick={onClose} aria-label="Close">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path d="M18 6L6 18M6 6L18 18" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
         <form className="modal-form" onSubmit={handleSubmit}>
@@ -629,7 +637,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
             </div>
           </div>
 
-          <div className="modal-actions">
+          <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={() => { resetForm(); onClose(); }}>
               Cancel
             </button>

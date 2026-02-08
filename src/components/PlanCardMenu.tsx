@@ -16,9 +16,10 @@ interface PlanCardMenuProps {
   onPin: (planId: string, isPinned: boolean) => Promise<void>;
   onHide: (planId: string, status: Plan['status']) => void;
   onDelete: (planId: string) => void;
+  onLinkGoal?: (planId: string) => void;
 }
 
-export function PlanCardMenu({ plan, onOpen, onRename, onPin, onHide, onDelete }: PlanCardMenuProps) {
+export function PlanCardMenu({ plan, onOpen, onRename, onPin, onHide, onDelete, onLinkGoal }: PlanCardMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +77,19 @@ export function PlanCardMenu({ plan, onOpen, onRename, onPin, onHide, onDelete }
             <img src={PenIcon} alt="" className="menu-item-icon" />
             <span>Rename</span>
           </button>
+
+          {onLinkGoal && (
+            <button
+              className="menu-item"
+              onClick={(e) => handleMenuItemClick(() => onLinkGoal(plan.id), e)}
+            >
+              <svg className="menu-item-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8M12 8v8" />
+              </svg>
+              <span>Link Goal</span>
+            </button>
+          )}
 
           <button
             className="menu-item"

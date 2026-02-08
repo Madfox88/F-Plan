@@ -1,37 +1,12 @@
-/* CreateGoalModal — inherits .modal-overlay, .modal-content, .modal-header,
-   .close-button, .form-group, .error-message, .modal-actions from
-   CreateWorkspaceModal.css / CreatePlanModal.css.
+/* CreateGoalModal — uses ModalBase.css for all base styles.
+   Only goal-specific overrides below. */
 
-   Only goal-specific overrides live here. */
+.create-goal-modal {
+  max-width: 520px;
+}
 
 .create-goal-modal .form-group textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-family: var(--font-family);
   resize: vertical;
-  transition: all 200ms ease-out;
-  box-sizing: border-box;
-}
-
-.create-goal-modal .form-group textarea:focus {
-  outline: none;
-  border-color: var(--glass-border-heavy);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 2px var(--glass-highlight);
-}
-
-.create-goal-modal .form-group textarea::placeholder {
-  color: var(--text-secondary);
-}
-
-.create-goal-modal .form-group textarea:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* Plan picker */
@@ -39,7 +14,7 @@
 .plan-picker-empty {
   padding: 12px 0;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .plan-picker-list {
@@ -57,23 +32,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
   cursor: pointer;
-  transition: all 200ms ease-out;
+  transition: border-color var(--transition-fast);
   user-select: none;
 }
 
 .plan-picker-item:hover {
-  background: rgba(255, 255, 255, 0.08);
   border-color: var(--glass-border-heavy);
 }
 
 .plan-picker-item.selected {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--accent-primary, var(--glass-border-heavy));
+  border-color: var(--color-active);
 }
 
 .plan-picker-check {
@@ -85,43 +58,22 @@
   justify-content: center;
   border-radius: 6px;
   border: 1px solid var(--glass-border);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--text-primary);
-  transition: all 200ms ease-out;
+  transition: all var(--transition-fast);
 }
 
 .plan-picker-check.checked {
-  background: var(--accent-primary, rgba(255, 255, 255, 0.2));
-  border-color: var(--accent-primary, var(--glass-border-heavy));
+  border-color: var(--color-active);
+  color: var(--color-active);
 }
 
 .plan-picker-title {
-  font-size: 14px;
+  font-size: var(--font-size-base);
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Date input */
-.create-goal-modal .form-group input[type="date"] {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-family: var(--font-family);
-  box-sizing: border-box;
-  transition: all 200ms ease-out;
-}
-
-.create-goal-modal .form-group input[type="date"]:focus {
-  outline: none;
-  border-color: var(--glass-border-heavy);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 2px var(--glass-highlight);
 }
 
 /* Tag input row */
@@ -134,25 +86,24 @@
 .tag-label-input {
   flex: 1;
   min-width: 0;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-family: var(--font-family);
   box-sizing: border-box;
-  transition: all 200ms ease-out;
+  transition: all var(--transition-fast);
 }
 
 .tag-label-input:focus {
   outline: none;
   border-color: var(--glass-border-heavy);
-  background: rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 0 2px var(--glass-highlight);
 }
 
-/* Color picker (matches TaskCreateModal) */
+/* Color picker */
 .create-goal-modal .color-input {
   width: 36px;
   height: 36px;
@@ -182,13 +133,13 @@
 }
 
 .tag-add-btn {
-  padding: 8px 14px;
-  font-size: 13px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 
-/* Tag pills (shared between create modal and goal cards) */
+/* Tag pills */
 .tag-pills {
   display: flex;
   flex-wrap: wrap;
@@ -209,7 +160,7 @@
   line-height: 1.4;
 }
 
-/* Color variants — border + text tone only */
+/* Color variants */
 .goal-tag--neutral {
   border-color: var(--glass-border-heavy);
   color: var(--text-secondary);
@@ -279,7 +230,7 @@ html[data-theme='light'] .goal-tag--neutral {
   line-height: 1;
   padding: 0 2px;
   opacity: 0.6;
-  transition: opacity 150ms ease;
+  transition: opacity var(--transition-fast);
 }
 
 .tag-remove-btn:hover {

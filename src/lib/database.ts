@@ -698,6 +698,16 @@ export async function getLinkedPlanIdsForGoal(goalId: string): Promise<string[]>
   return (data || []).map((row: any) => row.plan_id);
 }
 
+export async function getLinkedGoalIdsForPlan(planId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('plan_goals')
+    .select('goal_id')
+    .eq('plan_id', planId);
+
+  if (error) throw new Error(`Failed to fetch linked goals: ${error.message}`);
+  return (data || []).map((row: any) => row.goal_id);
+}
+
 export type LinkedPlanWithProgress = Plan & {
   totalTasks: number;
   completedTasks: number;

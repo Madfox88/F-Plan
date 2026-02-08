@@ -1,24 +1,24 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getActivePlans, getLinkedPlanIdsForGoal, linkGoalToPlan, unlinkGoalFromPlan } from '../lib/database';
-import type { Plan } from '../types/database';
-import './LinkPlanModal.css';
+import { getGoalsByWorkspace, getLinkedGoalIdsForPlan, linkGoalToPlan, unlinkGoalFromPlan } from '../lib/database';
+import type { Goal } from '../types/database';
+import './LinkGoalFromPlanModal.css';
 
-interface LinkPlanModalProps {
+interface LinkGoalFromPlanModalProps {
   isOpen: boolean;
-  goalId: string;
+  planId: string;
   workspaceId: string;
   onClose: () => void;
   onChanged: () => void;
 }
 
-export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
+export const LinkGoalFromPlanModal: React.FC<LinkGoalFromPlanModalProps> = ({
   isOpen,
-  goalId,
+  planId,
   workspaceId,
   onClose,
   onChanged,
 }) => {
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [linkedIds, setLinkedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -28,18 +28,18 @@ export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const [activePlans, linked] = await Promise.all([
-        getActivePlans(workspaceId),
-        getLinkedPlanIdsForGoal(goalId),
+      const [allGoals, linked] = await Promise.all([
+        getGoalsByWorkspace(workspaceId),
+        getLinkedGoalIdsForPlan(planId),
       ]);
-      setPlans(activePlans);
+      setGoals(allGoals);
       setLinkedIds(new Set(linked));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load plans');
+      setError(err instanceof Error ? err.message : 'Failed to load goals');
     } finally {
       setLoading(false);
     }
-  }, [goalId, workspaceId]);
+  }, [planId, workspaceId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,20 +47,20 @@ export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
     }
   }, [isOpen, loadData]);
 
-  const handleToggle = async (planId: string) => {
-    setUpdatingId(planId);
+  const handleToggle = async (goalId: string) => {
+    setUpdatingId(goalId);
     setError(null);
     try {
-      if (linkedIds.has(planId)) {
+      if (linkedIds.has(goalId)) {
         await unlinkGoalFromPlan(planId, goalId);
         setLinkedIds((prev) => {
           const next = new Set(prev);
-          next.delete(planId);
+          next.delete(goalId);
           return next;
         });
       } else {
         await linkGoalToPlan(planId, goalId);
-        setLinkedIds((prev) => new Set(prev).add(planId));
+        setLinkedIds((prev) => new Set(prev).add(goalId));
       }
       onChanged();
     } catch (err) {
@@ -75,11 +75,11 @@ export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="link-plan-modal modal-content"
+        className="link-goal-modal modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2>Link Plans</h2>
+          <h2>Link Goals</h2>
           <button className="close-button" onClick={onClose} aria-label="Close">
             <svg
               width="24"
@@ -97,31 +97,31 @@ export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
           </button>
         </div>
 
-        <div className="link-plan-body">
-          {loading && <div className="link-plan-loading">Loading plans...</div>}
+        <div className="link-goal-body">
+          {loading && <div className="link-goal-loading">Loading goals...</div>}
 
           {!loading && error && <div className="error-message">{error}</div>}
 
-          {!loading && !error && plans.length === 0 && (
-            <div className="link-plan-empty">No plans available to link.</div>
+          {!loading && !error && goals.length === 0 && (
+            <div className="link-goal-empty">No goals available to link.</div>
           )}
 
-          {!loading && !error && plans.length > 0 && (
-            <ul className="link-plan-list">
-              {plans.map((plan) => {
-                const isLinked = linkedIds.has(plan.id);
-                const isUpdating = updatingId === plan.id;
+          {!loading && !error && goals.length > 0 && (
+            <ul className="link-goal-list">
+              {goals.map((goal) => {
+                const isLinked = linkedIds.has(goal.id);
+                const isUpdating = updatingId === goal.id;
                 return (
-                  <li key={plan.id} className="link-plan-item">
-                    <div className="link-plan-info">
-                      <span className="link-plan-title">{plan.title}</span>
-                      {plan.description && (
-                        <span className="link-plan-desc">{plan.description}</span>
+                  <li key={goal.id} className="link-goal-item">
+                    <div className="link-goal-info">
+                      <span className="link-goal-title">{goal.title}</span>
+                      {goal.description && (
+                        <span className="link-goal-desc">{goal.description}</span>
                       )}
                     </div>
                     <button
-                      className={`link-plan-toggle ${isLinked ? 'linked' : ''}`}
-                      onClick={() => handleToggle(plan.id)}
+                      className={`link-goal-toggle ${isLinked ? 'linked' : ''}`}
+                      onClick={() => handleToggle(goal.id)}
                       disabled={isUpdating}
                     >
                       {isUpdating ? '...' : isLinked ? 'Unlink' : 'Link'}
@@ -134,9 +134,7 @@ export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
         </div>
 
         <div className="modal-footer">
-          <button className="btn-primary" onClick={onClose}>
-            Done
-          </button>
+          <button className="btn-primary" onClick={onClose}>Done</button>
         </div>
       </div>
     </div>

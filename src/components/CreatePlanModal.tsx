@@ -92,11 +92,19 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass-heavy" onClick={(e) => e.stopPropagation()}>
+      <div className="create-plan-modal modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Create New Plan</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close modal">
-            ✕
+          <button className="close-button" onClick={onClose} aria-label="Close">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path d="M18 6L6 18M6 6L18 18" strokeWidth="2" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
 
@@ -235,7 +243,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
 
           {error && <div className="form-error">{error}</div>}
 
-          <div className="modal-actions">
+          <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
               Cancel
             </button>

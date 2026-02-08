@@ -1,11 +1,11 @@
-/* GoalDetailModal — extends base modal styles */
+/* GoalDetailModal — uses ModalBase.css for all base styles. */
 
 .goal-detail-modal {
   max-width: 560px;
 }
 
 .goal-detail-body {
-  padding: 20px 24px 24px;
+  padding: 16px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
@@ -20,7 +20,6 @@
   line-height: 1.5;
 }
 
-/* Progress bar */
 .goal-detail-progress {
   display: flex;
   flex-direction: column;
@@ -49,7 +48,6 @@
   color: var(--text-secondary);
 }
 
-/* Linked Plans section */
 .goal-detail-section {
   display: flex;
   flex-direction: column;

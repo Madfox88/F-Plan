@@ -74,7 +74,7 @@ export const RenameWorkspaceModal: React.FC<RenameWorkspaceModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="modal-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="workspace-name">New Name</label>
             <input
@@ -91,7 +91,7 @@ export const RenameWorkspaceModal: React.FC<RenameWorkspaceModalProps> = ({
 
           {error && <div className="error-message">{error}</div>}
 
-          <div className="modal-actions">
+          <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={isLoading}>
               Cancel
             </button>

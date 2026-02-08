@@ -19,12 +19,68 @@
   height: 44px;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .add-stage-btn:hover {
   background: var(--glass-bg-heavy);
   color: var(--text-primary);
   border-color: var(--glass-border-heavy);
+}
+
+.link-goal-btn {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.link-goal-btn:hover {
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  border-color: var(--glass-border-heavy);
+}
+
+/* Linked goals in toolbar */
+.plan-linked-goals {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  margin-left: var(--space-xl);
+}
+
+.plan-linked-goals-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.plan-linked-goal-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .plan-detail-subheader {
@@ -62,6 +118,7 @@
   transition: all var(--transition-fast);
   white-space: nowrap;
   min-width: 180px;
+  box-sizing: border-box;
 }
 
 .grouping-selector-trigger:hover {
@@ -124,10 +181,11 @@ html[data-theme='dark'] .grouping-selector-icon {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
   background: var(--glass-bg);
   height: 44px;
+  box-sizing: border-box;
 }
 
 .view-switcher-btn {

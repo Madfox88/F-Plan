@@ -163,7 +163,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="modal-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="goal-title">Title</label>
             <input
@@ -299,7 +299,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
 
           {error && <div className="error-message">{error}</div>}
 
-          <div className="modal-actions">
+          <div className="modal-footer">
             <button
               type="button"
               className="btn-secondary"

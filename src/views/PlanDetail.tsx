@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import type { Plan, StageWithTasks, Task } from '../types/database';
-import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask } from '../lib/database';
+import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
 import { TaskCreateModal } from '../components/TaskCreateModal';
 import type { TaskCreatePayload } from '../components/TaskCreateModal';
 import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
+import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
+import { AddStageModal } from '../components/AddStageModal';
 import Checkbox from '../components/Checkbox';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
@@ -42,6 +44,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState<string | undefined>(undefined);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [linkGoalOpen, setLinkGoalOpen] = useState(false);
+  const [addStageOpen, setAddStageOpen] = useState(false);
+  const [linkedGoalNames, setLinkedGoalNames] = useState<string[]>([]);
 
   const resolveTaskStatus = (task: { status?: 'not_started' | 'in_progress' | 'completed'; completed?: boolean }) => {
     if (task.status) return task.status;
@@ -250,15 +255,33 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     }
   }, [planId]);
 
-  const handleAddStage = async () => {
-    const stageName = prompt('Enter stage name:');
-    if (stageName && stageName.trim()) {
-      try {
-        await createStage(planId, stageName);
-        await fetchStages();
-      } catch (error) {
-        console.error('Failed to create stage:', error);
+  const fetchLinkedGoals = useCallback(async () => {
+    try {
+      const goalIds = await getLinkedGoalIdsForPlan(planId);
+      if (goalIds.length === 0) {
+        setLinkedGoalNames([]);
+        return;
       }
+      const allGoals = await getGoalsByWorkspace(currentPlan.workspace_id);
+      const names = allGoals
+        .filter((g) => goalIds.includes(g.id))
+        .map((g) => g.title);
+      setLinkedGoalNames(names);
+    } catch (error) {
+      console.error('Failed to load linked goals:', error);
+    }
+  }, [planId, currentPlan.workspace_id]);
+
+  const handleAddStage = () => {
+    setAddStageOpen(true);
+  };
+
+  const handleAddStageSubmit = async (stageName: string) => {
+    try {
+      await createStage(planId, stageName);
+      await fetchStages();
+    } catch (error) {
+      console.error('Failed to create stage:', error);
     }
   };
 
@@ -453,8 +476,17 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             Grid
           </button>
         </div>
+          <button className="link-goal-btn" onClick={() => setLinkGoalOpen(true)}>Link Goal</button>
           {groupingMode === 'stages' && (
             <button className="add-stage-btn" onClick={handleAddStage}>+ Add Stage</button>
+          )}
+          {linkedGoalNames.length > 0 && (
+            <div className="plan-linked-goals">
+              <span className="plan-linked-goals-label">Linked to:</span>
+              {linkedGoalNames.map((name) => (
+                <span key={name} className="plan-linked-goal-pill">{name}</span>
+              ))}
+            </div>
           )}
         </div>
 
@@ -524,6 +556,10 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   useEffect(() => {
     fetchStages();
   }, [fetchStages]);
+
+  useEffect(() => {
+    fetchLinkedGoals();
+  }, [fetchLinkedGoals]);
 
   if (loading) {
     return (
@@ -807,6 +843,20 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
           setEditingTask(undefined);
         }}
         onSubmit={handleSaveTask}
+      />
+
+      <LinkGoalFromPlanModal
+        isOpen={linkGoalOpen}
+        planId={planId}
+        workspaceId={currentPlan.workspace_id}
+        onClose={() => setLinkGoalOpen(false)}
+        onChanged={fetchLinkedGoals}
+      />
+
+      <AddStageModal
+        isOpen={addStageOpen}
+        onClose={() => setAddStageOpen(false)}
+        onSubmit={handleAddStageSubmit}
       />
     </div>
   );

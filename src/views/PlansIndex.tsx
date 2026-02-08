@@ -3,6 +3,7 @@ import type { Plan } from '../types/database';
 import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan } from '../lib/database';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { PlanCardMenu } from '../components/PlanCardMenu';
+import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
 import SearchIcon from '../assets/icons/search.svg';
@@ -29,6 +30,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [searchOpen, setSearchOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [linkGoalPlanId, setLinkGoalPlanId] = useState<string | null>(null);
 
   const loadPlans = useCallback(async () => {
     if (!activeWorkspace) return;
@@ -269,6 +271,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
                     onPin={handleTogglePinFromMenu}
                     onHide={handleHidePlan}
                     onDelete={handleDeletePlan}
+                    onLinkGoal={(planId) => setLinkGoalPlanId(planId)}
                   />
                 </div>
               </div>
@@ -299,6 +302,15 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
             </div>
           ))}
         </div>
+      )}
+      {linkGoalPlanId && activeWorkspace && (
+        <LinkGoalFromPlanModal
+          isOpen={!!linkGoalPlanId}
+          planId={linkGoalPlanId}
+          workspaceId={activeWorkspace.id}
+          onClose={() => setLinkGoalPlanId(null)}
+          onChanged={loadPlans}
+        />
       )}
     </div>
   );
