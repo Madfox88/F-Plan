@@ -1,10 +1,15 @@
+/* ══════════════════════════════════════════════════
+   Dashboard.css — Glass design system tokens
+   ══════════════════════════════════════════════════ */
+
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: var(--space-lg);
-  animation: fadeIn 200ms ease-out;
+  animation: dashFadeIn 200ms ease-out;
 }
 
+/* ── Card shell ── */
 .dashboard-card {
   padding: var(--space-lg);
   display: flex;
@@ -19,6 +24,181 @@
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
+
+.dashboard-loading {
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-empty {
+  margin: auto 0;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════
+   Card 1 — Today's Schedule
+   ═══════════════════════════════════════════ */
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.schedule-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.schedule-group-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+}
+
+.schedule-item:hover {
+  background: var(--glass-hover);
+}
+
+.schedule-item--static {
+  cursor: default;
+}
+
+.schedule-item--static:hover {
+  background: transparent;
+}
+
+/* Coloured dots */
+.schedule-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.schedule-dot--task {
+  background: var(--accent-primary, #60a5fa);
+}
+
+.schedule-dot--event {
+  background: var(--accent-success, #34d399);
+}
+
+.schedule-dot--reminder {
+  background: var(--accent-warning, #fbbf24);
+}
+
+.schedule-item-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-item-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   Card 2 — Active Goals Progress
+   ═══════════════════════════════════════════ */
+
+.goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.goal-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.goal-row:hover {
+  background: var(--glass-hover);
+}
+
+.goal-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.goal-row-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.goal-row-pct {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--accent-primary, #60a5fa);
+  flex-shrink: 0;
+  margin-left: var(--space-sm);
+}
+
+.goal-progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--glass-border);
+  overflow: hidden;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent-primary, #60a5fa);
+  transition: width 300ms ease;
+  min-width: 0;
+}
+
+.goal-row-detail {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════
+   Card 3 — Productivity Stats
+   ═══════════════════════════════════════════ */
 
 .stat-item {
   display: flex;
@@ -43,7 +223,34 @@
   color: var(--text-primary);
 }
 
-@keyframes fadeIn {
+/* ═══════════════════════════════════════════
+   Card 4 — Focus Session
+   ═══════════════════════════════════════════ */
+
+.focus-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.focus-resume-timer {
+  font-size: var(--font-size-3xl, 2rem);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-primary, #60a5fa);
+  letter-spacing: 0.02em;
+}
+
+.focus-start-btn {
+  margin-top: auto;
+}
+
+/* ═══════════════════════════════════════════
+   Utilities / Animation
+   ═══════════════════════════════════════════ */
+
+@keyframes dashFadeIn {
   from {
     opacity: 0;
     transform: translateY(10px);
