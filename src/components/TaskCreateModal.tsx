@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Stage, Task, ChecklistItem } from '../types/database';
+import type { Stage, Task, ChecklistItem, User } from '../types/database';
+import { getUsers } from '../lib/database';
 import { TaskStatusIndicator } from './TaskStatusIndicator';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import CalendarIcon from '../assets/icons/calendar.svg';
@@ -26,6 +27,7 @@ export type TaskCreatePayload = {
   description?: string;
   checklists: ChecklistItem[];
   labels: TaskLabel[];
+  assignedTo?: string | null;
 };
 
 interface TaskCreateModalProps {
@@ -34,6 +36,7 @@ interface TaskCreateModalProps {
   stages: Stage[];
   defaultStageId?: string;
   editingTask?: Task;
+  currentUserId?: string | null;
   onClose: () => void;
   onSubmit: (payload: TaskCreatePayload, existingTaskId?: string) => Promise<void>;
 }
@@ -45,7 +48,7 @@ const defaultLabelSet: TaskLabel[] = [
   { id: 'learning', name: 'Learning', color: '#ffd37a' },
 ];
 
-export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editingTask, onClose, onSubmit }: TaskCreateModalProps) {
+export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
   const [title, setTitle] = useState('');
   const [stageId, setStageId] = useState('');
   const [status, setStatus] = useState<TaskCreatePayload['status']>('not_started');
@@ -65,12 +68,21 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
   const [isStageOpen, setIsStageOpen] = useState(false);
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
   const [isRepeatOpen, setIsRepeatOpen] = useState(false);
+  const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const statusMenuRef = useRef<HTMLDivElement>(null);
   const stageMenuRef = useRef<HTMLDivElement>(null);
   const priorityMenuRef = useRef<HTMLDivElement>(null);
   const repeatMenuRef = useRef<HTMLDivElement>(null);
+  const assigneeMenuRef = useRef<HTMLDivElement>(null);
 
   const labelStorageKey = useMemo(() => `task-labels:${planId}`, [planId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    getUsers().then(setUsers).catch(() => setUsers([]));
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -101,6 +113,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
       setDueDate(editingTask.due_date || '');
       setRepeat(editingTask.repeat || 'none');
       setDescription(editingTask.description || '');
+      setAssignedTo(editingTask.assigned_to || currentUserId || null);
 
       const checklistItems: ChecklistItem[] = (editingTask.checklists || []).map((item: any, index: number) => {
         if (typeof item === 'string') {
@@ -149,6 +162,9 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
       if (repeatMenuRef.current && !repeatMenuRef.current.contains(event.target as Node)) {
         setIsRepeatOpen(false);
       }
+      if (assigneeMenuRef.current && !assigneeMenuRef.current.contains(event.target as Node)) {
+        setIsAssigneeOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -167,11 +183,13 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
     setAssignedLabelIds(new Set());
     setNewLabelName('');
     setNewLabelColor('#7aa2ff');
+    setAssignedTo(currentUserId || null);
     setError(null);
     setIsStatusOpen(false);
     setIsStageOpen(false);
     setIsPriorityOpen(false);
     setIsRepeatOpen(false);
+    setIsAssigneeOpen(false);
   };
 
   const closeAllDropdowns = () => {
@@ -179,6 +197,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
     setIsStageOpen(false);
     setIsPriorityOpen(false);
     setIsRepeatOpen(false);
+    setIsAssigneeOpen(false);
   };
 
   const handleAddChecklist = () => {
@@ -258,6 +277,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
             completed: !!item.completed,
           })),
         labels: assignedLabels,
+        assignedTo: assignedTo || null,
       }, editingTask?.id);
       resetForm();
       onClose();
@@ -540,6 +560,67 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Assigned to</label>
+            <div className="dropdown" ref={assigneeMenuRef}>
+              <button
+                type="button"
+                className="dropdown-trigger"
+                onClick={() => {
+                  closeAllDropdowns();
+                  setIsAssigneeOpen(true);
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {assignedTo ? (
+                    <>
+                      <span className="assignee-avatar-sm">
+                        {users.find((u) => u.id === assignedTo)?.display_name?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                      {users.find((u) => u.id === assignedTo)?.display_name || 'Unknown user'}
+                    </>
+                  ) : (
+                    'Unassigned'
+                  )}
+                </span>
+                <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
+              </button>
+              {isAssigneeOpen && (
+                <div className="dropdown-menu">
+                  <button
+                    type="button"
+                    className={`dropdown-option${!assignedTo ? ' dropdown-option-active' : ''}`}
+                    onClick={() => {
+                      setAssignedTo(null);
+                      setIsAssigneeOpen(false);
+                    }}
+                  >
+                    <span>Unassigned</span>
+                  </button>
+                  {users.map((user) => (
+                    <button
+                      key={user.id}
+                      type="button"
+                      className={`dropdown-option${assignedTo === user.id ? ' dropdown-option-active' : ''}`}
+                      onClick={() => {
+                        setAssignedTo(user.id);
+                        setIsAssigneeOpen(false);
+                      }}
+                    >
+                      <span className="assignee-avatar-sm">
+                        {user.display_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                      <span>{user.display_name || user.email}</span>
+                    </button>
+                  ))}
+                  {users.length === 0 && (
+                    <div className="dropdown-empty">No users found</div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

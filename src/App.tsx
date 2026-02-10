@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { AvatarProvider } from './context/AvatarContext';
+import { UserProvider } from './context/UserContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MainLayout } from './components/Layout';
@@ -224,7 +225,9 @@ function App() {
   return (
     <WorkspaceProvider>
       <AvatarProvider>
-        <AppContent />
+        <UserProvider>
+          <AppContent />
+        </UserProvider>
       </AvatarProvider>
     </WorkspaceProvider>
   );

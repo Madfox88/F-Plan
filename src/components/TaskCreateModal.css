@@ -262,3 +262,30 @@ html[data-theme='dark'] .dropdown-chevron {
 .label-remove:hover {
   opacity: 1;
 }
+
+/* Assignee avatar (small, inline in dropdowns) */
+.assignee-avatar-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.dropdown-option-active {
+  background: var(--glass-bg-heavy);
+}
+
+.dropdown-empty {
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

@@ -54,7 +54,16 @@ export function TaskReadOnlyModal({ isOpen, task, onClose }: TaskReadOnlyModalPr
             </div>
             <div className="tro-meta-item">
               <span className="tro-meta-label">Completed</span>
-              <span className="tro-meta-value">{task.completed ? 'Yes' : 'No'}</span>
+              <span className="tro-meta-value">
+                {task.completed
+                  ? task.completed_at
+                    ? new Date(task.completed_at).toLocaleDateString(undefined, {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })
+                    : 'Yes'
+                  : 'No'}
+              </span>
             </div>
             <div className="tro-meta-item">
               <span className="tro-meta-label">Priority</span>

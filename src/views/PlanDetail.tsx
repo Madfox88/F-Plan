@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import type { Plan, StageWithTasks, Task } from '../types/database';
-import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
+import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask, setTaskCompleted, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
 import { TaskCreateModal } from '../components/TaskCreateModal';
+import { useCurrentUser } from '../context/UserContext';
 import type { TaskCreatePayload } from '../components/TaskCreateModal';
 import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
@@ -33,6 +34,7 @@ interface PlanDetailProps {
 }
 
 export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanDetailProps) {
+  const { userId: currentUserId } = useCurrentUser();
   const [stages, setStages] = useState<StageWithTasks[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'boards' | 'grid'>('boards');
@@ -311,6 +313,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         checklists: payload.checklists,
         labels: payload.labels,
         completed: payload.status === 'completed',
+        assigned_to: payload.assignedTo ?? null,
       });
     } else {
       await createTask({
@@ -324,6 +327,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         description: payload.description,
         checklists: payload.checklists,
         labels: payload.labels,
+        assignedTo: payload.assignedTo || currentUserId || '',
       });
     }
     setEditingTask(undefined);
@@ -347,9 +351,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
 
     const updatedChecklists = normalized.map((item) => ({ ...item, completed: true }));
 
+    await setTaskCompleted(task.id, true);
     await updateTask(task.id, {
       status: 'completed',
-      completed: true,
       checklists: updatedChecklists,
     });
     await fetchStages();
@@ -372,11 +376,14 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     const allChecked = nextChecklists.length > 0 && completedCount === nextChecklists.length;
     const someChecked = completedCount > 0 && !allChecked;
     const newStatus = allChecked ? 'completed' : someChecked ? 'in_progress' : 'not_started';
+    const wasCompleted = !!task.completed;
 
+    if (allChecked !== wasCompleted) {
+      await setTaskCompleted(task.id, allChecked);
+    }
     await updateTask(task.id, {
       checklists: nextChecklists,
       status: newStatus,
-      completed: allChecked,
     });
 
     await fetchStages();
@@ -393,9 +400,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
 
     const updatedChecklists = normalized.map((item) => ({ ...item, completed: nextChecked }));
 
+    await setTaskCompleted(task.id, nextChecked);
     await updateTask(task.id, {
       status: nextChecked ? 'completed' : 'not_started',
-      completed: nextChecked,
       checklists: updatedChecklists,
     });
 
@@ -837,6 +844,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         stages={stages}
         defaultStageId={selectedStageId}
         editingTask={editingTask}
+        currentUserId={currentUserId}
         onClose={() => {
           setIsTaskModalOpen(false);
           setSelectedStageId(undefined);

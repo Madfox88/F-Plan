@@ -13,9 +13,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useCurrentUser } from '../context/UserContext';
 import type { CalendarEvent, Reminder, FocusSession } from '../types/database';
 import {
-  getOrCreateUser,
   getTasksDueForUser,
   getTodaysEvents,
   getTodaysRemindersForUser,
@@ -61,9 +61,7 @@ function fmtElapsed(sec: number): string {
 
 export function Dashboard() {
   const { activeWorkspace } = useWorkspace();
-
-  /* User */
-  const [userId, setUserId] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   /* Card 1 – Today's Schedule */
   const [todayTasks, setTodayTasks] = useState<TaskWithContext[]>([]);
@@ -90,13 +88,6 @@ export function Dashboard() {
 
   /* Loading */
   const [loading, setLoading] = useState(true);
-
-  /* ── Bootstrap user ── */
-  useEffect(() => {
-    getOrCreateUser('local@fplan.app', 'Me')
-      .then((u) => setUserId(u.id))
-      .catch(() => { /* users table not migrated yet */ });
-  }, []);
 
   /* ── Load all dashboard data ── */
   const loadData = useCallback(async () => {

@@ -1,5 +1,14 @@
 /* F-Plan Database Types (from DATABASE_SCHEMA.md) */
 
+/* ── Users (DATABASE_SCHEMA.md §3) ── */
+export type User = {
+  id: string;
+  email: string;
+  display_name: string;
+  avatar_url: string | null;
+  created_at: string;
+};
+
 export type Workspace = {
   id: string;
   name: string;
@@ -15,6 +24,7 @@ export type Plan = {
   status: 'active' | 'archived' | 'draft';
   is_pinned: boolean;
   due_date: string | null;
+  archived_at: string | null;   // PLAN_ARCHIVAL_TRUTH_RULES.md §2 — sole archival truth
   created_at: string;
 };
 
@@ -37,6 +47,8 @@ export type Task = {
   stage_id: string;
   title: string;
   completed: boolean;
+  completed_at: string | null;  // TASK_TEMPORAL_TRUTH_RULES.md §2 — sole temporal authority
+  assigned_to: string | null;   // TASK_OWNERSHIP_RULES.md §3 — FK → users.id
   status?: 'not_started' | 'in_progress' | 'completed';
   priority?: 'urgent' | 'important' | 'medium' | 'low';
   start_date?: string | null;
@@ -101,12 +113,28 @@ export type CalendarEvent = {
 export type Reminder = {
   id: string;
   workspace_id: string;
+  user_id: string | null;       // VISIBILITY_RULES.md §7.3 — personal ownership
   title: string;
   notes: string | null;
   remind_at: string; // ISO timestamptz
   repeat_rule: RepeatRule;
   created_at: string;
   updated_at: string;
+};
+
+/* Focus Sessions (FOCUS_SESSIONS_RULES.md §11) */
+
+export type FocusSession = {
+  id: string;
+  user_id: string;
+  workspace_id: string;
+  started_at: string;
+  ended_at: string | null;       // null while session is active
+  duration_minutes: number | null; // derived on end
+  task_id: string | null;         // optional context
+  plan_id: string | null;         // optional context
+  goal_id: string | null;         // optional context
+  created_at: string;
 };
 
 /* Extended types for API responses with relations */

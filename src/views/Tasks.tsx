@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getActivePlans, getStagesByPlan, updateTask, createTask, deleteTask } from '../lib/database';
+import { getActivePlans, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted } from '../lib/database';
 import type { Task, Plan, StageWithTasks, ChecklistItem, Stage } from '../types/database';
 import { AnimatedCheckbox } from '../components/Checkbox';
 import { TaskCreateModal, type TaskCreatePayload } from '../components/TaskCreateModal';
+import { useCurrentUser } from '../context/UserContext';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import TrashIcon from '../assets/icons/trash.svg';
 import SearchIcon from '../assets/icons/search.svg';
@@ -69,6 +70,7 @@ const classifyDue = (value?: string | null): 'overdue' | 'today' | 'upcoming' | 
 
 export function Tasks() {
   const { activeWorkspace } = useWorkspace();
+  const { userId: currentUserId } = useCurrentUser();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<TaskWithMeta[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -191,7 +193,8 @@ export function Tasks() {
     const nextStatus = nextCompleted ? 'completed' : 'not_started';
     setUpdatingId(taskId);
     try {
-      await updateTask(taskId, { completed: nextCompleted, status: nextStatus });
+      await setTaskCompleted(taskId, nextCompleted);
+      await updateTask(taskId, { status: nextStatus });
       setTasks((prev) =>
         prev.map((t) =>
           t.id === taskId
@@ -321,6 +324,7 @@ export function Tasks() {
           description: payload.description,
           checklists: payload.checklists,
           labels: payload.labels,
+          assignedTo: payload.assignedTo || currentUserId || '',
         });
 
         const stageOption = stageOptions.find((s) => s.id === payload.stageId);
@@ -342,7 +346,7 @@ export function Tasks() {
         setError(err instanceof Error ? err.message : 'Failed to create task');
       }
     },
-    [createPlanId, plans, stageOptions, stagesByPlan]
+    [createPlanId, plans, stageOptions, stagesByPlan, currentUserId]
   );
 
   const groupedTasks: GroupBucket[] = useMemo(() => {
@@ -530,6 +534,7 @@ export function Tasks() {
         planId={createPlanId || plans[0]?.id || ''}
         stages={(createPlanId && stagesByPlan[createPlanId]) || []}
         defaultStageId={createStageId || (createPlanId ? stagesByPlan[createPlanId]?.[0]?.id : undefined)}
+        currentUserId={currentUserId}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateSubmit}
       />
