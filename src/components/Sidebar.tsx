@@ -11,6 +11,7 @@ import GoalsIcon from '../assets/icons/goals.svg';
 import PlansIcon from '../assets/icons/Plans.svg';
 import TasksIcon from '../assets/icons/tasks.svg';
 import CalendarIcon from '../assets/icons/calendar.svg';
+import FocusIcon from '../assets/icons/focus.svg';
 import './Sidebar.css';
 
 type NavigationItem = {
@@ -25,6 +26,7 @@ const NAV_ITEMS: NavigationItem[] = [
   { id: 'plans', label: 'Plans', icon: PlansIcon },
   { id: 'tasks', label: 'Tasks', icon: TasksIcon },
   { id: 'calendar', label: 'Calendar', icon: CalendarIcon },
+  { id: 'focus', label: 'Focus', icon: FocusIcon },
 ];
 
 interface SidebarProps {

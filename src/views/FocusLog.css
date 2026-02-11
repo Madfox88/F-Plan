@@ -1,0 +1,201 @@
+/* ═══════════════════════════════════════════
+   Focus Log — Session history
+   ═══════════════════════════════════════════ */
+
+.focus-log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  animation: focusLogFadeIn 200ms ease-out;
+}
+
+.focus-log-loading {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* ── Summary stats bar ── */
+
+.focus-log-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.focus-log-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.focus-log-stat-value {
+  font-size: var(--font-size-xl, 1.25rem);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.focus-log-stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Empty state ── */
+
+.focus-log-empty {
+  padding: var(--space-xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ── Session list ── */
+
+.focus-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ── Day group ── */
+
+.focus-log-day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.focus-log-day-header {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  padding: 0 var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+/* ── Session row ── */
+
+.focus-log-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.focus-log-row:hover {
+  background: var(--glass-hover);
+}
+
+.focus-log-row-time {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 140px;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
+
+.focus-log-time-sep {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
+.focus-log-row-duration {
+  min-width: 70px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--accent-primary, #60a5fa);
+}
+
+.focus-log-row-context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-sm);
+}
+
+.focus-log-context-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+/* ── Context badges ── */
+
+.focus-log-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.focus-log-badge--plan {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+}
+
+.focus-log-badge--goal {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.focus-log-badge--task {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+/* ── Load more ── */
+
+.focus-log-load-more {
+  align-self: center;
+  margin-top: var(--space-sm);
+}
+
+/* ── Animation ── */
+
+@keyframes focusLogFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 640px) {
+  .focus-log-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .focus-log-row {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .focus-log-row-time {
+    min-width: auto;
+  }
+
+  .focus-log-row-duration {
+    min-width: auto;
+  }
+}

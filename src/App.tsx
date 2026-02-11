@@ -16,6 +16,7 @@ import { Profile } from './views/Profile';
 import { PlanDetail } from './views/PlanDetail';
 import { Tasks } from './views/Tasks';
 import { Calendar } from './views/Calendar';
+import { FocusLog } from './views/FocusLog';
 import { supabaseConfigured } from './lib/supabase';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
 import type { Plan } from './types/database';
@@ -101,6 +102,10 @@ function AppContent() {
     calendar: {
       title: 'Calendar',
       subtitle: 'Schedule and timeline view',
+    },
+    focus: {
+      title: 'Focus',
+      subtitle: 'Session history and insights',
     },
     profile: {
       title: 'Profile',
@@ -196,6 +201,7 @@ function AppContent() {
             {activeTab === 'calendar' && (
               <Calendar />
             )}
+            {activeTab === 'focus' && <FocusLog />}
             {activeTab === 'profile' && <Profile />}
           </div>
         )}

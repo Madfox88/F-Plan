@@ -1175,6 +1175,71 @@ export async function getFocusSessionsInRange(
   return data || [];
 }
 
+/** Extended focus session with resolved context names for log display. */
+export type FocusSessionLogEntry = FocusSession & {
+  context_type: 'plan' | 'goal' | 'task' | null;
+  context_title: string | null;
+};
+
+/**
+ * Get focus session log for a user, enriched with context titles.
+ * Returns completed sessions (≥5 min) ordered newest-first.
+ */
+export async function getFocusSessionLog(
+  userId: string,
+  workspaceId: string,
+  limit = 50,
+  offset = 0
+): Promise<FocusSessionLogEntry[]> {
+  const { data: sessions, error } = await supabase
+    .from('focus_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
+    .not('ended_at', 'is', null)
+    .gte('duration_minutes', 5)
+    .order('started_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw new Error(`Failed to fetch focus log: ${error.message}`);
+  if (!sessions || sessions.length === 0) return [];
+
+  // Collect unique context IDs
+  const planIds = [...new Set(sessions.filter((s) => s.plan_id).map((s) => s.plan_id!))];
+  const goalIds = [...new Set(sessions.filter((s) => s.goal_id).map((s) => s.goal_id!))];
+  const taskIds = [...new Set(sessions.filter((s) => s.task_id).map((s) => s.task_id!))];
+
+  // Batch-fetch titles
+  const planMap: Record<string, string> = {};
+  const goalMap: Record<string, string> = {};
+  const taskMap: Record<string, string> = {};
+
+  if (planIds.length > 0) {
+    const { data: plans } = await supabase
+      .from('plans').select('id, title').in('id', planIds);
+    plans?.forEach((p: any) => { planMap[p.id] = p.title; });
+  }
+  if (goalIds.length > 0) {
+    const { data: goals } = await supabase
+      .from('goals').select('id, title').in('id', goalIds);
+    goals?.forEach((g: any) => { goalMap[g.id] = g.title; });
+  }
+  if (taskIds.length > 0) {
+    const { data: tasks } = await supabase
+      .from('tasks').select('id, title').in('id', taskIds);
+    tasks?.forEach((t: any) => { taskMap[t.id] = t.title; });
+  }
+
+  return sessions.map((s) => {
+    let context_type: FocusSessionLogEntry['context_type'] = null;
+    let context_title: string | null = null;
+    if (s.plan_id) { context_type = 'plan'; context_title = planMap[s.plan_id] || null; }
+    else if (s.goal_id) { context_type = 'goal'; context_title = goalMap[s.goal_id] || null; }
+    else if (s.task_id) { context_type = 'task'; context_title = taskMap[s.task_id] || null; }
+    return { ...s, context_type, context_title };
+  });
+}
+
 /* ══════════════════════════════════════════════════
    Dashboard Data Helpers
    ══════════════════════════════════════════════════ */
@@ -1357,8 +1422,10 @@ export async function getAssignedTaskCount(
 }
 
 /**
- * Get incomplete tasks assigned to a user across all active plans in a workspace.
+ * Get incomplete tasks across all active plans in a workspace.
  * Used by Dashboard focus session to let the user link a session to a specific task.
+ * Returns all incomplete tasks (not just assigned to user) so any workspace
+ * task can be a focus target.
  */
 export async function getIncompleteTasksForUser(
   userId: string,
@@ -1383,8 +1450,7 @@ export async function getIncompleteTasksForUser(
     .from('tasks')
     .select('*')
     .in('stage_id', stages.map((s: any) => s.id))
-    .eq('assigned_to', userId)
-    .is('completed_at', null)
+    .eq('completed', false)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
