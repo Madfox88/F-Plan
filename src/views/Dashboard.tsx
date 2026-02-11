@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
-import type { CalendarEvent, Reminder, FocusSession } from '../types/database';
+import type { CalendarEvent, Reminder, FocusSession, Plan, Goal } from '../types/database';
 import {
   getTasksDueForUser,
   getTodaysEvents,
@@ -25,11 +25,15 @@ import {
   getActiveFocusSession,
   computeFocusStreak,
   computeAverageDailyFocus,
+  startFocusSession,
+  endFocusSession,
+  getActivePlans,
+  getGoalsByWorkspace,
 } from '../lib/database';
 import type { TaskWithContext, DashboardGoal } from '../lib/database';
 import { TaskReadOnlyModal } from '../components/TaskReadOnlyModal';
 import { GoalReadOnlyModal } from '../components/GoalReadOnlyModal';
-import { FocusSessionModal } from '../components/FocusSessionModal';
+import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './Dashboard.css';
 
 /* ── Helpers ── */
@@ -77,10 +81,19 @@ export function Dashboard() {
   const [avgDailyFocus, setAvgDailyFocus] = useState(0);
   const [focusStreak, setFocusStreak] = useState(0);
 
-  /* Card 4 – Focus Session */
+  /* Card 4 – Focus Session (inline) */
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [focusElapsed, setFocusElapsed] = useState(0);
-  const [isFocusOpen, setIsFocusOpen] = useState(false);
+  const [focusContextType, setFocusContextType] = useState<'none' | 'plan' | 'goal'>('none');
+  const [focusContextId, setFocusContextId] = useState('');
+  const [focusPlans, setFocusPlans] = useState<Plan[]>([]);
+  const [focusGoals, setFocusGoals] = useState<Goal[]>([]);
+  const [focusStarted, setFocusStarted] = useState(false);  // show form vs idle
+  const [focusLoading, setFocusLoading] = useState(false);
+  const [focusError, setFocusError] = useState<string | null>(null);
+  const [focusEndMsg, setFocusEndMsg] = useState<string | null>(null);
+  const [isCtxTypeOpen, setIsCtxTypeOpen] = useState(false);
+  const [isCtxValOpen, setIsCtxValOpen] = useState(false);
 
   /* Popups */
   const [selectedTask, setSelectedTask] = useState<TaskWithContext | null>(null);
@@ -99,7 +112,7 @@ export function Dashboard() {
     const windowStart = rollingWindowStart();
 
     try {
-      const [tasks, events, reminders, goals, completed, assigned, avgFoc, streak, session] =
+      const [tasks, events, reminders, goals, completed, assigned, avgFoc, streak, session, plans, wGoals] =
         await Promise.all([
           getTasksDueForUser(userId, wsId, today).catch(() => [] as TaskWithContext[]),
           getTodaysEvents(wsId).catch(() => [] as Array<CalendarEvent & { occurrenceStart: string; occurrenceEnd: string }>),
@@ -110,6 +123,8 @@ export function Dashboard() {
           computeAverageDailyFocus(userId).catch(() => 0),
           computeFocusStreak(userId).catch(() => 0),
           getActiveFocusSession(userId, wsId).catch(() => null),
+          getActivePlans(wsId).catch(() => [] as Plan[]),
+          getGoalsByWorkspace(wsId).catch(() => [] as Goal[]),
         ]);
 
       setTodayTasks(tasks);
@@ -121,6 +136,8 @@ export function Dashboard() {
       setAvgDailyFocus(avgFoc);
       setFocusStreak(streak);
       setActiveSession(session);
+      setFocusPlans(plans);
+      setFocusGoals(wGoals);
     } finally {
       setLoading(false);
     }
@@ -141,6 +158,72 @@ export function Dashboard() {
   /* ── Derived ── */
   const completionRate = assignedCount > 0 ? Math.round((completedCount / assignedCount) * 100) : 0;
   const scheduleEmpty = todayTasks.length === 0 && todayEvents.length === 0 && todayReminders.length === 0;
+
+  /* ── Inline focus session handlers ── */
+  const handleShowSetup = async () => {
+    setFocusStarted(true);
+    setFocusError(null);
+    setFocusEndMsg(null);
+    if (!activeWorkspace) return;
+    try {
+      const [p, g] = await Promise.all([
+        getActivePlans(activeWorkspace.id),
+        getGoalsByWorkspace(activeWorkspace.id),
+      ]);
+      setFocusPlans(p);
+      setFocusGoals(g);
+    } catch { /* non-critical */ }
+  };
+
+  const handleCancelSetup = () => {
+    setFocusStarted(false);
+    setFocusContextType('none');
+    setFocusContextId('');
+    setIsCtxTypeOpen(false);
+    setIsCtxValOpen(false);
+    setFocusError(null);
+  };
+
+  const handleStartSession = async () => {
+    if (!userId || !activeWorkspace) return;
+    setFocusLoading(true);
+    setFocusError(null);
+    try {
+      const payload: Parameters<typeof startFocusSession>[0] = {
+        userId,
+        workspaceId: activeWorkspace.id,
+      };
+      if (focusContextType === 'plan' && focusContextId) payload.planId = focusContextId;
+      if (focusContextType === 'goal' && focusContextId) payload.goalId = focusContextId;
+      const session = await startFocusSession(payload);
+      setActiveSession(session);
+      setFocusStarted(false);
+    } catch (err) {
+      setFocusError(err instanceof Error ? err.message : 'Failed to start session');
+    } finally {
+      setFocusLoading(false);
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (!activeSession) return;
+    setFocusLoading(true);
+    setFocusError(null);
+    try {
+      const result = await endFocusSession(activeSession.id);
+      if (result) {
+        setFocusEndMsg(`Session ended — ${result.duration_minutes} min recorded.`);
+      } else {
+        setFocusEndMsg('Session was under 5 min and was discarded.');
+      }
+      setActiveSession(null);
+      loadData();
+    } catch (err) {
+      setFocusError(err instanceof Error ? err.message : 'Failed to end session');
+    } finally {
+      setFocusLoading(false);
+    }
+  };
 
   /* ── Loading state ── */
   if (loading) {
@@ -253,21 +336,119 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ CARD 4 — Focus Session Entry Point ═══ */}
+      {/* ═══ CARD 4 — Focus Session (inline) ═══ */}
       <div className="dashboard-card glass focus-card">
         <h3>Focus Session</h3>
+
+        {focusError && <div className="focus-inline-error">{focusError}</div>}
+        {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
+
         {activeSession ? (
-          <>
+          /* ── Active session: live timer ── */
+          <div className="focus-inline-active">
             <div className="focus-resume-timer">{fmtElapsed(focusElapsed)}</div>
-            <p className="text-secondary">Session in progress</p>
-            <button className="btn-primary focus-start-btn" onClick={() => setIsFocusOpen(true)}>
-              Resume Session
+            <p className="text-secondary focus-context-hint">
+              {activeSession.plan_id && focusPlans.find((p) => p.id === activeSession.plan_id)
+                ? `Focused on: ${focusPlans.find((p) => p.id === activeSession.plan_id)?.title}`
+                : activeSession.goal_id && focusGoals.find((g) => g.id === activeSession.goal_id)
+                ? `Focused on: ${focusGoals.find((g) => g.id === activeSession.goal_id)?.title}`
+                : 'Free focus — no specific context'}
+            </p>
+            <p className="text-tertiary focus-discard-hint">Sessions under 5 min are discarded.</p>
+            <button
+              className="btn-primary focus-end-btn"
+              onClick={handleEndSession}
+              disabled={focusLoading}
+            >
+              {focusLoading ? 'Ending…' : 'End Session'}
             </button>
-          </>
+          </div>
+        ) : focusStarted ? (
+          /* ── Setup form: choose context + start ── */
+          <div className="focus-inline-setup">
+            <div className="focus-form-group">
+              <label className="focus-form-label">Link to (optional)</label>
+              <div className="focus-dropdown">
+                <button
+                  type="button"
+                  className="focus-dropdown-trigger"
+                  onClick={() => { setIsCtxValOpen(false); setIsCtxTypeOpen(!isCtxTypeOpen); }}
+                >
+                  <span>{focusContextType === 'none' ? 'No context' : focusContextType === 'plan' ? 'Plan' : 'Goal'}</span>
+                  <img src={ChevronDownIcon} alt="" className="focus-dropdown-chevron" />
+                </button>
+                {isCtxTypeOpen && (
+                  <div className="focus-dropdown-menu">
+                    {(['none', 'plan', 'goal'] as const).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        className={`focus-dropdown-option${focusContextType === v ? ' focus-dropdown-option--active' : ''}`}
+                        onClick={() => { setFocusContextType(v); setFocusContextId(''); setIsCtxTypeOpen(false); }}
+                      >
+                        {v === 'none' ? 'No context' : v === 'plan' ? 'Plan' : 'Goal'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {focusContextType !== 'none' && (
+              <div className="focus-form-group">
+                <label className="focus-form-label">
+                  {focusContextType === 'plan' ? 'Select plan' : 'Select goal'}
+                </label>
+                <div className="focus-dropdown">
+                  <button
+                    type="button"
+                    className="focus-dropdown-trigger"
+                    onClick={() => { setIsCtxTypeOpen(false); setIsCtxValOpen(!isCtxValOpen); }}
+                  >
+                    <span>{focusContextId
+                      ? (focusContextType === 'plan'
+                          ? focusPlans.find((p) => p.id === focusContextId)?.title
+                          : focusGoals.find((g) => g.id === focusContextId)?.title) || 'Select…'
+                      : 'Select…'}
+                    </span>
+                    <img src={ChevronDownIcon} alt="" className="focus-dropdown-chevron" />
+                  </button>
+                  {isCtxValOpen && (
+                    <div className="focus-dropdown-menu">
+                      {(focusContextType === 'plan' ? focusPlans : focusGoals).length === 0 ? (
+                        <div className="focus-dropdown-empty">
+                          No {focusContextType === 'plan' ? 'active plans' : 'goals'} found
+                        </div>
+                      ) : (
+                        (focusContextType === 'plan' ? focusPlans : focusGoals).map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`focus-dropdown-option${focusContextId === item.id ? ' focus-dropdown-option--active' : ''}`}
+                            onClick={() => { setFocusContextId(item.id); setIsCtxValOpen(false); }}
+                          >
+                            {item.title}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="focus-inline-actions">
+              <button className="btn-secondary" onClick={handleCancelSetup}>Cancel</button>
+              <button className="btn-primary" onClick={handleStartSession} disabled={focusLoading}>
+                {focusLoading ? 'Starting…' : 'Start'}
+              </button>
+            </div>
+          </div>
         ) : (
+          /* ── Idle state ── */
           <>
             <p className="text-secondary">Start a focused work session.</p>
-            <button className="btn-primary focus-start-btn" onClick={() => setIsFocusOpen(true)}>
+            <button className="btn-primary focus-start-btn" onClick={handleShowSetup}>
               Start Focus Session
             </button>
           </>
@@ -290,16 +471,6 @@ export function Dashboard() {
             progress: selectedGoal.progress,
           }}
           onClose={() => setSelectedGoal(null)}
-        />
-      )}
-
-      {activeWorkspace && userId && (
-        <FocusSessionModal
-          isOpen={isFocusOpen}
-          workspaceId={activeWorkspace.id}
-          userId={userId}
-          onClose={() => setIsFocusOpen(false)}
-          onSessionEnd={loadData}
         />
       )}
     </div>

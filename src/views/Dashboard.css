@@ -246,6 +246,147 @@
   margin-top: auto;
 }
 
+/* ── Inline active session ── */
+
+.focus-inline-active {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.focus-context-hint {
+  font-size: var(--font-size-sm);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-discard-hint {
+  font-size: var(--font-size-xs);
+}
+
+.focus-end-btn {
+  margin-top: var(--space-xs);
+  background: var(--danger, #ef4444);
+}
+.focus-end-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* ── Inline setup form ── */
+
+.focus-inline-setup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.focus-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.focus-form-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium, 500);
+}
+
+/* ── Custom dropdown (glass-style) ── */
+
+.focus-dropdown {
+  position: relative;
+}
+
+.focus-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--glass-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-align: left;
+}
+.focus-dropdown-trigger:hover {
+  border-color: var(--accent-primary, #60a5fa);
+}
+
+.focus-dropdown-chevron {
+  width: 14px;
+  height: 14px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.focus-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  background: var(--glass-bg-elevated, rgba(30, 30, 46, 0.95));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-xs) 0;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+}
+
+.focus-dropdown-option {
+  display: block;
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.focus-dropdown-option:hover {
+  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.08));
+}
+.focus-dropdown-option--active {
+  color: var(--accent-primary, #60a5fa);
+}
+
+.focus-dropdown-empty {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* ── Actions row ── */
+
+.focus-inline-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+/* ── Feedback messages ── */
+
+.focus-inline-error {
+  font-size: var(--font-size-sm);
+  color: var(--danger, #ef4444);
+}
+
+.focus-inline-success {
+  font-size: var(--font-size-sm);
+  color: var(--success, #34d399);
+}
+
 /* ═══════════════════════════════════════════
    Utilities / Animation
    ═══════════════════════════════════════════ */
