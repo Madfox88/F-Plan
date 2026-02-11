@@ -549,18 +549,18 @@ export function Dashboard() {
         <div className="focus-inline-actions">
           {activeSession ? (
             <button className="btn-primary focus-end-btn" onClick={handleEndSession} disabled={focusLoading}>
-              {focusLoading ? 'Ending…' : 'End Session'}
+              <span>{focusLoading ? 'Ending…' : 'End Session'}</span>
             </button>
           ) : focusStarted ? (
             <>
-              <button className="btn-secondary" onClick={handleCancelSetup}>Cancel</button>
+              <button className="btn-secondary" onClick={handleCancelSetup}><span>Cancel</span></button>
               <button className="btn-primary" onClick={handleStartSession} disabled={focusLoading}>
-                {focusLoading ? 'Starting…' : 'Start'}
+                <span>{focusLoading ? 'Starting…' : 'Start'}</span>
               </button>
             </>
           ) : (
             <button className="btn-primary" onClick={handleShowSetup}>
-              Start Focus Session
+              <span>Start Focus Session</span>
             </button>
           )}
         </div>

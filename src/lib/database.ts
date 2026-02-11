@@ -1422,10 +1422,9 @@ export async function getAssignedTaskCount(
 }
 
 /**
- * Get incomplete tasks across all active plans in a workspace.
- * Used by Dashboard focus session to let the user link a session to a specific task.
- * Returns all incomplete tasks (not just assigned to user) so any workspace
- * task can be a focus target.
+ * Get incomplete tasks assigned to the current user across all active plans
+ * in a workspace. Used by Dashboard focus session to let the user link a
+ * session to a specific task.
  */
 export async function getIncompleteTasksForUser(
   userId: string,
@@ -1451,6 +1450,7 @@ export async function getIncompleteTasksForUser(
     .select('*')
     .in('stage_id', stages.map((s: any) => s.id))
     .eq('completed', false)
+    .eq('assigned_to', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);

@@ -183,8 +183,6 @@ function AppContent() {
             <PageHeaderCard 
               title={activePage.title} 
               subtitle={activePage.subtitle}
-              actionLabel={activeTab === 'plans' ? '+ New Plan' : undefined}
-              onAction={activeTab === 'plans' ? () => setIsCreatePlanModalOpen(true) : undefined}
             />
             {activeTab === 'dashboard' && <Dashboard />}
             {activeTab === 'goals' && <GoalsIndex />}

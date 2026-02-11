@@ -21,8 +21,8 @@ export function PageHeaderCard({ title, subtitle, actionLabel, onAction, subtitl
           </div>
         </div>
         {actionLabel && onAction && (
-          <button className="page-header-action-btn" onClick={onAction}>
-            {actionLabel}
+          <button className="btn-primary page-header-action-btn" onClick={onAction}>
+            <span>{actionLabel}</span>
           </button>
         )}
       </div>

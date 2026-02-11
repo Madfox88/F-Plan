@@ -111,7 +111,7 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
                   className="btn-secondary goal-detail-link-btn"
                   onClick={() => setIsLinkModalOpen(true)}
                 >
-                  Link Plan
+                  <span>Link Plan</span>
                 </button>
               </div>
 

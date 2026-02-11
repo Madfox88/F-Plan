@@ -687,7 +687,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
                 title="Choose color"
               />
               <button type="button" className="btn-secondary" onClick={handleCreateLabel}>
-                Add
+                <span>Add</span>
               </button>
             </div>
 
@@ -718,10 +718,10 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={() => { resetForm(); onClose(); }}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? 'Save changes' : 'Create task')}
+              <span>{loading ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? 'Save changes' : 'Create task')}</span>
             </button>
           </div>
         </form>

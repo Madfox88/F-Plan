@@ -137,7 +137,7 @@ export function TaskReadOnlyModal({ isOpen, task, onClose }: TaskReadOnlyModalPr
         </div>
 
         <div className="modal-footer">
-          <button className="btn-primary" onClick={onClose}>Done</button>
+          <button className="btn-primary" onClick={onClose}><span>Done</span></button>
         </div>
       </div>
     </div>

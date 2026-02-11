@@ -80,10 +80,10 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={isLoading}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button type="submit" className="btn-primary" disabled={isLoading || !name.trim()}>
-              {isLoading ? 'Creating...' : 'Create Workspace'}
+              <span>{isLoading ? 'Creating...' : 'Create Workspace'}</span>
             </button>
           </div>
         </form>

@@ -522,7 +522,7 @@ export function Tasks() {
               setShowCreateModal(true);
             }}
           >
-            + Add Task
+            <span>+ Add Task</span>
           </button>
         </div>
       </div>
@@ -730,7 +730,7 @@ export function Tasks() {
 
                           <div className="task-card-actions">
                             <button type="button" className="btn-secondary" onClick={() => setExpandedId(null)}>
-                              Close
+                              <span>Close</span>
                             </button>
                             <div className="task-card-actions-right">
                               <button
@@ -739,7 +739,7 @@ export function Tasks() {
                                 onClick={() => handleDeleteTask(task.id)}
                                 disabled={updatingId === task.id}
                               >
-                                Delete
+                                <span>Delete</span>
                               </button>
                               <button
                                 type="button"
@@ -747,7 +747,7 @@ export function Tasks() {
                                 disabled={updatingId === task.id}
                                 onClick={() => handleSaveExpanded(task.id)}
                               >
-                                Save changes
+                                <span>Save changes</span>
                               </button>
                             </div>
                           </div>

@@ -196,7 +196,7 @@ export function FocusLog() {
               onClick={loadMore}
               disabled={loadingMore}
             >
-              {loadingMore ? 'Loading…' : 'Load more'}
+              <span>{loadingMore ? 'Loading…' : 'Load more'}</span>
             </button>
           )}
         </div>

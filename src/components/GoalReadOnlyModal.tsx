@@ -104,7 +104,7 @@ export function GoalReadOnlyModal({ isOpen, goal, onClose }: GoalReadOnlyModalPr
         </div>
 
         <div className="modal-footer">
-          <button className="btn-primary" onClick={onClose}>Done</button>
+          <button className="btn-primary" onClick={onClose}><span>Done</span></button>
         </div>
       </div>
     </div>

@@ -159,8 +159,8 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleConfirm}>Save</button>
+          <button className="btn-secondary" onClick={onClose}><span>Cancel</span></button>
+          <button className="btn-primary" onClick={handleConfirm}><span>Save</span></button>
         </div>
       </div>
     </div>,

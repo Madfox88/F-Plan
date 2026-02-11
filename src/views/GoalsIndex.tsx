@@ -213,7 +213,7 @@ export function GoalsIndex() {
         </div>
 
         <button className="btn-primary" onClick={() => setIsCreateModalOpen(true)}>
-          + New Goal
+          <span>+ New Goal</span>
         </button>
       </div>
 

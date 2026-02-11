@@ -222,6 +222,10 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
             </button>
           </div>
         </div>
+
+        <button className="btn-primary" onClick={onCreatePlan} style={{ marginLeft: 'auto' }}>
+          <span>+ New Plan</span>
+        </button>
       </div>
 
       {filteredPlans.length === 0 ? (
@@ -230,7 +234,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
             <p className="empty-title">No plans yet</p>
             <p className="empty-message">Plans help you organize your work into stages and track progress on your goals.</p>
             <button className="btn-primary btn-large" onClick={onCreatePlan}>
-              + Create Your First Plan
+              <span>+ Create Your First Plan</span>
             </button>
           </div>
         </div>

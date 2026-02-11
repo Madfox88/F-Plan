@@ -238,7 +238,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                 onClick={addTag}
                 disabled={isLoading || !tagInput.trim()}
               >
-                Add
+                <span>Add</span>
               </button>
             </div>
             {tags.length > 0 && (
@@ -306,14 +306,14 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
               onClick={onClose}
               disabled={isLoading}
             >
-              Cancel
+              <span>Cancel</span>
             </button>
             <button
               type="submit"
               className="btn-primary"
               disabled={isLoading || !title.trim()}
             >
-              {isLoading ? 'Creating...' : 'Create Goal'}
+              <span>{isLoading ? 'Creating...' : 'Create Goal'}</span>
             </button>
           </div>
         </form>

@@ -328,17 +328,17 @@ export function FocusSessionModal({
         <div className="modal-footer">
           {activeSession ? (
             <button className="btn-primary focus-end-btn" onClick={handleEnd} disabled={loading}>
-              {loading ? 'Ending…' : 'End Session'}
+              <span>{loading ? 'Ending…' : 'End Session'}</span>
             </button>
           ) : endMessage ? (
             <button className="btn-primary" onClick={handleClose}>
-              Done
+              <span>Done</span>
             </button>
           ) : (
             <>
-              <button className="btn-secondary" onClick={handleClose}>Cancel</button>
+              <button className="btn-secondary" onClick={handleClose}><span>Cancel</span></button>
               <button className="btn-primary" onClick={handleStart} disabled={loading}>
-                {loading ? 'Starting…' : 'Start Session'}
+                <span>{loading ? 'Starting…' : 'Start Session'}</span>
               </button>
             </>
           )}

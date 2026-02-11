@@ -229,7 +229,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
                         disabled={loading}
                         aria-label="Remove stage"
                       >
-                        ✕
+                        <span>✕</span>
                       </button>
                     )}
                   </div>
@@ -241,7 +241,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
                 className="btn-add-stage"
                 disabled={loading || customStages.length >= 6}
               >
-                + Add Stage
+                <span>+ Add Stage</span>
               </button>
               {stageAddError && (
                 <div className="form-error">{stageAddError}</div>
@@ -265,10 +265,10 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Plan'}
+              <span>{loading ? 'Creating...' : 'Create Plan'}</span>
             </button>
           </div>
         </form>

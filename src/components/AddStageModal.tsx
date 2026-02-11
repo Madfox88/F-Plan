@@ -82,10 +82,10 @@ export const AddStageModal: React.FC<AddStageModalProps> = ({
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button type="submit" className="btn-primary">
-              Add Stage
+              <span>Add Stage</span>
             </button>
           </div>
         </form>

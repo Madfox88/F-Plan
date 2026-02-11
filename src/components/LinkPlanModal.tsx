@@ -135,7 +135,7 @@ export const LinkPlanModal: React.FC<LinkPlanModalProps> = ({
 
         <div className="modal-footer">
           <button className="btn-primary" onClick={onClose}>
-            Done
+            <span>Done</span>
           </button>
         </div>
       </div>

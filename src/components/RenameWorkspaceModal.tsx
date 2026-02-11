@@ -93,14 +93,14 @@ export const RenameWorkspaceModal: React.FC<RenameWorkspaceModalProps> = ({
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose} disabled={isLoading}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button
               type="submit"
               className="btn-primary"
               disabled={isLoading || !name.trim() || name.trim() === workspace.name}
             >
-              {isLoading ? 'Renaming...' : 'Rename Workspace'}
+              <span>{isLoading ? 'Renaming...' : 'Rename Workspace'}</span>
             </button>
           </div>
         </form>

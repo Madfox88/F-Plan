@@ -191,14 +191,14 @@ export function EventModal({ isOpen, event, defaultStart, onClose, onSave, onDel
                 onClick={onDelete}
                 disabled={loading}
               >
-                Delete
+                <span>Delete</span>
               </button>
             )}
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Saving...' : event ? 'Save Changes' : 'Create Event'}
+              <span>{loading ? 'Saving...' : event ? 'Save Changes' : 'Create Event'}</span>
             </button>
           </div>
         </form>

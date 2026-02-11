@@ -158,14 +158,14 @@ export function ReminderModal({ isOpen, reminder, defaultAt, onClose, onSave, on
                 onClick={onDelete}
                 disabled={loading}
               >
-                Delete
+                <span>Delete</span>
               </button>
             )}
             <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
-              Cancel
+              <span>Cancel</span>
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Saving...' : reminder ? 'Save Changes' : 'Create Reminder'}
+              <span>{loading ? 'Saving...' : reminder ? 'Save Changes' : 'Create Reminder'}</span>
             </button>
           </div>
         </form>
