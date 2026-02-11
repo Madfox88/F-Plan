@@ -11,10 +11,10 @@
  * No creation, no editing, no comparisons.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
-import type { CalendarEvent, Reminder, FocusSession, Plan, Goal } from '../types/database';
+import type { CalendarEvent, Reminder, FocusSession, Plan, Goal, Task } from '../types/database';
 import {
   getTasksDueForUser,
   getTodaysEvents,
@@ -29,6 +29,7 @@ import {
   endFocusSession,
   getActivePlans,
   getGoalsByWorkspace,
+  getIncompleteTasksForUser,
 } from '../lib/database';
 import type { TaskWithContext, DashboardGoal } from '../lib/database';
 import { TaskReadOnlyModal } from '../components/TaskReadOnlyModal';
@@ -84,16 +85,25 @@ export function Dashboard() {
   /* Card 4 – Focus Session (inline) */
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [focusElapsed, setFocusElapsed] = useState(0);
-  const [focusContextType, setFocusContextType] = useState<'none' | 'plan' | 'goal'>('none');
+  const [focusContextType, setFocusContextType] = useState<'none' | 'plan' | 'goal' | 'task'>('none');
   const [focusContextId, setFocusContextId] = useState('');
   const [focusPlans, setFocusPlans] = useState<Plan[]>([]);
   const [focusGoals, setFocusGoals] = useState<Goal[]>([]);
+  const [focusTasks, setFocusTasks] = useState<Task[]>([]);
   const [focusStarted, setFocusStarted] = useState(false);  // show form vs idle
   const [focusLoading, setFocusLoading] = useState(false);
   const [focusError, setFocusError] = useState<string | null>(null);
   const [focusEndMsg, setFocusEndMsg] = useState<string | null>(null);
   const [isCtxTypeOpen, setIsCtxTypeOpen] = useState(false);
   const [isCtxValOpen, setIsCtxValOpen] = useState(false);
+  const [isDurationOpen, setIsDurationOpen] = useState(false);
+  const [focusDuration, setFocusDuration] = useState<number | null>(25); // minutes, null = custom
+  const [customDuration, setCustomDuration] = useState('');
+
+  /* Click-outside refs for focus dropdowns */
+  const ctxTypeRef = useRef<HTMLDivElement>(null);
+  const ctxValRef = useRef<HTMLDivElement>(null);
+  const durationRef = useRef<HTMLDivElement>(null);
 
   /* Popups */
   const [selectedTask, setSelectedTask] = useState<TaskWithContext | null>(null);
@@ -112,7 +122,7 @@ export function Dashboard() {
     const windowStart = rollingWindowStart();
 
     try {
-      const [tasks, events, reminders, goals, completed, assigned, avgFoc, streak, session, plans, wGoals] =
+      const [tasks, events, reminders, goals, completed, assigned, avgFoc, streak, session, plans, wGoals, incompleteTasks] =
         await Promise.all([
           getTasksDueForUser(userId, wsId, today).catch(() => [] as TaskWithContext[]),
           getTodaysEvents(wsId).catch(() => [] as Array<CalendarEvent & { occurrenceStart: string; occurrenceEnd: string }>),
@@ -125,6 +135,7 @@ export function Dashboard() {
           getActiveFocusSession(userId, wsId).catch(() => null),
           getActivePlans(wsId).catch(() => [] as Plan[]),
           getGoalsByWorkspace(wsId).catch(() => [] as Goal[]),
+          getIncompleteTasksForUser(userId, wsId).catch(() => [] as Task[]),
         ]);
 
       setTodayTasks(tasks);
@@ -138,6 +149,7 @@ export function Dashboard() {
       setActiveSession(session);
       setFocusPlans(plans);
       setFocusGoals(wGoals);
+      setFocusTasks(incompleteTasks);
     } finally {
       setLoading(false);
     }
@@ -159,28 +171,41 @@ export function Dashboard() {
   const completionRate = assignedCount > 0 ? Math.round((completedCount / assignedCount) * 100) : 0;
   const scheduleEmpty = todayTasks.length === 0 && todayEvents.length === 0 && todayReminders.length === 0;
 
+  /* ── Focus click-outside handler ── */
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (isCtxTypeOpen && ctxTypeRef.current && !ctxTypeRef.current.contains(t)) setIsCtxTypeOpen(false);
+      if (isCtxValOpen && ctxValRef.current && !ctxValRef.current.contains(t)) setIsCtxValOpen(false);
+      if (isDurationOpen && durationRef.current && !durationRef.current.contains(t)) setIsDurationOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isCtxTypeOpen, isCtxValOpen, isDurationOpen]);
+
+  const closeAllFocusDropdowns = () => {
+    setIsCtxTypeOpen(false);
+    setIsCtxValOpen(false);
+    setIsDurationOpen(false);
+  };
+
+  const DURATION_PRESETS = [15, 20, 25, 30, 45, 60] as const;
+  const durationLabel = focusDuration === null ? `${customDuration || '?'} min` : `${focusDuration} min`;
+
   /* ── Inline focus session handlers ── */
-  const handleShowSetup = async () => {
+  const handleShowSetup = () => {
     setFocusStarted(true);
     setFocusError(null);
     setFocusEndMsg(null);
-    if (!activeWorkspace) return;
-    try {
-      const [p, g] = await Promise.all([
-        getActivePlans(activeWorkspace.id),
-        getGoalsByWorkspace(activeWorkspace.id),
-      ]);
-      setFocusPlans(p);
-      setFocusGoals(g);
-    } catch { /* non-critical */ }
   };
 
   const handleCancelSetup = () => {
     setFocusStarted(false);
     setFocusContextType('none');
     setFocusContextId('');
-    setIsCtxTypeOpen(false);
-    setIsCtxValOpen(false);
+    setFocusDuration(25);
+    setCustomDuration('');
+    closeAllFocusDropdowns();
     setFocusError(null);
   };
 
@@ -195,6 +220,7 @@ export function Dashboard() {
       };
       if (focusContextType === 'plan' && focusContextId) payload.planId = focusContextId;
       if (focusContextType === 'goal' && focusContextId) payload.goalId = focusContextId;
+      if (focusContextType === 'task' && focusContextId) payload.taskId = focusContextId;
       const session = await startFocusSession(payload);
       setActiveSession(session);
       setFocusStarted(false);
@@ -223,6 +249,50 @@ export function Dashboard() {
     } finally {
       setFocusLoading(false);
     }
+  };
+
+  /* ── Focus context helpers ── */
+  const contextTypeLabel = (v: typeof focusContextType) =>
+    v === 'none' ? 'No context' : v === 'plan' ? 'Plan' : v === 'goal' ? 'Goal' : 'Task';
+
+  const contextValueLabel = (): string => {
+    if (!focusContextId) return 'Select…';
+    if (focusContextType === 'plan') return focusPlans.find((p) => p.id === focusContextId)?.title || 'Select…';
+    if (focusContextType === 'goal') return focusGoals.find((g) => g.id === focusContextId)?.title || 'Select…';
+    if (focusContextType === 'task') return focusTasks.find((t) => t.id === focusContextId)?.title || 'Select…';
+    return 'Select…';
+  };
+
+  const contextValueItems = (): Array<{ id: string; title: string }> => {
+    if (focusContextType === 'plan') return focusPlans;
+    if (focusContextType === 'goal') return focusGoals;
+    if (focusContextType === 'task') return focusTasks;
+    return [];
+  };
+
+  const contextEmptyLabel = (): string => {
+    if (focusContextType === 'plan') return 'No active plans';
+    if (focusContextType === 'goal') return 'No goals found';
+    if (focusContextType === 'task') return 'No incomplete tasks';
+    return '';
+  };
+
+  /** Resolve active session context label for timer display */
+  const activeContextLabel = (): string | null => {
+    if (!activeSession) return null;
+    if (activeSession.plan_id) {
+      const p = focusPlans.find((x) => x.id === activeSession.plan_id);
+      return p ? `Plan: ${p.title}` : null;
+    }
+    if (activeSession.goal_id) {
+      const g = focusGoals.find((x) => x.id === activeSession.goal_id);
+      return g ? `Goal: ${g.title}` : null;
+    }
+    if (activeSession.task_id) {
+      const t = focusTasks.find((x) => x.id === activeSession.task_id);
+      return t ? `Task: ${t.title}` : null;
+    }
+    return null;
   };
 
   /* ── Loading state ── */
@@ -343,50 +413,89 @@ export function Dashboard() {
         {focusError && <div className="focus-inline-error">{focusError}</div>}
         {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
 
+        {/* Timer — always visible */}
+        <div className="focus-resume-timer">{fmtElapsed(focusElapsed)}</div>
+
         {activeSession ? (
-          /* ── Active session: live timer ── */
+          /* ── Active session ── */
           <div className="focus-inline-active">
-            <div className="focus-resume-timer">{fmtElapsed(focusElapsed)}</div>
             <p className="text-secondary focus-context-hint">
-              {activeSession.plan_id && focusPlans.find((p) => p.id === activeSession.plan_id)
-                ? `Focused on: ${focusPlans.find((p) => p.id === activeSession.plan_id)?.title}`
-                : activeSession.goal_id && focusGoals.find((g) => g.id === activeSession.goal_id)
-                ? `Focused on: ${focusGoals.find((g) => g.id === activeSession.goal_id)?.title}`
-                : 'Free focus — no specific context'}
+              {activeContextLabel() ? `Focused on: ${activeContextLabel()}` : 'Free focus — no specific context'}
             </p>
             <p className="text-tertiary focus-discard-hint">Sessions under 5 min are discarded.</p>
-            <button
-              className="btn-primary focus-end-btn"
-              onClick={handleEndSession}
-              disabled={focusLoading}
-            >
-              {focusLoading ? 'Ending…' : 'End Session'}
-            </button>
           </div>
         ) : focusStarted ? (
-          /* ── Setup form: choose context + start ── */
+          /* ── Setup form ── */
           <div className="focus-inline-setup">
+            {/* Duration dropdown */}
             <div className="focus-form-group">
-              <label className="focus-form-label">Link to (optional)</label>
-              <div className="focus-dropdown">
+              <label className="focus-form-label">Duration</label>
+              <div className="dropdown" ref={durationRef}>
                 <button
                   type="button"
-                  className="focus-dropdown-trigger"
-                  onClick={() => { setIsCtxValOpen(false); setIsCtxTypeOpen(!isCtxTypeOpen); }}
+                  className="dropdown-trigger"
+                  onClick={() => { closeAllFocusDropdowns(); setIsDurationOpen(!isDurationOpen); }}
                 >
-                  <span>{focusContextType === 'none' ? 'No context' : focusContextType === 'plan' ? 'Plan' : 'Goal'}</span>
-                  <img src={ChevronDownIcon} alt="" className="focus-dropdown-chevron" />
+                  <span>{durationLabel}</span>
+                  <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
+                </button>
+                {isDurationOpen && (
+                  <div className="dropdown-menu">
+                    {DURATION_PRESETS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        className={`dropdown-option${focusDuration === m ? ' dropdown-option-active' : ''}`}
+                        onClick={() => { setFocusDuration(m); setCustomDuration(''); setIsDurationOpen(false); }}
+                      >
+                        {m} min
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className={`dropdown-option${focusDuration === null ? ' dropdown-option-active' : ''}`}
+                      onClick={() => { setFocusDuration(null); setIsDurationOpen(false); }}
+                    >
+                      Custom
+                    </button>
+                  </div>
+                )}
+              </div>
+              {focusDuration === null && (
+                <input
+                  type="number"
+                  className="focus-custom-input"
+                  placeholder="Minutes"
+                  min={1}
+                  max={480}
+                  value={customDuration}
+                  onChange={(e) => setCustomDuration(e.target.value)}
+                />
+              )}
+            </div>
+
+            {/* Context type dropdown */}
+            <div className="focus-form-group">
+              <label className="focus-form-label">Link to (optional)</label>
+              <div className="dropdown" ref={ctxTypeRef}>
+                <button
+                  type="button"
+                  className="dropdown-trigger"
+                  onClick={() => { closeAllFocusDropdowns(); setIsCtxTypeOpen(!isCtxTypeOpen); }}
+                >
+                  <span>{contextTypeLabel(focusContextType)}</span>
+                  <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
                 </button>
                 {isCtxTypeOpen && (
-                  <div className="focus-dropdown-menu">
-                    {(['none', 'plan', 'goal'] as const).map((v) => (
+                  <div className="dropdown-menu">
+                    {(['none', 'plan', 'goal', 'task'] as const).map((v) => (
                       <button
                         key={v}
                         type="button"
-                        className={`focus-dropdown-option${focusContextType === v ? ' focus-dropdown-option--active' : ''}`}
+                        className={`dropdown-option${focusContextType === v ? ' dropdown-option-active' : ''}`}
                         onClick={() => { setFocusContextType(v); setFocusContextId(''); setIsCtxTypeOpen(false); }}
                       >
-                        {v === 'none' ? 'No context' : v === 'plan' ? 'Plan' : 'Goal'}
+                        {contextTypeLabel(v)}
                       </button>
                     ))}
                   </div>
@@ -394,37 +503,31 @@ export function Dashboard() {
               </div>
             </div>
 
+            {/* Context value dropdown */}
             {focusContextType !== 'none' && (
               <div className="focus-form-group">
                 <label className="focus-form-label">
-                  {focusContextType === 'plan' ? 'Select plan' : 'Select goal'}
+                  {focusContextType === 'plan' ? 'Select plan' : focusContextType === 'goal' ? 'Select goal' : 'Select task'}
                 </label>
-                <div className="focus-dropdown">
+                <div className="dropdown" ref={ctxValRef}>
                   <button
                     type="button"
-                    className="focus-dropdown-trigger"
-                    onClick={() => { setIsCtxTypeOpen(false); setIsCtxValOpen(!isCtxValOpen); }}
+                    className="dropdown-trigger"
+                    onClick={() => { closeAllFocusDropdowns(); setIsCtxValOpen(!isCtxValOpen); }}
                   >
-                    <span>{focusContextId
-                      ? (focusContextType === 'plan'
-                          ? focusPlans.find((p) => p.id === focusContextId)?.title
-                          : focusGoals.find((g) => g.id === focusContextId)?.title) || 'Select…'
-                      : 'Select…'}
-                    </span>
-                    <img src={ChevronDownIcon} alt="" className="focus-dropdown-chevron" />
+                    <span>{contextValueLabel()}</span>
+                    <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
                   </button>
                   {isCtxValOpen && (
-                    <div className="focus-dropdown-menu">
-                      {(focusContextType === 'plan' ? focusPlans : focusGoals).length === 0 ? (
-                        <div className="focus-dropdown-empty">
-                          No {focusContextType === 'plan' ? 'active plans' : 'goals'} found
-                        </div>
+                    <div className="dropdown-menu">
+                      {contextValueItems().length === 0 ? (
+                        <div className="dropdown-empty">{contextEmptyLabel()}</div>
                       ) : (
-                        (focusContextType === 'plan' ? focusPlans : focusGoals).map((item) => (
+                        contextValueItems().map((item) => (
                           <button
                             key={item.id}
                             type="button"
-                            className={`focus-dropdown-option${focusContextId === item.id ? ' focus-dropdown-option--active' : ''}`}
+                            className={`dropdown-option${focusContextId === item.id ? ' dropdown-option-active' : ''}`}
                             onClick={() => { setFocusContextId(item.id); setIsCtxValOpen(false); }}
                           >
                             {item.title}
@@ -436,23 +539,31 @@ export function Dashboard() {
                 </div>
               </div>
             )}
+          </div>
+        ) : (
+          /* ── Idle hint ── */
+          <p className="text-secondary">Start a focused work session.</p>
+        )}
 
-            <div className="focus-inline-actions">
+        {/* ── Actions — always pinned at bottom ── */}
+        <div className="focus-inline-actions">
+          {activeSession ? (
+            <button className="btn-primary focus-end-btn" onClick={handleEndSession} disabled={focusLoading}>
+              {focusLoading ? 'Ending…' : 'End Session'}
+            </button>
+          ) : focusStarted ? (
+            <>
               <button className="btn-secondary" onClick={handleCancelSetup}>Cancel</button>
               <button className="btn-primary" onClick={handleStartSession} disabled={focusLoading}>
                 {focusLoading ? 'Starting…' : 'Start'}
               </button>
-            </div>
-          </div>
-        ) : (
-          /* ── Idle state ── */
-          <>
-            <p className="text-secondary">Start a focused work session.</p>
-            <button className="btn-primary focus-start-btn" onClick={handleShowSetup}>
+            </>
+          ) : (
+            <button className="btn-primary" onClick={handleShowSetup}>
               Start Focus Session
             </button>
-          </>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ═══ Read-only popups ═══ */}

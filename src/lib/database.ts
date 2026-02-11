@@ -1356,6 +1356,41 @@ export async function getAssignedTaskCount(
   return count || 0;
 }
 
+/**
+ * Get incomplete tasks assigned to a user across all active plans in a workspace.
+ * Used by Dashboard focus session to let the user link a session to a specific task.
+ */
+export async function getIncompleteTasksForUser(
+  userId: string,
+  workspaceId: string
+): Promise<Task[]> {
+  const { data: plans } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .is('archived_at', null);
+
+  if (!plans || plans.length === 0) return [];
+
+  const { data: stages } = await supabase
+    .from('stages')
+    .select('id')
+    .in('plan_id', plans.map((p: any) => p.id));
+
+  if (!stages || stages.length === 0) return [];
+
+  const { data: tasks, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .in('stage_id', stages.map((s: any) => s.id))
+    .eq('assigned_to', userId)
+    .is('completed_at', null)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
+  return tasks || [];
+}
+
 /* ══════════════════════════════════════════════════
    Dashboard-specific queries (DASHBOARD_RULES.md)
    ══════════════════════════════════════════════════ */

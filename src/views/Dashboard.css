@@ -242,17 +242,13 @@
   letter-spacing: 0.02em;
 }
 
-.focus-start-btn {
-  margin-top: auto;
-}
-
 /* ── Inline active session ── */
 
 .focus-inline-active {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   width: 100%;
 }
 
@@ -269,7 +265,6 @@
 }
 
 .focus-end-btn {
-  margin-top: var(--space-xs);
   background: var(--danger, #ef4444);
 }
 .focus-end-btn:hover {
@@ -297,82 +292,30 @@
   font-weight: var(--font-weight-medium, 500);
 }
 
-/* ── Custom dropdown (glass-style) ── */
-
-.focus-dropdown {
-  position: relative;
-}
-
-.focus-dropdown-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Custom duration input */
+.focus-custom-input {
+  margin-top: var(--space-xs);
   width: 100%;
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--glass-bg, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-md, 8px);
+  padding: 10px 12px;
+  font-size: var(--font-size-base);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  text-align: left;
 }
-.focus-dropdown-trigger:hover {
-  border-color: var(--accent-primary, #60a5fa);
-}
-
-.focus-dropdown-chevron {
-  width: 14px;
-  height: 14px;
-  opacity: 0.5;
-  flex-shrink: 0;
+.focus-custom-input:focus {
+  outline: none;
+  border-color: var(--glass-border-heavy);
+  box-shadow: 0 0 0 2px var(--glass-highlight);
 }
 
-.focus-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  max-height: 160px;
-  overflow-y: auto;
-  background: var(--glass-bg-elevated, rgba(30, 30, 46, 0.95));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-md, 8px);
-  padding: var(--space-xs) 0;
-  z-index: 10;
-  backdrop-filter: blur(12px);
-}
-
-.focus-dropdown-option {
-  display: block;
-  width: 100%;
-  padding: var(--space-xs) var(--space-sm);
-  font-size: var(--font-size-sm);
-  color: var(--text-primary);
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-}
-.focus-dropdown-option:hover {
-  background: var(--glass-bg-hover, rgba(255, 255, 255, 0.08));
-}
-.focus-dropdown-option--active {
-  color: var(--accent-primary, #60a5fa);
-}
-
-.focus-dropdown-empty {
-  padding: var(--space-xs) var(--space-sm);
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-}
-
-/* ── Actions row ── */
+/* ── Actions row — pinned bottom-left ── */
 
 .focus-inline-actions {
   display: flex;
   gap: var(--space-sm);
-  margin-top: var(--space-xs);
+  margin-top: auto;         /* push to card bottom */
+  align-self: flex-start;   /* left-align */
 }
 
 /* ── Feedback messages ── */
