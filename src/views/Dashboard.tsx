@@ -34,6 +34,7 @@ import {
 import type { TaskWithContext, DashboardGoal } from '../lib/database';
 import { TaskReadOnlyModal } from '../components/TaskReadOnlyModal';
 import { GoalReadOnlyModal } from '../components/GoalReadOnlyModal';
+import { FocusTimer } from '../components/FocusTimer';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './Dashboard.css';
 
@@ -52,14 +53,6 @@ function rollingWindowStart(): string {
 
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-}
-
-function fmtElapsed(sec: number): string {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 /* ── Component ── */
@@ -414,7 +407,7 @@ export function Dashboard() {
         {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
 
         {/* Timer — always visible */}
-        <div className="focus-resume-timer">{fmtElapsed(focusElapsed)}</div>
+        <FocusTimer seconds={focusElapsed} active={!!activeSession} />
 
         {activeSession ? (
           /* ── Active session ── */

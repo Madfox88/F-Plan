@@ -234,13 +234,7 @@
   gap: var(--space-md);
 }
 
-.focus-resume-timer {
-  font-size: var(--font-size-3xl, 2rem);
-  font-weight: var(--font-weight-semibold);
-  font-variant-numeric: tabular-nums;
-  color: var(--accent-primary, #60a5fa);
-  letter-spacing: 0.02em;
-}
+/* Timer display is now handled by <FocusTimer /> component — see FocusTimer.css */
 
 /* ── Inline active session ── */
 

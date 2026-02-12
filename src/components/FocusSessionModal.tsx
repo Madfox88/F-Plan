@@ -23,6 +23,7 @@ import {
   getActivePlans,
   getGoalsByWorkspace,
 } from '../lib/database';
+import { FocusTimer } from './FocusTimer';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './FocusSessionModal.css';
 
@@ -120,14 +121,6 @@ export function FocusSessionModal({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const formatTime = (totalSeconds: number) => {
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  };
-
   const handleStart = async () => {
     setError(null);
     setEndMessage(null);
@@ -212,7 +205,7 @@ export function FocusSessionModal({
           {activeSession ? (
             /* ── Active session view ── */
             <div className="focus-active">
-              <div className="focus-timer">{formatTime(elapsed)}</div>
+              <FocusTimer seconds={elapsed} active />
               <p className="focus-hint">
                 {activeSession.plan_id && plans.find((p) => p.id === activeSession.plan_id)
                   ? `Focused on: ${plans.find((p) => p.id === activeSession.plan_id)?.title}`

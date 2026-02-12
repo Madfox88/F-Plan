@@ -1,0 +1,108 @@
+/* ═══════════════════════════════════════════
+   FocusTimer — Variant C  "Gradient Glow"
+   ═══════════════════════════════════════════
+   Bold gradient digits + soft diffused glow.
+   The glow only renders when --active is set.
+*/
+
+/* ── Container ── */
+.focus-glow-timer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Glow blob (behind digits) ── */
+.focus-glow-timer__glow {
+  position: absolute;
+  width: 220px;
+  height: 80px;
+  border-radius: 50%;
+  filter: blur(44px);
+  opacity: 0;
+  background: linear-gradient(135deg, #8b5cf6, #f43f5e);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.6s ease;
+}
+
+.focus-glow-timer--active .focus-glow-timer__glow {
+  opacity: 0.35;
+  animation: focusGlowPulse 3s ease-in-out infinite;
+}
+
+/* ── Digits ── */
+.focus-glow-timer__digits {
+  position: relative;
+  z-index: 1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  /* Idle state — plain text color */
+  color: var(--text-tertiary);
+  transition: color 0.3s ease;
+}
+
+/* Active → gradient fill */
+.focus-glow-timer--active .focus-glow-timer__digits {
+  background: linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── Size: lg (default — Dashboard card / modal) ── */
+.focus-glow-timer--lg .focus-glow-timer__digits {
+  font-size: 56px;
+}
+.focus-glow-timer--lg .focus-glow-timer__glow {
+  width: 220px;
+  height: 80px;
+  filter: blur(44px);
+}
+
+/* ── Size: sm ── */
+.focus-glow-timer--sm .focus-glow-timer__digits {
+  font-size: 36px;
+  letter-spacing: -1px;
+}
+.focus-glow-timer--sm .focus-glow-timer__glow {
+  width: 140px;
+  height: 50px;
+  filter: blur(32px);
+}
+
+/* ── Glow pulse animation ── */
+@keyframes focusGlowPulse {
+  0%, 100% {
+    opacity: 0.30;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.42;
+    transform: scale(1.06);
+  }
+}
+
+/* ── Light theme — use darker gradient for contrast ── */
+:root .focus-glow-timer--active .focus-glow-timer__digits {
+  background: linear-gradient(135deg, #7c3aed 0%, #e11d48 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Dark theme — brighter pastel gradient ── */
+[data-theme="dark"] .focus-glow-timer--active .focus-glow-timer__digits {
+  background: linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .focus-glow-timer--active .focus-glow-timer__glow {
+  opacity: 0.38;
+}

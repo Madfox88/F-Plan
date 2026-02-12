@@ -13,14 +13,7 @@
   padding: var(--space-lg) 0;
 }
 
-.focus-timer {
-  font-size: 56px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 2px;
-  line-height: 1;
-}
+/* Timer display is now handled by <FocusTimer /> component — see FocusTimer.css */
 
 .focus-hint {
   font-size: var(--font-size-sm);
