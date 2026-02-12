@@ -45,7 +45,9 @@ html[data-theme='dark'] .plan-menu-icon {
   background: var(--glass-bg-heavy);
   border: 1px solid var(--glass-border-heavy);
   border-radius: var(--radius-sm);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -76,17 +78,23 @@ html[data-theme='dark'] .plan-menu-icon {
   color: var(--text-primary);
   font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  text-shadow: var(--dropdown-text-halo);
+  border-bottom: 1px solid var(--dropdown-separator);
+  transition: background var(--transition-fast);
   text-align: left;
 }
 
+.menu-item:last-child {
+  border-bottom: none;
+}
+
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--dropdown-hover-bg);
   color: var(--text-primary);
 }
 
 .menu-item:active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--dropdown-active-bg);
 }
 
 .menu-item-icon {

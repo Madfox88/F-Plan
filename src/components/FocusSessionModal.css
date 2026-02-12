@@ -75,7 +75,8 @@
 
 /* Reuse dropdown styles from TaskCreateModal */
 .focus-session-modal .dropdown-option-active {
-  background: var(--glass-bg-heavy);
+  background: var(--dropdown-active-bg);
+  border-bottom-color: var(--dropdown-active-border);
 }
 
 .focus-session-modal .dropdown-empty {

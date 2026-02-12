@@ -66,18 +66,13 @@
   position: absolute;
   top: calc(100% + 20px);
   left: 0;
-  background-color: var(--glass-bg-heavy);
-  background-image: linear-gradient(
-    139deg,
-    var(--glass-bg-heavy) 0%,
-    var(--glass-bg-heavy) 0%,
-    rgba(var(--primary-color-rgb), 0.08) 100%
-  );
-  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border-heavy);
   border-radius: 10px;
   width: 280px;
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -113,21 +108,23 @@
 .workspace-item {
   padding: 4px 7px;
   cursor: pointer;
-  transition: all 0.3s ease-out;
+  transition: background var(--transition-fast);
   display: flex;
   align-items: center;
   gap: 10px;
   border-radius: 6px;
   color: var(--text-secondary);
+  text-shadow: var(--dropdown-text-halo);
+  border-bottom: 1px solid var(--dropdown-separator);
+}
+
+.workspace-item:last-child {
+  border-bottom: none;
 }
 
 .workspace-item:hover {
-  background: var(--glass-bg-hover);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
+  background: var(--dropdown-hover-bg);
   color: var(--text-primary);
-  transform: translate(1px, -1px);
 }
 
 .workspace-item:active {

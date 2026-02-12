@@ -12,6 +12,13 @@
   --glass-border-heavy: rgba(255, 255, 255, 0.60);
   --glass-blur-heavy: 32px;
 
+  /* Dropdown-specific tokens (Variant B) */
+  --dropdown-text-halo: 0 0 8px rgba(255, 255, 255, 0.5);
+  --dropdown-separator: rgba(0, 0, 0, 0.05);
+  --dropdown-hover-bg: rgba(0, 0, 0, 0.04);
+  --dropdown-active-bg: rgba(139, 92, 246, 0.08);
+  --dropdown-active-border: rgba(139, 92, 246, 0.06);
+
   --bg-overlay: rgba(255, 255, 255, 0.28);
 
   /* Light Theme Colors */
@@ -74,6 +81,13 @@
   --glass-bg-heavy: rgba(32, 32, 36, 0.72);
   --glass-border-heavy: rgba(255, 255, 255, 0.22);
   --glass-blur-heavy: 26px;
+
+  /* Dropdown-specific tokens (Variant B) */
+  --dropdown-text-halo: 0 0 8px rgba(10, 10, 18, 0.6);
+  --dropdown-separator: rgba(255, 255, 255, 0.08);
+  --dropdown-hover-bg: var(--glass-bg-heavy);
+  --dropdown-active-bg: rgba(139, 92, 246, 0.15);
+  --dropdown-active-border: rgba(139, 92, 246, 0.1);
 
   --bg-overlay: rgba(0, 0, 0, 0.32);
 

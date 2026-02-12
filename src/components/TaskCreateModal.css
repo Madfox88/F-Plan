@@ -77,13 +77,15 @@ html[data-theme='dark'] .dropdown-chevron {
   left: 0;
   right: 0;
   background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-heavy);
   border-radius: var(--radius-sm);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
   box-shadow: var(--shadow-lg);
   padding: var(--space-xs);
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 0;
 }
 
 .dropdown-option {
@@ -99,10 +101,17 @@ html[data-theme='dark'] .dropdown-chevron {
   text-align: left;
   font-family: var(--font-family);
   font-size: var(--font-size-base);
+  text-shadow: var(--dropdown-text-halo);
+  border-bottom: 1px solid var(--dropdown-separator);
+  transition: background var(--transition-fast);
+}
+
+.dropdown-option:last-child {
+  border-bottom: none;
 }
 
 .dropdown-option:hover {
-  background: var(--glass-bg-heavy);
+  background: var(--dropdown-hover-bg);
 }
 
 .form-section-header {
@@ -280,7 +289,18 @@ html[data-theme='dark'] .dropdown-chevron {
 }
 
 .dropdown-option-active {
+  background: var(--dropdown-active-bg);
+  border-bottom-color: var(--dropdown-active-border);
+}
+
+/* Light theme: heavier glass for menu panel readability */
+:root .dropdown-menu {
   background: var(--glass-bg-heavy);
+}
+
+/* Dark theme: standard glass-bg is sufficient with blur */
+[data-theme="dark"] .dropdown-menu {
+  background: var(--glass-bg);
 }
 
 .dropdown-empty {
