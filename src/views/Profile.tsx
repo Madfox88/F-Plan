@@ -2,52 +2,29 @@ import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAvatar } from '../context/AvatarContext';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useCurrentUser } from '../context/UserContext';
 import { AvatarCropperModal } from '../components/AvatarCropperModal';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import './Profile.css';
 import './Settings.css';
 
-const profileData = {
-  name: 'Alex Morgan',
-};
-
-interface AccountData {
-  email: string;
-  createdAt: string;
-}
-
-const defaultAccountData: AccountData = {
-  email: 'alex@fplan.com',
-  createdAt: 'January 31, 2026',
-};
-
 export function Profile() {
   const { avatarUrl, setAvatarUrl } = useAvatar();
   const { activeWorkspace } = useWorkspace();
+  const { displayName, email: userEmail, updateProfile } = useCurrentUser();
   const workspaceId = activeWorkspace?.id ?? null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [accountData, setAccountData] = useState<AccountData>(() => {
-    const saved = localStorage.getItem('accountData');
-    return saved ? JSON.parse(saved) : defaultAccountData;
-  });
   const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [editEmail, setEditEmail] = useState(() => {
-    const saved = localStorage.getItem('accountData');
-    return saved ? JSON.parse(saved).email : defaultAccountData.email;
-  });
+  const [editEmail, setEditEmail] = useState(userEmail);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [name, setName] = useState(() => {
-    return localStorage.getItem('userName') || profileData.name;
-  });
+  const [name, setName] = useState(displayName);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [editName, setEditName] = useState(() => {
-    return localStorage.getItem('userName') || profileData.name;
-  });
+  const [editName, setEditName] = useState(displayName);
 
   const handleAvatarClick = () => {
     if (!workspaceId) return;
@@ -83,31 +60,36 @@ export function Profile() {
     setCropSrc(null);
   };
 
-  const handleEmailSave = () => {
+  const handleEmailSave = async () => {
     if (!editEmail.trim()) {
       setMessage({ type: 'error', text: 'Email cannot be empty' });
       return;
     }
-    const updatedData = { ...accountData, email: editEmail };
-    setAccountData(updatedData);
-    localStorage.setItem('accountData', JSON.stringify(updatedData));
-    setIsEditingEmail(false);
-    setMessage({ type: 'success', text: 'Email updated successfully' });
-    setTimeout(() => setMessage(null), 3000);
+    try {
+      await updateProfile({ email: editEmail.trim() });
+      setIsEditingEmail(false);
+      setMessage({ type: 'success', text: 'Email updated successfully' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to update email' });
+    }
   };
 
-  const handleNameSave = () => {
+  const handleNameSave = async () => {
     if (!editName.trim()) {
       setMessage({ type: 'error', text: 'Name cannot be empty' });
       return;
     }
-    const trimmedName = editName.trim();
-    setName(trimmedName);
-    localStorage.setItem('userName', trimmedName);
-    window.dispatchEvent(new Event('userNameChanged'));
-    setIsEditingName(false);
-    setMessage({ type: 'success', text: 'Name updated successfully' });
-    setTimeout(() => setMessage(null), 3000);
+    try {
+      const trimmedName = editName.trim();
+      await updateProfile({ display_name: trimmedName });
+      setName(trimmedName);
+      setIsEditingName(false);
+      setMessage({ type: 'success', text: 'Name updated successfully' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to update name' });
+    }
   };
 
   const handlePasswordChange = () => {
@@ -131,7 +113,7 @@ export function Profile() {
 
   const handleExportData = () => {
     const data = {
-      account: accountData,
+      account: { name: displayName, email: userEmail },
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -244,7 +226,7 @@ export function Profile() {
             </div>
           ) : (
             <div className="settings-field-display">
-              <span className="settings-value">{accountData.email}</span>
+              <span className="settings-value">{userEmail}</span>
               <button
                 className="settings-button secondary small"
                 onClick={() => setIsEditingEmail(true)}
@@ -258,7 +240,7 @@ export function Profile() {
         <div className="settings-field">
           <label className="settings-label">Account Created</label>
           <div className="settings-field-display">
-            <span className="settings-value">{accountData.createdAt}</span>
+            <span className="settings-value">—</span>
           </div>
         </div>
 

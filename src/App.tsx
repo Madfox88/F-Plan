@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { AvatarProvider } from './context/AvatarContext';
-import { UserProvider } from './context/UserContext';
+import { UserProvider, useCurrentUser } from './context/UserContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { MainLayout } from './components/Layout';
@@ -24,12 +24,10 @@ import './App.css';
 
 function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
+  const { displayName } = useCurrentUser();
+  const userName = displayName ? displayName.split(' ')[0] : 'User';
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('activeTab') || 'dashboard';
-  });
-  const [userName, setUserName] = useState(() => {
-    const fullName = localStorage.getItem('userName') || 'Alex Morgan';
-    return fullName.split(' ')[0];
   });
   const [isCreatePlanModalOpen, setIsCreatePlanModalOpen] = useState(false);
   const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] = useState(false);
@@ -37,22 +35,6 @@ function AppContent() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const fullName = localStorage.getItem('userName') || 'Alex Morgan';
-      setUserName(fullName.split(' ')[0]);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    // Also listen for custom event from same window
-    window.addEventListener('userNameChanged', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('userNameChanged', handleStorageChange);
-    };
-  }, []);
 
   useEffect(() => {
     if (selectedPlanId) {

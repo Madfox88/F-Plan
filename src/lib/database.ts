@@ -1050,6 +1050,22 @@ export async function getUsers(): Promise<User[]> {
   return data ?? [];
 }
 
+/** Update mutable fields on a user row (display_name, email, avatar_url). */
+export async function updateUser(
+  id: string,
+  fields: Partial<Pick<User, 'display_name' | 'email' | 'avatar_url'>>
+): Promise<User> {
+  const { data, error } = await supabase
+    .from('users')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update user: ${error.message}`);
+  return data;
+}
+
 /* ══════════════════════════════════════════════════
    Focus Session Operations (FOCUS_SESSIONS_RULES.md §11)
    ══════════════════════════════════════════════════ */
