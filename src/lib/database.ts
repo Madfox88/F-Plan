@@ -963,27 +963,6 @@ export async function getGoalsWithDueDatesInRange(
    User Operations (DATABASE_SCHEMA.md §3)
    ══════════════════════════════════════════════════ */
 
-export async function getOrCreateUser(email: string, displayName: string): Promise<User> {
-  // Try to find existing user
-  const { data: existing } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email)
-    .maybeSingle();
-
-  if (existing) return existing;
-
-  // Create new user
-  const { data, error } = await supabase
-    .from('users')
-    .insert([{ email, display_name: displayName }])
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to create user: ${error.message}`);
-  return data;
-}
-
 /** Fetch all users in the system. Scoped to workspace members later. */
 export async function getUsers(): Promise<User[]> {
   const { data, error } = await supabase

@@ -1,18 +1,20 @@
 /**
- * UserContext — Current user identity and profile.
+ * UserContext — Current user profile from public.users.
+ *
+ * Reads the auth session from AuthContext, then fetches/syncs
+ * the corresponding public.users row. Provides userId, display name,
+ * email, avatar, and a updateProfile() helper.
  *
  * TASK_OWNERSHIP_RULES.md §3: Every task has exactly one owner.
- * This context resolves the current user once on mount and makes
- * the userId, display name, email, and avatar available to all views.
- *
- * Profile edits (name, email, avatar) are persisted to Supabase via
- * updateProfile() so they survive browser clears / device changes.
+ * This context resolves the current user identity for all views.
  */
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types/database';
-import { getOrCreateUser, updateUser } from '../lib/database';
+import { updateUser } from '../lib/database';
+import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface UserContextType {
   userId: string | null;
@@ -27,23 +29,65 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [userId, setUserId] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /* When auth user changes, fetch the public.users row */
   useEffect(() => {
-    getOrCreateUser('local@fplan.app', 'User')
-      .then((u) => {
-        setUserId(u.id);
-        setDisplayName(u.display_name);
-        setEmail(u.email);
-        setAvatarUrl(u.avatar_url);
-      })
-      .catch((err) => console.error('Failed to resolve current user:', err))
-      .finally(() => setLoading(false));
-  }, []);
+    if (authLoading) return;
+
+    if (!authUser) {
+      setUserId(null);
+      setDisplayName('');
+      setEmail('');
+      setAvatarUrl(null);
+      setLoading(false);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          setUserId(data.id);
+          setDisplayName(data.display_name);
+          setEmail(data.email);
+          setAvatarUrl(data.avatar_url);
+        } else {
+          // Bridge trigger hasn't fired yet — fall back to auth metadata
+          setUserId(authUser.id);
+          setDisplayName(
+            authUser.user_metadata?.display_name ??
+            authUser.email?.split('@')[0] ??
+            'User'
+          );
+          setEmail(authUser.email ?? '');
+          setAvatarUrl(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+        setUserId(authUser.id);
+        setDisplayName(authUser.email?.split('@')[0] ?? 'User');
+        setEmail(authUser.email ?? '');
+        setAvatarUrl(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [authUser, authLoading]);
 
   const updateProfile = useCallback(
     async (fields: Partial<Pick<User, 'display_name' | 'email' | 'avatar_url'>>) => {

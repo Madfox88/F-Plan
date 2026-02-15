@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAvatar } from '../context/AvatarContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 import { AvatarCropperModal } from '../components/AvatarCropperModal';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import './Profile.css';
@@ -12,6 +13,7 @@ export function Profile() {
   const { avatarUrl, setAvatarUrl } = useAvatar();
   const { activeWorkspace } = useWorkspace();
   const { displayName, email: userEmail, updateProfile } = useCurrentUser();
+  const { signOut, updateEmail, updatePassword } = useAuth();
   const workspaceId = activeWorkspace?.id ?? null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -66,10 +68,17 @@ export function Profile() {
       return;
     }
     try {
+      // Update in Supabase Auth (sends confirmation to new email)
+      const { error } = await updateEmail(editEmail.trim());
+      if (error) {
+        setMessage({ type: 'error', text: error });
+        return;
+      }
+      // Also update public.users row
       await updateProfile({ email: editEmail.trim() });
       setIsEditingEmail(false);
-      setMessage({ type: 'success', text: 'Email updated successfully' });
-      setTimeout(() => setMessage(null), 3000);
+      setMessage({ type: 'success', text: 'Confirmation email sent to your new address' });
+      setTimeout(() => setMessage(null), 5000);
     } catch {
       setMessage({ type: 'error', text: 'Failed to update email' });
     }
@@ -92,8 +101,8 @@ export function Profile() {
     }
   };
 
-  const handlePasswordChange = () => {
-    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+  const handlePasswordChange = async () => {
+    if (!passwordForm.new || !passwordForm.confirm) {
       setMessage({ type: 'error', text: 'All fields are required' });
       return;
     }
@@ -103,6 +112,11 @@ export function Profile() {
     }
     if (passwordForm.new.length < 8) {
       setMessage({ type: 'error', text: 'Password must be at least 8 characters' });
+      return;
+    }
+    const { error } = await updatePassword(passwordForm.new);
+    if (error) {
+      setMessage({ type: 'error', text: error });
       return;
     }
     setPasswordForm({ current: '', new: '', confirm: '' });
@@ -129,12 +143,10 @@ export function Profile() {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     setShowDeleteConfirm(false);
-    setMessage({ type: 'success', text: 'Account deleted. Redirecting...' });
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 2000);
+    setMessage({ type: 'error', text: 'Account deletion requires admin approval. Contact support.' });
+    setTimeout(() => setMessage(null), 5000);
   };
 
   return (
@@ -250,13 +262,6 @@ export function Profile() {
             <div className="settings-edit-field">
               <input
                 type="password"
-                placeholder="Current password"
-                value={passwordForm.current}
-                onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                className="settings-input"
-              />
-              <input
-                type="password"
                 placeholder="New password"
                 value={passwordForm.new}
                 onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
@@ -326,6 +331,17 @@ export function Profile() {
               Delete Account
             </button>
           )}
+        </div>
+      </div>
+
+      <div className="settings-card">
+        <h2 className="settings-section-title">Session</h2>
+        <div className="settings-field">
+          <label className="settings-label">Sign out</label>
+          <p className="settings-description">Sign out of your F-Plan account on this device</p>
+          <button className="settings-button danger" onClick={signOut}>
+            Sign out
+          </button>
         </div>
       </div>
 

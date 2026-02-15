@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { AvatarProvider } from './context/AvatarContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { UserProvider, useCurrentUser } from './context/UserContext';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -17,6 +18,10 @@ import { PlanDetail } from './views/PlanDetail';
 import { Tasks } from './views/Tasks';
 import { Calendar } from './views/Calendar';
 import { FocusLog } from './views/FocusLog';
+import { LoginPage } from './views/LoginPage';
+import { SignupPage } from './views/SignupPage';
+import { ForgotPasswordPage } from './views/ForgotPasswordPage';
+import { ResetPasswordPage } from './views/ResetPasswordPage';
 import { supabaseConfigured } from './lib/supabase';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
 import type { Plan } from './types/database';
@@ -207,7 +212,52 @@ function AppContent() {
   );
 }
 
-function App() {
+/**
+ * AuthGate — Shows auth pages when signed out, main app when signed in.
+ * Also handles the /reset-password recovery flow.
+ */
+function AuthGate() {
+  const { session, loading: authLoading } = useAuth();
+  const [authPage, setAuthPage] = useState<'login' | 'signup' | 'forgot'>('login');
+
+  // Detect password recovery flow from URL hash
+  const isRecoveryFlow =
+    window.location.hash.includes('type=recovery') ||
+    window.location.pathname === '/reset-password';
+
+  if (authLoading) {
+    return (
+      <div className="app-loading">
+        <p>Initializing F-Plan...</p>
+      </div>
+    );
+  }
+
+  // Password recovery: user clicked the reset link in their email
+  if (isRecoveryFlow && session) {
+    return (
+      <ResetPasswordPage
+        onComplete={() => {
+          // Clear the hash/path and go to main app
+          window.history.replaceState(null, '', '/');
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
+  // Not signed in — show auth pages
+  if (!session) {
+    if (authPage === 'signup') {
+      return <SignupPage onNavigate={(p) => setAuthPage(p)} />;
+    }
+    if (authPage === 'forgot') {
+      return <ForgotPasswordPage onNavigate={(p) => setAuthPage(p)} />;
+    }
+    return <LoginPage onNavigate={(p) => setAuthPage(p)} />;
+  }
+
+  // Signed in — show the main app
   return (
     <WorkspaceProvider>
       <AvatarProvider>
@@ -216,6 +266,14 @@ function App() {
         </UserProvider>
       </AvatarProvider>
     </WorkspaceProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   );
 }
 

@@ -30,12 +30,25 @@ const createOfflineStorage = () => ({
   getPublicUrl: (_path: string) => ({ data: { publicUrl: '' }, error: missingEnvError }),
 });
 
+const noopAuthResult = { data: { user: null, session: null }, error: missingEnvError };
+
+const createOfflineAuth = () => ({
+  getSession: async () => ({ data: { session: null }, error: null }),
+  onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+  signUp: async () => noopAuthResult,
+  signInWithPassword: async () => noopAuthResult,
+  signOut: async () => ({ error: null }),
+  resetPasswordForEmail: async () => ({ data: {}, error: null }),
+  updateUser: async () => noopAuthResult,
+});
+
 const createOfflineClient = (): SupabaseClient =>
   ({
     from: () => createOfflineQueryBuilder(),
     storage: {
       from: () => createOfflineStorage(),
     },
+    auth: createOfflineAuth(),
   } as unknown as SupabaseClient);
 
 export const supabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
