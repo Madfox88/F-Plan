@@ -313,7 +313,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         checklists: payload.checklists,
         labels: payload.labels,
         completed: payload.status === 'completed',
-        assigned_to: payload.assignedTo ?? null,
+        assigned_to: payload.assignedTo || undefined,
       });
     } else {
       await createTask({

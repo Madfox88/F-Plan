@@ -48,7 +48,7 @@ export type Task = {
   title: string;
   completed: boolean;
   completed_at: string | null;  // TASK_TEMPORAL_TRUTH_RULES.md §2 — sole temporal authority
-  assigned_to: string | null;   // TASK_OWNERSHIP_RULES.md §3 — FK → users.id
+  assigned_to: string;          // TASK_OWNERSHIP_RULES.md §3 — FK → users.id  (DB: NOT NULL)
   status?: 'not_started' | 'in_progress' | 'completed';
   priority?: 'urgent' | 'important' | 'medium' | 'low';
   start_date?: string | null;

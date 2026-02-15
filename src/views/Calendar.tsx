@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useCurrentUser } from '../context/UserContext';
 import {
   getEvents,
   getReminders,
@@ -98,6 +99,7 @@ const MAX_MONTH_ITEMS = 3;
 
 export function Calendar() {
   const { activeWorkspace } = useWorkspace();
+  const { userId } = useCurrentUser();
   const [view, setView] = useState<CalendarView>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
@@ -347,6 +349,7 @@ export function Calendar() {
         notes: data.notes,
         remindAt: data.remindAt,
         repeatRule: data.repeatRule,
+        userId: userId || undefined,
       });
     }
     setReminderModalData(null);

@@ -113,7 +113,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
       setDueDate(editingTask.due_date || '');
       setRepeat(editingTask.repeat || 'none');
       setDescription(editingTask.description || '');
-      setAssignedTo(editingTask.assigned_to || currentUserId || null);
+      setAssignedTo(editingTask.assigned_to || currentUserId || '');
 
       const checklistItems: ChecklistItem[] = (editingTask.checklists || []).map((item: any, index: number) => {
         if (typeof item === 'string') {

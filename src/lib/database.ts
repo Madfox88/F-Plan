@@ -373,27 +373,6 @@ export async function createStage(planId: string, title: string): Promise<Stage>
   return data;
 }
 
-export async function updateStagePosition(id: string, position: number): Promise<Stage> {
-  const { data, error } = await supabase
-    .from('stages')
-    .update({ position })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw new Error(`Failed to update stage: ${error.message}`);
-  return data;
-}
-
-export async function deleteStage(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('stages')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw new Error(`Failed to delete stage: ${error.message}`);
-}
-
 /* Task Operations */
 type ChecklistPayloadItem = { id?: string; text: string; completed?: boolean } | string;
 
@@ -410,17 +389,6 @@ const normalizeChecklistPayload = (items?: ChecklistPayloadItem[]) => {
     };
   });
 };
-
-export async function getTasksByStage(stageId: string): Promise<Task[]> {
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('stage_id', stageId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
-  return data || [];
-}
 
 export async function createTask(payload: {
   stageId: string;
@@ -512,20 +480,6 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
   } else {
     return updateTask(id, { completed: false, completed_at: null } as Partial<Task>);
   }
-}
-
-/** @deprecated Use setTaskCompleted(id, true) instead */
-export async function completeTask(id: string): Promise<Task> {
-  return setTaskCompleted(id, true);
-}
-
-/** Assign a task to a user (or unassign with null). TASK_OWNERSHIP_RULES.md §5 */
-export async function assignTask(taskId: string, userId: string | null): Promise<Task> {
-  return updateTask(taskId, { assigned_to: userId } as Partial<Task>);
-}
-
-export async function moveTaskToStage(taskId: string, stageId: string): Promise<Task> {
-  return updateTask(taskId, { stage_id: stageId });
 }
 
 export async function deleteTask(id: string): Promise<void> {
@@ -884,6 +838,7 @@ export async function createReminder(payload: {
   notes?: string;
   remindAt: string;
   repeatRule: RepeatRule;
+  userId?: string;
 }): Promise<Reminder> {
   const { data, error } = await supabase
     .from('reminders')
@@ -893,6 +848,7 @@ export async function createReminder(payload: {
       notes: payload.notes || null,
       remind_at: payload.remindAt,
       repeat_rule: payload.repeatRule,
+      user_id: payload.userId || null,
     }])
     .select()
     .single();
@@ -1025,17 +981,6 @@ export async function getOrCreateUser(email: string, displayName: string): Promi
     .single();
 
   if (error) throw new Error(`Failed to create user: ${error.message}`);
-  return data;
-}
-
-export async function getUserById(id: string): Promise<User | null> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle();
-
-  if (error) throw new Error(`Failed to fetch user: ${error.message}`);
   return data;
 }
 
