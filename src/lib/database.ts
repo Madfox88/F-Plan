@@ -214,6 +214,23 @@ export async function revokeWorkspaceInvitation(invitationId: string): Promise<v
   if (error) throw new Error(`Failed to revoke invitation: ${error.message}`);
 }
 
+/** Send invitation email via Edge Function + Resend. Fire-and-forget. */
+export async function sendInvitationEmail(
+  email: string,
+  workspaceName: string,
+  inviterName: string,
+  role: string
+): Promise<void> {
+  const appUrl = window.location.origin;
+  const { error } = await supabase.functions.invoke('send-invitation-email', {
+    body: { email, workspaceName, inviterName, role, appUrl },
+  });
+  if (error) {
+    // Non-fatal — the invitation record is already saved
+    console.warn('Invitation email failed (invitation still created):', error.message);
+  }
+}
+
 /** Transfer workspace ownership to another member. Caller must be owner. */
 export async function transferWorkspaceOwnership(
   workspaceId: string,

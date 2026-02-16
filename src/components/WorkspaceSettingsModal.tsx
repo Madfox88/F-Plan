@@ -8,6 +8,7 @@ import {
   getWorkspaceInvitations,
   createWorkspaceInvitation,
   revokeWorkspaceInvitation,
+  sendInvitationEmail,
   transferWorkspaceOwnership,
 } from '../lib/database';
 import type { WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, User } from '../types/database';
@@ -26,7 +27,7 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
   onClose,
 }) => {
   const { activeWorkspace, myRole, renameWorkspace, deleteWorkspace, workspaces, refreshMyRole } = useWorkspace();
-  const { userId } = useCurrentUser();
+  const { userId, displayName } = useCurrentUser();
 
   const [tab, setTab] = useState<'general' | 'members'>('general');
 
@@ -158,6 +159,13 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
         inviteEmail.trim(),
         inviteRole,
         userId
+      );
+      // Fire-and-forget email — don't block on it
+      sendInvitationEmail(
+        inv.email,
+        activeWorkspace.name,
+        displayName || 'A team member',
+        inviteRole
       );
       setInvitations((prev) => [inv, ...prev]);
       setInviteEmail('');
