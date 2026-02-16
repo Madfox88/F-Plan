@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Workspace, WorkspaceMember, WorkspaceMemberRole, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, FocusSession, User } from '../types/database';
+import type { Workspace, WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, FocusSession, User } from '../types/database';
 
 /* Workspace Operations */
 export async function getWorkspaces(): Promise<Workspace[]> {
@@ -157,6 +157,84 @@ export async function removeWorkspaceMember(
     .eq('user_id', userId);
 
   if (error) throw new Error(`Failed to remove workspace member: ${error.message}`);
+}
+
+/* Workspace Invitation Operations */
+
+/** Get pending invitations for a workspace. */
+export async function getWorkspaceInvitations(
+  workspaceId: string
+): Promise<WorkspaceInvitation[]> {
+  const { data, error } = await supabase
+    .from('workspace_invitations')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch invitations: ${error.message}`);
+  return data || [];
+}
+
+/** Create an invitation. Caller must be owner/admin (enforced by RLS). */
+export async function createWorkspaceInvitation(
+  workspaceId: string,
+  email: string,
+  role: 'admin' | 'member',
+  invitedBy: string
+): Promise<WorkspaceInvitation> {
+  const { data, error } = await supabase
+    .from('workspace_invitations')
+    .insert([{
+      workspace_id: workspaceId,
+      email: email.toLowerCase().trim(),
+      role,
+      invited_by: invitedBy,
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      throw new Error('An invitation for this email is already pending');
+    }
+    throw new Error(`Failed to create invitation: ${error.message}`);
+  }
+  return data;
+}
+
+/** Revoke (cancel) a pending invitation. */
+export async function revokeWorkspaceInvitation(invitationId: string): Promise<void> {
+  const { error } = await supabase
+    .from('workspace_invitations')
+    .update({ status: 'revoked' })
+    .eq('id', invitationId)
+    .eq('status', 'pending');
+
+  if (error) throw new Error(`Failed to revoke invitation: ${error.message}`);
+}
+
+/** Get pending invitations for the current user's email. */
+export async function getMyPendingInvitations(
+  email: string
+): Promise<(WorkspaceInvitation & { workspace: Workspace })[]> {
+  const { data, error } = await supabase
+    .from('workspace_invitations')
+    .select('*, workspace:workspaces(*)')
+    .eq('email', email.toLowerCase())
+    .eq('status', 'pending');
+
+  if (error) throw new Error(`Failed to fetch your invitations: ${error.message}`);
+  return (data || []) as (WorkspaceInvitation & { workspace: Workspace })[];
+}
+
+/** Accept a pending invitation (calls the DB function). */
+export async function acceptWorkspaceInvitation(invitationId: string): Promise<void> {
+  const { error } = await supabase.rpc('accept_workspace_invitation', {
+    invitation_id: invitationId,
+  });
+
+  if (error) throw new Error(`Failed to accept invitation: ${error.message}`);
 }
 
 /* Plan Operations */

@@ -24,6 +24,18 @@ export type WorkspaceMember = {
   created_at: string;
 };
 
+export type InvitationStatus = 'pending' | 'accepted' | 'revoked';
+
+export type WorkspaceInvitation = {
+  id: string;
+  workspace_id: string;
+  email: string;
+  role: 'admin' | 'member';
+  invited_by: string;
+  status: InvitationStatus;
+  created_at: string;
+};
+
 export type Plan = {
   id: string;
   workspace_id: string;

@@ -5,8 +5,11 @@ import {
   getWorkspaceMembers,
   removeWorkspaceMember,
   updateWorkspaceMemberRole,
+  getWorkspaceInvitations,
+  createWorkspaceInvitation,
+  revokeWorkspaceInvitation,
 } from '../lib/database';
-import type { WorkspaceMember, WorkspaceMemberRole, User } from '../types/database';
+import type { WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, User } from '../types/database';
 import TrashIcon from '../assets/icons/trash.svg';
 import './WorkspaceSettingsModal.css';
 
@@ -36,6 +39,12 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
 
+  // ── Invitations state ─────────────────────────────
+  const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
+  const [inviteSending, setInviteSending] = useState(false);
+
   const isAdmin = myRole === 'owner' || myRole === 'admin';
   const isOwner = myRole === 'owner';
 
@@ -49,13 +58,17 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
     }
   }, [isOpen, activeWorkspace]);
 
-  // Load members when switching to members tab
+  // Load members + invitations when switching to members tab
   const loadMembers = useCallback(async () => {
     if (!activeWorkspace) return;
     setMembersLoading(true);
     try {
-      const data = await getWorkspaceMembers(activeWorkspace.id);
-      setMembers(data);
+      const [memberData, inviteData] = await Promise.all([
+        getWorkspaceMembers(activeWorkspace.id),
+        getWorkspaceInvitations(activeWorkspace.id),
+      ]);
+      setMembers(memberData);
+      setInvitations(inviteData);
     } catch {
       setMessage({ type: 'error', text: 'Failed to load members' });
     } finally {
@@ -116,6 +129,49 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
       setMembers((prev) => prev.filter((m) => m.user_id !== memberId));
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to remove member' });
+    }
+  };
+
+  // ── Invitation handlers ───────────────────────────
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeWorkspace || !userId || !inviteEmail.trim()) return;
+
+    // Check if email is already a member
+    const alreadyMember = members.some(
+      (m) => m.user.email.toLowerCase() === inviteEmail.trim().toLowerCase()
+    );
+    if (alreadyMember) {
+      setMessage({ type: 'error', text: 'This user is already a member of this workspace' });
+      return;
+    }
+
+    setInviteSending(true);
+    try {
+      const inv = await createWorkspaceInvitation(
+        activeWorkspace.id,
+        inviteEmail.trim(),
+        inviteRole,
+        userId
+      );
+      setInvitations((prev) => [inv, ...prev]);
+      setInviteEmail('');
+      setInviteRole('member');
+      setMessage({ type: 'success', text: `Invitation sent to ${inv.email}` });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to send invitation' });
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
+  const handleRevokeInvite = async (inviteId: string) => {
+    try {
+      await revokeWorkspaceInvitation(inviteId);
+      setInvitations((prev) => prev.filter((i) => i.id !== inviteId));
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to revoke invitation' });
     }
   };
 
@@ -259,13 +315,87 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
         {/* ═══ Members Tab ═══ */}
         {tab === 'members' && (
           <div className="ws-settings-body">
+            {/* Invite form — admin/owner only */}
+            {isAdmin && (
+              <form className="ws-invite-form" onSubmit={handleSendInvite}>
+                <label className="settings-label">Invite by Email</label>
+                <div className="ws-invite-row">
+                  <input
+                    className="settings-input ws-invite-input"
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colleague@example.com"
+                    disabled={inviteSending}
+                    required
+                  />
+                  <select
+                    className="ws-role-select ws-invite-role"
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+                    disabled={inviteSending}
+                  >
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button
+                    type="submit"
+                    className="settings-button primary"
+                    disabled={inviteSending || !inviteEmail.trim()}
+                  >
+                    {inviteSending ? 'Sending…' : 'Invite'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Pending invitations */}
+            {invitations.length > 0 && (
+              <div className="ws-invite-section">
+                <label className="settings-label">Pending Invitations</label>
+                <div className="ws-members-list">
+                  {invitations.map((inv) => (
+                    <div key={inv.id} className="ws-member-row ws-invite-row-item">
+                      <div className="ws-member-info">
+                        <div className="ws-member-avatar ws-invite-avatar">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2" />
+                            <path d="M22 4L12 13L2 4" />
+                          </svg>
+                        </div>
+                        <div className="ws-member-text">
+                          <span className="ws-member-name">{inv.email}</span>
+                          <span className="ws-member-email">Invited · {inv.role}</span>
+                        </div>
+                      </div>
+                      <div className="ws-member-actions">
+                        <span className="ws-role-badge ws-role-pending">pending</span>
+                        {isAdmin && (
+                          <button
+                            className="ws-member-remove"
+                            onClick={() => handleRevokeInvite(inv.id)}
+                            title="Revoke invitation"
+                          >
+                            <img src={TrashIcon} alt="Revoke" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Existing members */}
             {membersLoading ? (
               <p className="ws-members-loading">Loading members…</p>
             ) : members.length === 0 ? (
               <p className="ws-members-loading">No members found.</p>
             ) : (
-              <div className="ws-members-list">
-                {members.map((member) => {
+              <div className="ws-members-section">
+                <label className="settings-label">Members ({members.length})</label>
+                <div className="ws-members-list">
+                  {members.map((member) => {
                   const isSelf = member.user_id === userId;
                   const isMemberOwner = member.role === 'owner';
 
@@ -322,6 +452,7 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
                     </div>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>

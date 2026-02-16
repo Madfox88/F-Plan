@@ -11,6 +11,7 @@ import { CreatePlanModal } from './components/CreatePlanModal';
 import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
 import { WorkspaceSettingsModal } from './components/WorkspaceSettingsModal';
+import { PendingInvitationsBanner } from './components/PendingInvitationsBanner';
 import { PlansIndex } from './views/PlansIndex';
 import { GoalsIndex } from './views/GoalsIndex';
 import { Dashboard } from './views/Dashboard';
@@ -168,6 +169,7 @@ function AppContent() {
         userName={userName}
       />
       <MainLayout>
+        <PendingInvitationsBanner />
         {selectedPlanId && selectedPlan ? (
           <PlanDetail planId={selectedPlanId} plan={selectedPlan} />
         ) : (

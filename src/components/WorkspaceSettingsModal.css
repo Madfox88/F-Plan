@@ -218,3 +218,54 @@
 .ws-settings-modal .settings-message {
   margin: 0 var(--space-lg);
 }
+
+/* ── Invite form ─────────────────────────────────────── */
+.ws-invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ws-invite-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.ws-invite-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ws-invite-role {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-md);
+}
+
+/* ── Invite section ──────────────────────────────────── */
+.ws-invite-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ws-members-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ws-invite-avatar {
+  background: rgba(var(--primary-color-rgb), 0.1);
+  color: var(--primary-color);
+}
+
+.ws-invite-row-item {
+  border-style: dashed;
+}
+
+.ws-role-badge.ws-role-pending {
+  background: rgba(255, 159, 10, 0.12);
+  border-color: rgba(255, 159, 10, 0.3);
+  color: #ff9f0a;
+}
