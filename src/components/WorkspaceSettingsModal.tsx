@@ -161,7 +161,7 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
         userId
       );
       // Fire-and-forget email — don't block on it
-      sendInvitationEmail(
+      const emailSent = await sendInvitationEmail(
         inv.email,
         activeWorkspace.name,
         displayName || 'A team member',
@@ -170,7 +170,12 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
       setInvitations((prev) => [inv, ...prev]);
       setInviteEmail('');
       setInviteRole('member');
-      setMessage({ type: 'success', text: `Invitation sent to ${inv.email}` });
+      setMessage({
+        type: 'success',
+        text: emailSent
+          ? `Invitation sent to ${inv.email}`
+          : `Invitation created for ${inv.email} (email notification could not be delivered — share the link manually)`,
+      });
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to send invitation' });
