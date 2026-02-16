@@ -15,6 +15,15 @@ export type Workspace = {
   created_at: string;
 };
 
+export type WorkspaceMemberRole = 'owner' | 'admin' | 'member';
+
+export type WorkspaceMember = {
+  user_id: string;
+  workspace_id: string;
+  role: WorkspaceMemberRole;
+  created_at: string;
+};
+
 export type Plan = {
   id: string;
   workspace_id: string;

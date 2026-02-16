@@ -1,16 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { Workspace } from '../types/database';
+import type { Workspace, WorkspaceMemberRole } from '../types/database';
 import {
   getWorkspaces,
   createWorkspace as createWorkspaceInDB,
   updateWorkspace as updateWorkspaceInDB,
   deleteWorkspace as deleteWorkspaceInDB,
+  getMyMembership,
 } from '../lib/database';
+import { useAuth } from './AuthContext';
 
 interface WorkspaceContextType {
   workspaces: Workspace[];
   activeWorkspace: Workspace | null;
+  myRole: WorkspaceMemberRole | null;
   loading: boolean;
   error: string | null;
   setActiveWorkspace: (id: string) => void;
@@ -25,10 +28,23 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 const STORAGE_KEY = 'f-plan:activeWorkspaceId';
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const { user: authUser } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspace, setActiveWorkspaceState] = useState<Workspace | null>(null);
+  const [myRole, setMyRole] = useState<WorkspaceMemberRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch the current user's role whenever active workspace changes
+  useEffect(() => {
+    if (!activeWorkspace || !authUser) {
+      setMyRole(null);
+      return;
+    }
+    getMyMembership(activeWorkspace.id, authUser.id)
+      .then((m) => setMyRole(m?.role ?? null))
+      .catch(() => setMyRole(null));
+  }, [activeWorkspace, authUser]);
 
   // Load workspaces
   const loadWorkspaces = async () => {
@@ -115,6 +131,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       value={{
         workspaces,
         activeWorkspace,
+        myRole,
         loading,
         error,
         setActiveWorkspace,

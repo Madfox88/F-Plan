@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Workspace, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, FocusSession, User } from '../types/database';
+import type { Workspace, WorkspaceMember, WorkspaceMemberRole, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, FocusSession, User } from '../types/database';
 
 /* Workspace Operations */
 export async function getWorkspaces(): Promise<Workspace[]> {
@@ -78,6 +78,85 @@ export async function getWorkspace(id: string): Promise<Workspace> {
 
   if (error) throw new Error(`Failed to fetch workspace: ${error.message}`);
   return data;
+}
+
+/* Workspace Member Operations */
+
+/** Get all members for a workspace (with user profile data). */
+export async function getWorkspaceMembers(
+  workspaceId: string
+): Promise<(WorkspaceMember & { user: User })[]> {
+  const { data, error } = await supabase
+    .from('workspace_members')
+    .select('*, user:users(*)')
+    .eq('workspace_id', workspaceId);
+
+  if (error) throw new Error(`Failed to fetch workspace members: ${error.message}`);
+  return (data || []) as (WorkspaceMember & { user: User })[];
+}
+
+/** Get the current user's membership in a workspace (or null if not a member). */
+export async function getMyMembership(
+  workspaceId: string,
+  userId: string
+): Promise<WorkspaceMember | null> {
+  const { data, error } = await supabase
+    .from('workspace_members')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw new Error(`Failed to fetch membership: ${error.message}`);
+  return data;
+}
+
+/** Add a member to a workspace. Caller must be owner/admin (enforced by RLS). */
+export async function addWorkspaceMember(
+  workspaceId: string,
+  userId: string,
+  role: WorkspaceMemberRole = 'member'
+): Promise<WorkspaceMember> {
+  const { data, error } = await supabase
+    .from('workspace_members')
+    .insert([{ workspace_id: workspaceId, user_id: userId, role }])
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to add workspace member: ${error.message}`);
+  return data;
+}
+
+/** Update a member's role. Caller must be owner/admin (enforced by RLS). */
+export async function updateWorkspaceMemberRole(
+  workspaceId: string,
+  userId: string,
+  role: WorkspaceMemberRole
+): Promise<WorkspaceMember> {
+  const { data, error } = await supabase
+    .from('workspace_members')
+    .update({ role })
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update member role: ${error.message}`);
+  return data;
+}
+
+/** Remove a member from a workspace. */
+export async function removeWorkspaceMember(
+  workspaceId: string,
+  userId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('workspace_members')
+    .delete()
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId);
+
+  if (error) throw new Error(`Failed to remove workspace member: ${error.message}`);
 }
 
 /* Plan Operations */
