@@ -47,6 +47,9 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
   const [inviteSending, setInviteSending] = useState(false);
 
+  // ── Copy invite link state ────────────────────────
+  const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
+
   // ── Transfer ownership state ──────────────────────
   const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
@@ -173,8 +176,8 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
       setMessage({
         type: 'success',
         text: emailSent
-          ? `Invitation sent to ${inv.email}`
-          : `Invitation created for ${inv.email} (email notification could not be delivered — share the link manually)`,
+          ? `Invitation emailed to ${inv.email}. You can also copy the invite link.`
+          : `Invitation created for ${inv.email} — copy the invite link to share it.`,
       });
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
@@ -190,6 +193,18 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
       setInvitations((prev) => prev.filter((i) => i.id !== inviteId));
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to revoke invitation' });
+    }
+  };
+
+  const handleCopyInviteLink = async (inviteId: string) => {
+    const link = `${window.location.origin}?invite=${inviteId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedInviteId(inviteId);
+      setTimeout(() => setCopiedInviteId(null), 2000);
+    } catch {
+      // Fallback for non-HTTPS / old browsers
+      window.prompt('Copy this invite link:', link);
     }
   };
 
@@ -407,6 +422,22 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
                       </div>
                       <div className="ws-member-actions">
                         <span className="ws-role-badge ws-role-pending">pending</span>
+                        <button
+                          className="ws-copy-link-btn"
+                          onClick={() => handleCopyInviteLink(inv.id)}
+                          title="Copy invite link"
+                        >
+                          {copiedInviteId === inv.id ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6L9 17l-5-5" />
+                            </svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                              <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                            </svg>
+                          )}
+                        </button>
                         {isAdmin && (
                           <button
                             className="ws-member-remove"

@@ -249,6 +249,28 @@
   gap: var(--space-sm);
 }
 
+/* ── Copy invite link button ─────────────────────────── */
+.ws-copy-link-btn {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.5;
+  color: var(--primary-color);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-copy-link-btn:hover {
+  opacity: 1;
+  background: rgba(var(--primary-color-rgb), 0.12);
+}
+
 .ws-members-section {
   display: flex;
   flex-direction: column;

@@ -230,7 +230,13 @@ function AppContent() {
  */
 function AuthGate() {
   const { session, loading: authLoading } = useAuth();
-  const [authPage, setAuthPage] = useState<'login' | 'signup' | 'forgot'>('login');
+
+  // Detect invite link: ?invite=<id>
+  const inviteParam = new URLSearchParams(window.location.search).get('invite');
+
+  const [authPage, setAuthPage] = useState<'login' | 'signup' | 'forgot'>(
+    inviteParam ? 'signup' : 'login'
+  );
 
   // Detect password recovery flow from URL hash
   const isRecoveryFlow =
@@ -267,6 +273,13 @@ function AuthGate() {
       return <ForgotPasswordPage onNavigate={(p) => setAuthPage(p)} />;
     }
     return <LoginPage onNavigate={(p) => setAuthPage(p)} />;
+  }
+
+  // Clean up invite param from URL once authenticated
+  if (inviteParam) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('invite');
+    window.history.replaceState(null, '', url.pathname + url.hash);
   }
 
   // Signed in — show the main app
