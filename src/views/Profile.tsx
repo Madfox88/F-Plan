@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { deleteOwnAccount } from '../lib/database';
 import { useAvatar } from '../context/AvatarContext';
 import { useCurrentUser } from '../context/UserContext';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +22,8 @@ export function Profile() {
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [name, setName] = useState(displayName);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(displayName);
@@ -141,9 +144,21 @@ export function Profile() {
   };
 
   const handleDeleteAccount = async () => {
-    setShowDeleteConfirm(false);
-    setMessage({ type: 'error', text: 'Account deletion requires admin approval. Contact support.' });
-    setTimeout(() => setMessage(null), 5000);
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeleting(true);
+    try {
+      await deleteOwnAccount();
+      // Account is gone — sign out locally to clear session
+      await signOut();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete account';
+      setMessage({ type: 'error', text: msg });
+      setTimeout(() => setMessage(null), 8000);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText('');
+    }
   };
 
   return (
@@ -304,22 +319,46 @@ export function Profile() {
 
         <div className="settings-field settings-field-danger">
           <label className="settings-label">Delete Account</label>
-          <p className="settings-description">Permanently delete your account and all associated data</p>
+          <p className="settings-description">
+            Permanently delete your account and all associated data.
+            If you own a workspace with other members, you must transfer ownership first.
+          </p>
           {showDeleteConfirm ? (
             <div className="settings-delete-confirm">
-              <p>Are you sure? This action cannot be undone.</p>
+              <p className="settings-delete-warning">
+                ⚠️ This action is <strong>permanent</strong> and cannot be undone.
+                All your personal workspaces, plans, tasks, focus sessions, and data will be erased.
+              </p>
+              <label className="settings-label" htmlFor="delete-confirm-input">
+                Type <strong>DELETE</strong> to confirm
+              </label>
+              <input
+                id="delete-confirm-input"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="settings-input settings-input-danger"
+                placeholder="DELETE"
+                autoComplete="off"
+                disabled={isDeleting}
+              />
               <div className="settings-edit-actions">
                 <button
                   className="settings-button secondary"
-                  onClick={() => setShowDeleteConfirm(false)}
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeleteConfirmText('');
+                  }}
+                  disabled={isDeleting}
                 >
                   Cancel
                 </button>
                 <button
                   className="settings-button danger"
                   onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== 'DELETE' || isDeleting}
                 >
-                  Delete Account
+                  {isDeleting ? 'Deleting…' : 'Permanently Delete Account'}
                 </button>
               </div>
             </div>

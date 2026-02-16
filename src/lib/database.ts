@@ -1796,3 +1796,18 @@ export async function getActiveGoalsForUser(
 
   return result;
 }
+
+/* ── Account Deletion ───────────────────────────── */
+
+/**
+ * Permanently delete the current user's account.
+ * Calls the `delete_own_account` RPC which:
+ *   - Blocks if the user owns a workspace with other members
+ *     (must transfer ownership first)
+ *   - Deletes solo-owned workspaces (CASCADE cleans all data)
+ *   - Deletes public.users + auth.users rows
+ */
+export async function deleteOwnAccount(): Promise<void> {
+  const { error } = await supabase.rpc('delete_own_account');
+  if (error) throw new Error(error.message);
+}

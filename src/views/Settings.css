@@ -175,11 +175,32 @@
   border: 1px solid rgba(255, 59, 48, 0.2);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .settings-delete-confirm p {
-  margin: 0 0 var(--space-md) 0;
+  margin: 0;
   font-size: var(--font-size-sm);
+}
+
+.settings-delete-warning {
+  line-height: 1.5;
+}
+
+.settings-input-danger {
+  border-color: rgba(255, 59, 48, 0.4) !important;
+}
+
+.settings-input-danger:focus {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.15);
+}
+
+.settings-button.danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 @keyframes slideDown {
