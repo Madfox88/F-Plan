@@ -445,7 +445,8 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
 
                       {/* Role badge / dropdown */}
                       <div className="ws-member-actions">
-                        {isAdmin && !isMemberOwner && !isSelf ? (
+                        {/* Owner can promote/demote any non-owner, non-self member */}
+                        {isOwner && !isMemberOwner && !isSelf ? (
                           <select
                             className="ws-role-select"
                             value={member.role}
@@ -462,8 +463,11 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
                           </span>
                         )}
 
-                        {/* Remove button */}
-                        {isAdmin && !isMemberOwner && !isSelf && (
+                        {/* Remove button — owner can remove anyone except self;
+                            admin can only remove regular members */}
+                        {!isMemberOwner && !isSelf && (
+                          isOwner || (isAdmin && member.role === 'member')
+                        ) && (
                           <button
                             className="ws-member-remove"
                             onClick={() => handleRemoveMember(member.user_id)}
