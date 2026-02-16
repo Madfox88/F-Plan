@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAvatar } from '../context/AvatarContext';
-import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
 import { useAuth } from '../context/AuthContext';
 import { AvatarCropperModal } from '../components/AvatarCropperModal';
@@ -11,10 +10,8 @@ import './Settings.css';
 
 export function Profile() {
   const { avatarUrl, setAvatarUrl } = useAvatar();
-  const { activeWorkspace } = useWorkspace();
-  const { displayName, email: userEmail, updateProfile } = useCurrentUser();
+  const { displayName, email: userEmail, updateProfile, userId } = useCurrentUser();
   const { signOut, updateEmail, updatePassword } = useAuth();
-  const workspaceId = activeWorkspace?.id ?? null;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -29,7 +26,7 @@ export function Profile() {
   const [editName, setEditName] = useState(displayName);
 
   const handleAvatarClick = () => {
-    if (!workspaceId) return;
+    if (!userId) return;
     fileInputRef.current?.click();
   };
 
@@ -46,9 +43,9 @@ export function Profile() {
   };
 
   const handleSaveCrop = async (blob: Blob) => {
-    if (!workspaceId) return;
+    if (!userId) return;
     setIsUploading(true);
-    const path = `avatars/${workspaceId}/avatar.jpg`;
+    const path = `avatars/${userId}/avatar.jpg`;
     const { error } = await supabase.storage
       .from('avatars')
       .upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '0' });
@@ -161,7 +158,7 @@ export function Profile() {
           className="profile-avatar-large"
           onClick={handleAvatarClick}
           aria-label="Change avatar"
-          disabled={!workspaceId || isUploading}
+          disabled={!userId || isUploading}
         >
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="profile-avatar-image" />

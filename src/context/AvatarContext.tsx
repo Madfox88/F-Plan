@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
-import { useWorkspace } from './WorkspaceContext';
+import { useAuth } from './AuthContext';
 
 interface AvatarContextType {
   avatarUrl: string | null;
@@ -12,24 +12,24 @@ interface AvatarContextType {
 
 const AvatarContext = createContext<AvatarContextType | undefined>(undefined);
 
-const getAvatarPath = (workspaceId: string) => `avatars/${workspaceId}/avatar.jpg`;
+const getAvatarPath = (userId: string) => `avatars/${userId}/avatar.jpg`;
 
 export function AvatarProvider({ children }: { children: ReactNode }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { activeWorkspace } = useWorkspace();
-  const workspaceId = activeWorkspace?.id ?? null;
+  const { user: authUser } = useAuth();
+  const userId = authUser?.id ?? null;
 
   const refreshAvatar = async () => {
-    if (!workspaceId) {
+    if (!userId) {
       setAvatarUrl(null);
       return;
     }
 
-    const path = getAvatarPath(workspaceId);
+    const path = getAvatarPath(userId);
     const { data, error } = await supabase.storage
       .from('avatars')
-      .list(`avatars/${workspaceId}`, { search: 'avatar.jpg', limit: 1 });
+      .list(`avatars/${userId}`, { search: 'avatar.jpg', limit: 1 });
 
     if (error || !data || data.length === 0) {
       setAvatarUrl(null);
@@ -46,16 +46,16 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAvatar = async () => {
       setLoading(true);
-      if (!workspaceId) {
+      if (!userId) {
         setAvatarUrl(null);
         setLoading(false);
         return;
       }
 
-      const path = getAvatarPath(workspaceId);
+      const path = getAvatarPath(userId);
       const { data: listData, error } = await supabase.storage
         .from('avatars')
-        .list(`avatars/${workspaceId}`, { search: 'avatar.jpg', limit: 1 });
+        .list(`avatars/${userId}`, { search: 'avatar.jpg', limit: 1 });
 
       if (!error && listData && listData.length > 0) {
         const { data: publicUrlData } = supabase.storage
@@ -69,7 +69,7 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
     };
 
     initAvatar();
-  }, [workspaceId]);
+  }, [userId]);
 
   return (
     <AvatarContext.Provider value={{ avatarUrl, loading, setAvatarUrl, refreshAvatar }}>
