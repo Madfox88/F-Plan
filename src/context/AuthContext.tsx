@@ -24,6 +24,8 @@ interface AuthContextType {
   user: AuthUser | null;
   /** True while the initial session is being resolved on mount. */
   loading: boolean;
+  /** The last auth event that fired (e.g. 'USER_UPDATED'). */
+  lastEvent: string | null;
 
   /* Actions */
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: string | null }>;
@@ -41,6 +43,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastEvent, setLastEvent] = useState<string | null>(null);
 
   /* On mount: resolve existing session + subscribe to changes */
   useEffect(() => {
@@ -58,8 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth state changes (sign-in, sign-out, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => {
+    } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      setLastEvent(event);
     });
 
     return () => subscription.unsubscribe();
@@ -119,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         user: session?.user ?? null,
         loading,
+        lastEvent,
         signUp,
         signIn,
         signOut,

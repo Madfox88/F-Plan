@@ -71,10 +71,10 @@ export function Profile() {
         setMessage({ type: 'error', text: error });
         return;
       }
-      // Also update public.users row
-      await updateProfile({ email: editEmail.trim() });
+      // Don't update public.users email here — the DB trigger will sync
+      // it automatically once the user confirms via the email link.
       setIsEditingEmail(false);
-      setMessage({ type: 'success', text: 'Confirmation email sent to your new address' });
+      setMessage({ type: 'success', text: 'Confirmation email sent to your new address. Click the link to confirm.' });
       setTimeout(() => setMessage(null), 5000);
     } catch {
       setMessage({ type: 'error', text: 'Failed to update email' });

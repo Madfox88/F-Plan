@@ -29,7 +29,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const { user: authUser, loading: authLoading } = useAuth();
+  const { user: authUser, loading: authLoading, lastEvent } = useAuth();
   const [userId, setUserId] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -88,6 +88,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     fetchProfile();
   }, [authUser, authLoading]);
+
+  /* Re-fetch profile when Supabase fires USER_UPDATED (e.g. email confirmed) */
+  useEffect(() => {
+    if (lastEvent === 'USER_UPDATED' && authUser && userId) {
+      supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setDisplayName(data.display_name);
+            setEmail(data.email);
+            setAvatarUrl(data.avatar_url);
+          }
+        });
+    }
+  }, [lastEvent, authUser, userId]);
 
   const updateProfile = useCallback(
     async (fields: Partial<Pick<User, 'display_name' | 'email' | 'avatar_url'>>) => {

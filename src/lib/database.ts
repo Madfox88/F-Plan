@@ -1290,6 +1290,7 @@ export async function getActiveFocusSession(
 /** Get completed focus sessions in a time range. */
 export async function getFocusSessionsInRange(
   userId: string,
+  workspaceId: string,
   from: string,
   to: string
 ): Promise<FocusSession[]> {
@@ -1297,6 +1298,7 @@ export async function getFocusSessionsInRange(
     .from('focus_sessions')
     .select('*')
     .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
     .not('ended_at', 'is', null)
     .gte('started_at', from)
     .lte('started_at', to)
@@ -1381,12 +1383,13 @@ export async function getFocusSessionLog(
  * with ≥1 valid focus session (≥5 min).
  * FOCUS_SESSIONS_RULES.md §6
  */
-export async function computeFocusStreak(userId: string): Promise<number> {
+export async function computeFocusStreak(userId: string, workspaceId: string): Promise<number> {
   // Fetch all completed sessions ordered by start, descending
   const { data: sessions, error } = await supabase
     .from('focus_sessions')
     .select('started_at')
     .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
     .not('ended_at', 'is', null)
     .gte('duration_minutes', 5)
     .order('started_at', { ascending: false });
@@ -1425,6 +1428,7 @@ export async function computeFocusStreak(userId: string): Promise<number> {
  */
 export async function computeAverageDailyFocus(
   userId: string,
+  workspaceId: string,
   windowDays: number = 7
 ): Promise<number> {
   const now = new Date();
@@ -1434,6 +1438,7 @@ export async function computeAverageDailyFocus(
 
   const sessions = await getFocusSessionsInRange(
     userId,
+    workspaceId,
     windowStart.toISOString(),
     now.toISOString()
   );

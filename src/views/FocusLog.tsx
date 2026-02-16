@@ -83,8 +83,8 @@ export function FocusLog() {
     try {
       const [log, s, avg] = await Promise.all([
         getFocusSessionLog(userId, activeWorkspace.id, PAGE_SIZE, 0),
-        computeFocusStreak(userId),
-        computeAverageDailyFocus(userId),
+        computeFocusStreak(userId, activeWorkspace.id),
+        computeAverageDailyFocus(userId, activeWorkspace.id),
       ]);
       setSessions(log);
       setStreak(s);
