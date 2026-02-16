@@ -8,6 +8,7 @@ import {
   getWorkspaceInvitations,
   createWorkspaceInvitation,
   revokeWorkspaceInvitation,
+  transferWorkspaceOwnership,
 } from '../lib/database';
 import type { WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, User } from '../types/database';
 import TrashIcon from '../assets/icons/trash.svg';
@@ -24,7 +25,7 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { activeWorkspace, myRole, renameWorkspace, deleteWorkspace, workspaces } = useWorkspace();
+  const { activeWorkspace, myRole, renameWorkspace, deleteWorkspace, workspaces, refreshMyRole } = useWorkspace();
   const { userId } = useCurrentUser();
 
   const [tab, setTab] = useState<'general' | 'members'>('general');
@@ -44,6 +45,10 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
   const [inviteSending, setInviteSending] = useState(false);
+
+  // ── Transfer ownership state ──────────────────────
+  const [transferTarget, setTransferTarget] = useState<string | null>(null);
+  const [transferring, setTransferring] = useState(false);
 
   const isAdmin = myRole === 'owner' || myRole === 'admin';
   const isOwner = myRole === 'owner';
@@ -172,6 +177,25 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
       setInvitations((prev) => prev.filter((i) => i.id !== inviteId));
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to revoke invitation' });
+    }
+  };
+
+  // ── Transfer ownership handler ────────────────────
+  const handleTransferOwnership = async (newOwnerId: string) => {
+    if (!activeWorkspace) return;
+    setTransferring(true);
+    try {
+      await transferWorkspaceOwnership(activeWorkspace.id, newOwnerId);
+      // Refresh members to reflect the role swap
+      await loadMembers();
+      await refreshMyRole();
+      setTransferTarget(null);
+      setMessage({ type: 'success', text: 'Ownership transferred successfully. You are now an admin.' });
+      setTimeout(() => setMessage(null), 5000);
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Transfer failed' });
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -448,6 +472,19 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
                             <img src={TrashIcon} alt="Remove" />
                           </button>
                         )}
+
+                        {/* Transfer ownership — owner only, to non-owners */}
+                        {isOwner && !isMemberOwner && !isSelf && (
+                          <button
+                            className="ws-transfer-btn"
+                            onClick={() => setTransferTarget(member.user_id)}
+                            title="Transfer ownership"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 12h16M13 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -458,6 +495,44 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
           </div>
         )}
       </div>
+
+      {/* ── Transfer ownership confirmation overlay ── */}
+      {transferTarget && (() => {
+        const target = members.find((m) => m.user_id === transferTarget);
+        if (!target) return null;
+        return (
+          <div className="ws-transfer-overlay">
+            <div className="ws-transfer-dialog">
+              <h3 className="ws-transfer-title">Transfer ownership</h3>
+              <p className="ws-transfer-desc">
+                Are you sure you want to transfer ownership of{' '}
+                <strong>{activeWorkspace?.name}</strong> to{' '}
+                <strong>{target.user.display_name}</strong>?
+              </p>
+              <p className="ws-transfer-warn">
+                You will be downgraded to <em>admin</em>. This action cannot be undone
+                without the new owner's consent.
+              </p>
+              <div className="ws-transfer-actions">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setTransferTarget(null)}
+                  disabled={transferring}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleTransferOwnership(transferTarget)}
+                  disabled={transferring}
+                >
+                  {transferring ? 'Transferring…' : 'Transfer ownership'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

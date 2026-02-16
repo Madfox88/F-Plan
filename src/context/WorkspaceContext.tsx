@@ -18,6 +18,7 @@ interface WorkspaceContextType {
   error: string | null;
   setActiveWorkspace: (id: string) => void;
   refreshWorkspaces: () => Promise<void>;
+  refreshMyRole: () => Promise<void>;
   createWorkspace: (name: string) => Promise<Workspace>;
   renameWorkspace: (id: string, name: string) => Promise<Workspace>;
   deleteWorkspace: (id: string) => Promise<void>;
@@ -92,6 +93,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     await loadWorkspaces();
   };
 
+  const refreshMyRole = async () => {
+    if (!activeWorkspace || !authUser) return;
+    const m = await getMyMembership(activeWorkspace.id, authUser.id);
+    setMyRole(m?.role ?? null);
+  };
+
   const createWorkspace = async (name: string): Promise<Workspace> => {
     const newWorkspace = await createWorkspaceInDB(name);
     setWorkspaces([...workspaces, newWorkspace]);
@@ -136,6 +143,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         error,
         setActiveWorkspace,
         refreshWorkspaces,
+        refreshMyRole,
         createWorkspace,
         renameWorkspace,
         deleteWorkspace,

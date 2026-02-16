@@ -214,6 +214,19 @@ export async function revokeWorkspaceInvitation(invitationId: string): Promise<v
   if (error) throw new Error(`Failed to revoke invitation: ${error.message}`);
 }
 
+/** Transfer workspace ownership to another member. Caller must be owner. */
+export async function transferWorkspaceOwnership(
+  workspaceId: string,
+  newOwnerId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('transfer_workspace_ownership', {
+    ws_id: workspaceId,
+    new_owner_id: newOwnerId,
+  });
+
+  if (error) throw new Error(`Failed to transfer ownership: ${error.message}`);
+}
+
 /** Get pending invitations for the current user's email. */
 export async function getMyPendingInvitations(
   email: string

@@ -269,3 +269,79 @@
   border-color: rgba(255, 159, 10, 0.3);
   color: #ff9f0a;
 }
+
+/* ── Transfer ownership button ───────────────────────── */
+.ws-transfer-btn {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.5;
+  color: #ffcc00;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-transfer-btn:hover {
+  opacity: 1;
+  background: rgba(255, 204, 0, 0.12);
+}
+
+/* ── Transfer confirmation overlay ───────────────────── */
+.ws-transfer-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius-lg);
+  z-index: 10;
+  padding: var(--space-lg);
+}
+
+.ws-transfer-dialog {
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.ws-transfer-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.ws-transfer-desc {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ws-transfer-warn {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: #ff9f0a;
+  line-height: 1.5;
+}
+
+.ws-transfer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
