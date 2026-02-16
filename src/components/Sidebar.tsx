@@ -34,9 +34,11 @@ interface SidebarProps {
   onTabChange: (tabId: string) => void;
   onPlanSelect?: (planId: string) => void;
   refreshKey?: number;
+  onSettingsClick?: () => void;
+  onLogoutClick?: () => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSettingsClick, onLogoutClick }: SidebarProps) {
   const { activeWorkspace } = useWorkspace();
   const [pinnedPlans, setPinnedPlans] = useState<Plan[]>([]);
 
@@ -93,11 +95,11 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey }: Si
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-footer-button">
+        <button className="sidebar-footer-button" onClick={onSettingsClick}>
           <img src={SettingsSlidersIcon} alt="" className="sidebar-footer-icon" />
           <span>Settings</span>
         </button>
-        <button className="sidebar-footer-button">
+        <button className="sidebar-footer-button" onClick={onLogoutClick}>
           <img src={LogoutIcon} alt="" className="sidebar-footer-icon" />
           <span>Logout</span>
         </button>

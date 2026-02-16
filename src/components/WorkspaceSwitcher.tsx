@@ -18,7 +18,8 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
   onCreateClick,
   onRenameClick,
 }) => {
-  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace } = useWorkspace();
+  const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace, myRole } = useWorkspace();
+  const isAdmin = myRole === 'owner' || myRole === 'admin';
   const [isOpen, setIsOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -111,24 +112,26 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 onClick={() => handleSelectWorkspace(workspace.id)}
               >
                 <span className="workspace-item-name">{workspace.name}</span>
-                <div className="workspace-item-actions">
-                  <button
-                    className="action-button rename-button"
-                    onClick={(e) => handleRenameClick(workspace.id, e)}
-                    title="Rename"
-                    aria-label="Rename workspace"
-                  >
-                    <img src={PenSquareIcon} alt="" />
-                  </button>
-                  <button
-                    className="action-button delete-button"
-                    onClick={(e) => handleDeleteWorkspace(workspace.id, e)}
-                    title="Delete"
-                    aria-label="Delete workspace"
-                  >
-                    <img src={TrashIcon} alt="" />
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div className="workspace-item-actions">
+                    <button
+                      className="action-button rename-button"
+                      onClick={(e) => handleRenameClick(workspace.id, e)}
+                      title="Rename"
+                      aria-label="Rename workspace"
+                    >
+                      <img src={PenSquareIcon} alt="" />
+                    </button>
+                    <button
+                      className="action-button delete-button"
+                      onClick={(e) => handleDeleteWorkspace(workspace.id, e)}
+                      title="Delete"
+                      aria-label="Delete workspace"
+                    >
+                      <img src={TrashIcon} alt="" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -10,6 +10,7 @@ import { PageHeaderCard } from './components/PageHeaderCard';
 import { CreatePlanModal } from './components/CreatePlanModal';
 import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
+import { WorkspaceSettingsModal } from './components/WorkspaceSettingsModal';
 import { PlansIndex } from './views/PlansIndex';
 import { GoalsIndex } from './views/GoalsIndex';
 import { Dashboard } from './views/Dashboard';
@@ -30,6 +31,8 @@ import './App.css';
 function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
   const { displayName } = useCurrentUser();
+  const { signOut } = useAuth();
+  const [isWorkspaceSettingsOpen, setIsWorkspaceSettingsOpen] = useState(false);
   const userName = displayName ? displayName.split(' ')[0] : 'User';
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('activeTab') || 'dashboard';
@@ -155,6 +158,8 @@ function AppContent() {
         onTabChange={handleTabChange}
         onPlanSelect={handlePlanSelect}
         refreshKey={refreshKey}
+        onSettingsClick={() => setIsWorkspaceSettingsOpen(true)}
+        onLogoutClick={() => signOut()}
       />
       <Header
         onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
@@ -207,6 +212,11 @@ function AppContent() {
         isOpen={renameWorkspaceId !== null}
         workspaceId={renameWorkspaceId}
         onClose={() => setRenameWorkspaceId(null)}
+      />
+
+      <WorkspaceSettingsModal
+        isOpen={isWorkspaceSettingsOpen}
+        onClose={() => setIsWorkspaceSettingsOpen(false)}
       />
     </div>
   );
