@@ -8,6 +8,7 @@ interface HeaderProps {
   onCreateWorkspace: () => void;
   onRenameWorkspace: (workspaceId: string) => void;
   onProfileClick: () => void;
+  onSignOut: () => void;
   userName?: string;
 }
 
@@ -15,6 +16,7 @@ export function Header({
   onCreateWorkspace,
   onRenameWorkspace,
   onProfileClick,
+  onSignOut,
   userName = 'User',
 }: HeaderProps) {
   return (
@@ -26,7 +28,7 @@ export function Header({
             onRenameClick={onRenameWorkspace}
           />
           <ThemeToggle />
-          <ProfileAvatar onProfileClick={onProfileClick} />
+          <ProfileAvatar onProfileClick={onProfileClick} onSignOut={onSignOut} />
         </div>
         <div className="header-text">
           <HeaderGreeting userName={userName} />

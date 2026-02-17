@@ -632,6 +632,7 @@ export async function createTask(payload: {
           title: payload.title,
           due_date: payload.dueDate || null,
           completed: payload.status === 'completed',
+          assigned_to: payload.assignedTo,
         },
       ])
       .select()
@@ -708,10 +709,12 @@ export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWit
   const goals = await getGoalsByWorkspace(workspaceId);
   if (goals.length === 0) return [];
 
-  // 2. Fetch all plan-goal links
+  // 2. Fetch plan-goal links for goals in this workspace only
+  const goalIds = goals.map((g) => g.id);
   const { data: links, error: linksError } = await supabase
     .from('plan_goals')
-    .select('plan_id, goal_id');
+    .select('plan_id, goal_id')
+    .in('goal_id', goalIds);
 
   if (linksError) throw new Error(`Failed to fetch plan-goal links: ${linksError.message}`);
 
@@ -1085,8 +1088,8 @@ export type TaskWithContext = Task & {
 
 export async function getTasksWithDueDatesInRange(
   workspaceId: string,
-  _rangeStart: string,
-  _rangeEnd: string
+  rangeStart: string,
+  rangeEnd: string
 ): Promise<TaskWithContext[]> {
   // Load all active plans for workspace, then their stages + tasks
   const { data: plans, error: plansError } = await supabase
@@ -1118,7 +1121,9 @@ export async function getTasksWithDueDatesInRange(
     .from('tasks')
     .select('*')
     .in('stage_id', stageIds)
-    .not('due_date', 'is', null);
+    .not('due_date', 'is', null)
+    .gte('due_date', rangeStart.split('T')[0])
+    .lte('due_date', rangeEnd.split('T')[0]);
 
   if (tasksError) throw new Error(`Failed to fetch tasks: ${tasksError.message}`);
   if (!tasks) return [];

@@ -117,8 +117,12 @@ export function GoalsIndex() {
           if (!goal.due_date) return false;
           const d = new Date(goal.due_date + 'T00:00:00');
           if (dueFilter === 'overdue' && d >= today) return false;
-          if (dueFilter === 'this_month' && d.getMonth() !== today.getMonth()) return false;
-          if (dueFilter === 'next_month' && d.getMonth() !== today.getMonth() + 1) return false;
+          if (dueFilter === 'this_month' && (d.getMonth() !== today.getMonth() || d.getFullYear() !== today.getFullYear())) return false;
+          if (dueFilter === 'next_month') {
+            const nextMonth = (today.getMonth() + 1) % 12;
+            const nextMonthYear = today.getMonth() === 11 ? today.getFullYear() + 1 : today.getFullYear();
+            if (d.getMonth() !== nextMonth || d.getFullYear() !== nextMonthYear) return false;
+          }
         }
       }
 

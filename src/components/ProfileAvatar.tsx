@@ -7,9 +7,10 @@ const CLOSE_MENUS_EVENT = 'fplan:close-menus';
 
 interface ProfileAvatarProps {
   onProfileClick: () => void;
+  onSignOut: () => void;
 }
 
-export function ProfileAvatar({ onProfileClick }: ProfileAvatarProps) {
+export function ProfileAvatar({ onProfileClick, onSignOut }: ProfileAvatarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const avatarRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -107,7 +108,16 @@ export function ProfileAvatar({ onProfileClick }: ProfileAvatarProps) {
             >
               Profile
             </div>
-            <div className="profile-menu-item">Sign out</div>
+            <div
+              className="profile-menu-item"
+              role="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                onSignOut();
+              }}
+            >
+              Sign out
+            </div>
           </div>,
           document.body
         )}

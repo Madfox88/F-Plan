@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useAuth } from '../context/AuthContext';
 import './WorkspaceSwitcher.css';
 import WorkspaceIcon from '../assets/icons/workspace.svg';
 import AngleDownIcon from '../assets/icons/angle-small-down.svg';
@@ -19,6 +20,7 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
   onRenameClick,
 }) => {
   const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace, myRole } = useWorkspace();
+  const { signOut } = useAuth();
   const isAdmin = myRole === 'owner' || myRole === 'admin';
   const [isOpen, setIsOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);

@@ -166,12 +166,29 @@ function AppContent() {
         onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
         onRenameWorkspace={(workspaceId) => setRenameWorkspaceId(workspaceId)}
         onProfileClick={() => handleTabChange('profile')}
+        onSignOut={() => signOut()}
         userName={userName}
       />
       <MainLayout>
         <PendingInvitationsBanner />
         {selectedPlanId && selectedPlan ? (
-          <PlanDetail planId={selectedPlanId} plan={selectedPlan} />
+          <PlanDetail
+            planId={selectedPlanId}
+            plan={selectedPlan}
+            onPlanDeleted={() => {
+              setSelectedPlanId(null);
+              setSelectedPlan(null);
+              setRefreshKey((k) => k + 1);
+            }}
+            onPlanUpdated={() => {
+              setRefreshKey((k) => k + 1);
+              // Re-fetch plan to reflect rename/archive
+              getPlanById(selectedPlanId).then(setSelectedPlan).catch(() => {
+                setSelectedPlanId(null);
+                setSelectedPlan(null);
+              });
+            }}
+          />
         ) : (
           <div className="page-stack">
             <PageHeaderCard 

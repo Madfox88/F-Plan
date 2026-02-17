@@ -583,23 +583,13 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
                       {users.find((u) => u.id === assignedTo)?.display_name || 'Unknown user'}
                     </>
                   ) : (
-                    'Unassigned'
+                    'Select assignee'
                   )}
                 </span>
                 <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
               </button>
               {isAssigneeOpen && (
                 <div className="dropdown-menu">
-                  <button
-                    type="button"
-                    className={`dropdown-option${!assignedTo ? ' dropdown-option-active' : ''}`}
-                    onClick={() => {
-                      setAssignedTo(null);
-                      setIsAssigneeOpen(false);
-                    }}
-                  >
-                    <span>Unassigned</span>
-                  </button>
                   {users.map((user) => (
                     <button
                       key={user.id}
