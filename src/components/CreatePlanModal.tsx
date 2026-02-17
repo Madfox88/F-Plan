@@ -20,7 +20,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
   const [intent, setIntent] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [useSuggestedStages, setUseSuggestedStages] = useState(true);
+  const [stageMode, setStageMode] = useState<'blank' | 'suggested' | 'custom'>('suggested');
   const [isDraft, setIsDraft] = useState(false);
   const [customStages, setCustomStages] = useState<string[]>(['']);
   const [stageAddError, setStageAddError] = useState<string | null>(null);
@@ -56,22 +56,23 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
       return;
     }
 
-    if (!useSuggestedStages && customStages.length === 0) {
-      setError('Please add at least one custom stage or select suggested stages');
+    if (stageMode === 'custom' && customStages.filter((s) => s.trim()).length === 0) {
+      setError('Please add at least one custom stage');
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      const customStagesToPass = !useSuggestedStages
+      const useSuggested = stageMode === 'suggested';
+      const customStagesToPass = stageMode === 'custom'
         ? customStages.filter((s) => s.trim())
         : undefined;
       await onSubmit(
         title,
         description,
         intent,
-        useSuggestedStages,
+        useSuggested,
         isDraft,
         customStagesToPass,
         dueDate || undefined
@@ -80,7 +81,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
       setIntent('');
       setDescription('');
       setDueDate('');
-      setUseSuggestedStages(true);
+      setStageMode('suggested');
       setIsDraft(false);
       setCustomStages(['']);
       setStageAddError(null);
@@ -178,8 +179,9 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
               <label className="form-radio">
                 <input
                   type="radio"
-                  checked={!useSuggestedStages}
-                  onChange={() => setUseSuggestedStages(false)}
+                  name="stageMode"
+                  checked={stageMode === 'blank'}
+                  onChange={() => setStageMode('blank')}
                   disabled={loading}
                 />
                 <span>Blank plan (start from scratch)</span>
@@ -187,8 +189,9 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
               <label className="form-radio">
                 <input
                   type="radio"
-                  checked={useSuggestedStages}
-                  onChange={() => setUseSuggestedStages(true)}
+                  name="stageMode"
+                  checked={stageMode === 'suggested'}
+                  onChange={() => setStageMode('suggested')}
                   disabled={loading}
                 />
                 <span>Suggested stages (Thinking, Planning, Execution, Review)</span>
@@ -196,8 +199,9 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
               <label className="form-radio">
                 <input
                   type="radio"
-                  checked={!useSuggestedStages && customStages.length > 0}
-                  onChange={() => setUseSuggestedStages(false)}
+                  name="stageMode"
+                  checked={stageMode === 'custom'}
+                  onChange={() => setStageMode('custom')}
                   disabled={loading}
                 />
                 <span>Custom stages</span>
@@ -205,7 +209,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
             </div>
           </div>
 
-          {!useSuggestedStages && (
+          {stageMode === 'custom' && (
             <div className="form-group">
               <label className="form-label">
                 Custom Stages ({customStages.filter((s) => s.trim()).length}/6)

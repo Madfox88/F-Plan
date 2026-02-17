@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { deleteOwnAccount } from '../lib/database';
+import { deleteOwnAccount, getActivePlans, getStagesByPlan, getGoalsByWorkspace, getEvents, getReminders, getFocusSessionLog } from '../lib/database';
 import { useAvatar } from '../context/AvatarContext';
 import { useCurrentUser } from '../context/UserContext';
 import { useAuth } from '../context/AuthContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { AvatarCropperModal } from '../components/AvatarCropperModal';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import './Profile.css';
@@ -12,7 +13,8 @@ import './Settings.css';
 export function Profile() {
   const { avatarUrl, setAvatarUrl } = useAvatar();
   const { displayName, email: userEmail, updateProfile, userId } = useCurrentUser();
-  const { signOut, updateEmail, updatePassword } = useAuth();
+  const { signOut, updateEmail, updatePassword, user: authUser } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -127,22 +129,63 @@ export function Profile() {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleExportData = () => {
-    const data = {
-      account: { name: displayName, email: userEmail },
-      exportedAt: new Date().toISOString(),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `f-plan-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    setMessage({ type: 'success', text: 'Data exported successfully' });
-    setTimeout(() => setMessage(null), 3000);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportData = async () => {
+    if (!activeWorkspace || !userId) return;
+    setIsExporting(true);
+    try {
+      const wsId = activeWorkspace.id;
+      const farPast = '2000-01-01T00:00:00Z';
+      const farFuture = '2099-12-31T23:59:59Z';
+
+      const [plans, goals, events, reminders, focusSessions] = await Promise.all([
+        getActivePlans(wsId).catch(() => []),
+        getGoalsByWorkspace(wsId).catch(() => []),
+        getEvents(wsId, farPast, farFuture).catch(() => []),
+        getReminders(wsId, farPast, farFuture).catch(() => []),
+        getFocusSessionLog(userId, wsId, 10000, 0).catch(() => []),
+      ]);
+
+      // Fetch stages + tasks per plan
+      const plansWithStages = await Promise.all(
+        plans.map(async (p) => {
+          const stages = await getStagesByPlan(p.id).catch(() => []);
+          return { ...p, stages };
+        })
+      );
+
+      const data = {
+        account: {
+          name: displayName,
+          email: userEmail,
+          createdAt: authUser?.created_at ?? null,
+        },
+        workspace: { id: wsId, name: activeWorkspace.name },
+        plans: plansWithStages,
+        goals,
+        events,
+        reminders,
+        focusSessions,
+        exportedAt: new Date().toISOString(),
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `f-plan-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setMessage({ type: 'success', text: 'Data exported successfully' });
+    } catch {
+      setMessage({ type: 'error', text: 'Failed to export data. Please try again.' });
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -266,7 +309,15 @@ export function Profile() {
         <div className="settings-field">
           <label className="settings-label">Account Created</label>
           <div className="settings-field-display">
-            <span className="settings-value">—</span>
+            <span className="settings-value">
+              {authUser?.created_at
+                ? new Date(authUser.created_at).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : '—'}
+            </span>
           </div>
         </div>
 
@@ -314,8 +365,8 @@ export function Profile() {
         <div className="settings-field">
           <label className="settings-label">Export Data</label>
           <p className="settings-description">Download all your account data as JSON</p>
-          <button className="settings-button secondary" onClick={handleExportData}>
-            Export Data
+          <button className="settings-button secondary" onClick={handleExportData} disabled={isExporting}>
+            {isExporting ? 'Exporting…' : 'Export Data'}
           </button>
         </div>
 

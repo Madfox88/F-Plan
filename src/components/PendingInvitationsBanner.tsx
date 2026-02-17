@@ -5,6 +5,23 @@ import { getMyPendingInvitations, acceptWorkspaceInvitation } from '../lib/datab
 import type { WorkspaceInvitation, Workspace } from '../types/database';
 import './PendingInvitationsBanner.css';
 
+const DISMISSED_KEY = 'f-plan-dismissed-invitations';
+
+function getDismissedIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function persistDismissal(invId: string): void {
+  const ids = getDismissedIds();
+  ids.add(invId);
+  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]));
+}
+
 type InviteWithWorkspace = WorkspaceInvitation & { workspace: Workspace };
 
 export const PendingInvitationsBanner: React.FC = () => {
@@ -18,7 +35,8 @@ export const PendingInvitationsBanner: React.FC = () => {
     if (!email) return;
     try {
       const data = await getMyPendingInvitations(email);
-      setInvitations(data);
+      const dismissed = getDismissedIds();
+      setInvitations(data.filter((inv) => !dismissed.has(inv.id)));
     } catch {
       // Silently fail — not critical
     }
@@ -43,6 +61,7 @@ export const PendingInvitationsBanner: React.FC = () => {
   };
 
   const handleDismiss = (invId: string) => {
+    persistDismissal(invId);
     setInvitations((prev) => prev.filter((i) => i.id !== invId));
   };
 

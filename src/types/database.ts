@@ -152,6 +152,7 @@ export type FocusSession = {
   started_at: string;
   ended_at: string | null;       // null while session is active
   duration_minutes: number | null; // derived on end
+  planned_duration_minutes: number | null; // user-chosen target duration
   task_id: string | null;         // optional context
   plan_id: string | null;         // optional context
   goal_id: string | null;         // optional context

@@ -21,7 +21,7 @@ import {
   getTodaysRemindersForUser,
   getActiveGoalsForUser,
   getCompletedTaskCountInWindow,
-  getAssignedTaskCount,
+  getAssignedTaskCountInWindow,
   getActiveFocusSession,
   computeFocusStreak,
   computeAverageDailyFocus,
@@ -122,7 +122,7 @@ export function Dashboard() {
           getTodaysRemindersForUser(userId, wsId).catch(() => [] as Array<Reminder & { occurrenceAt: string }>),
           getActiveGoalsForUser(userId, wsId).catch(() => [] as DashboardGoal[]),
           getCompletedTaskCountInWindow(userId, windowStart).catch(() => 0),
-          getAssignedTaskCount(userId, wsId).catch(() => 0),
+          getAssignedTaskCountInWindow(userId, wsId, windowStart).catch(() => 0),
           computeAverageDailyFocus(userId, wsId).catch(() => 0),
           computeFocusStreak(userId, wsId).catch(() => 0),
           getActiveFocusSession(userId, wsId).catch(() => null),
@@ -207,9 +207,11 @@ export function Dashboard() {
     setFocusLoading(true);
     setFocusError(null);
     try {
+      const resolvedDuration = focusDuration ?? (customDuration ? parseInt(customDuration, 10) : undefined);
       const payload: Parameters<typeof startFocusSession>[0] = {
         userId,
         workspaceId: activeWorkspace.id,
+        plannedDurationMinutes: resolvedDuration && resolvedDuration > 0 ? resolvedDuration : undefined,
       };
       if (focusContextType === 'plan' && focusContextId) payload.planId = focusContextId;
       if (focusContextType === 'goal' && focusContextId) payload.goalId = focusContextId;
@@ -407,7 +409,11 @@ export function Dashboard() {
         {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
 
         {/* Timer — always visible */}
-        <FocusTimer seconds={focusElapsed} active={!!activeSession} />
+        <FocusTimer
+          seconds={focusElapsed}
+          active={!!activeSession}
+          plannedMinutes={activeSession?.planned_duration_minutes}
+        />
 
         {activeSession ? (
           /* ── Active session ── */

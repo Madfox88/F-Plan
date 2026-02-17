@@ -15,6 +15,8 @@ interface FocusTimerProps {
   active?: boolean;
   /** Visual size — lg (default) for card/modal, sm for compact contexts */
   size?: 'lg' | 'sm';
+  /** Planned duration in minutes — when set, shows remaining time label */
+  plannedMinutes?: number | null;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -26,11 +28,20 @@ function formatTime(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function FocusTimer({ seconds, active = false, size = 'lg' }: FocusTimerProps) {
+export function FocusTimer({ seconds, active = false, size = 'lg', plannedMinutes }: FocusTimerProps) {
+  const targetSeconds = plannedMinutes ? plannedMinutes * 60 : null;
+  const remaining = targetSeconds ? Math.max(0, targetSeconds - seconds) : null;
+  const overtime = targetSeconds ? seconds > targetSeconds : false;
+
   return (
-    <div className={`focus-glow-timer focus-glow-timer--${size}${active ? ' focus-glow-timer--active' : ''}`}>
+    <div className={`focus-glow-timer focus-glow-timer--${size}${active ? ' focus-glow-timer--active' : ''}${overtime ? ' focus-glow-timer--overtime' : ''}`}>
       {active && <div className="focus-glow-timer__glow" aria-hidden="true" />}
       <span className="focus-glow-timer__digits">{formatTime(seconds)}</span>
+      {active && remaining !== null && (
+        <span className="focus-glow-timer__remaining">
+          {overtime ? 'Overtime' : `${formatTime(remaining)} left`}
+        </span>
+      )}
     </div>
   );
 }

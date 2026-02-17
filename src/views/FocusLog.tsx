@@ -13,6 +13,8 @@ import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
 import {
   getFocusSessionLog,
+  getFocusSessionCount,
+  getTotalFocusMinutes,
   computeFocusStreak,
   computeAverageDailyFocus,
 } from '../lib/database';
@@ -69,6 +71,8 @@ export function FocusLog() {
   const { userId } = useCurrentUser();
 
   const [sessions, setSessions] = useState<FocusSessionLogEntry[]>([]);
+  const [totalSessionCount, setTotalSessionCount] = useState(0);
+  const [totalMinutes, setTotalMinutes] = useState(0);
   const [streak, setStreak] = useState(0);
   const [avgDaily, setAvgDaily] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -82,12 +86,16 @@ export function FocusLog() {
     if (!userId || !activeWorkspace) return;
     setLoading(true);
     try {
-      const [log, s, avg] = await Promise.all([
+      const [log, count, minutes, s, avg] = await Promise.all([
         getFocusSessionLog(userId, activeWorkspace.id, PAGE_SIZE, 0),
+        getFocusSessionCount(userId, activeWorkspace.id),
+        getTotalFocusMinutes(userId, activeWorkspace.id),
         computeFocusStreak(userId, activeWorkspace.id),
         computeAverageDailyFocus(userId, activeWorkspace.id),
       ]);
       setSessions(log);
+      setTotalSessionCount(count);
+      setTotalMinutes(minutes);
       setStreak(s);
       setAvgDaily(avg);
       setHasMore(log.length >= PAGE_SIZE);
@@ -117,8 +125,7 @@ export function FocusLog() {
   };
 
   /* ── Derived stats ── */
-  const totalSessions = sessions.length;
-  const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+  const totalSessions = totalSessionCount;
 
   if (loading) {
     return (

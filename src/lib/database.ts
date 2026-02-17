@@ -565,6 +565,53 @@ export async function createStage(planId: string, title: string): Promise<Stage>
   return data;
 }
 
+/** Update an existing stage's title and/or position. */
+export async function updateStage(
+  stageId: string,
+  updates: Partial<{ title: string; position: number }>
+): Promise<Stage> {
+  const payload: Record<string, unknown> = {};
+  if (updates.title !== undefined) payload.title = updates.title.trim();
+  if (updates.position !== undefined) payload.position = updates.position;
+
+  if (Object.keys(payload).length === 0) {
+    throw new Error('No updates provided');
+  }
+
+  const { data, error } = await supabase
+    .from('stages')
+    .update(payload)
+    .eq('id', stageId)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to update stage: ${error.message}`);
+  return data;
+}
+
+/**
+ * Delete a stage and all its tasks (DB CASCADE).
+ * Throws if it's the last stage in the plan — a plan must have ≥1 stage.
+ */
+export async function deleteStage(stageId: string, planId: string): Promise<void> {
+  // Guard: ensure this isn't the only stage
+  const { data: siblings } = await supabase
+    .from('stages')
+    .select('id')
+    .eq('plan_id', planId);
+
+  if (!siblings || siblings.length <= 1) {
+    throw new Error('Cannot delete the only stage in a plan');
+  }
+
+  const { error } = await supabase
+    .from('stages')
+    .delete()
+    .eq('id', stageId);
+
+  if (error) throw new Error(`Failed to delete stage: ${error.message}`);
+}
+
 /* Task Operations */
 type ChecklistPayloadItem = { id?: string; text: string; completed?: boolean } | string;
 
@@ -1201,6 +1248,7 @@ export async function startFocusSession(payload: {
   taskId?: string;
   planId?: string;
   goalId?: string;
+  plannedDurationMinutes?: number;
 }): Promise<FocusSession> {
   // Validate single context link
   const contextCount = [payload.taskId, payload.planId, payload.goalId]
@@ -1218,6 +1266,7 @@ export async function startFocusSession(payload: {
       task_id: payload.taskId || null,
       plan_id: payload.planId || null,
       goal_id: payload.goalId || null,
+      planned_duration_minutes: payload.plannedDurationMinutes ?? null,
     }])
     .select()
     .single();
@@ -1319,6 +1368,46 @@ export type FocusSessionLogEntry = FocusSession & {
   context_type: 'plan' | 'goal' | 'task' | null;
   context_title: string | null;
 };
+
+/**
+ * Get the total count of completed focus sessions (≥5 min) for a user.
+ * Used by FocusLog to show accurate totals independent of pagination.
+ */
+export async function getFocusSessionCount(
+  userId: string,
+  workspaceId: string
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('focus_sessions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
+    .not('ended_at', 'is', null)
+    .gte('duration_minutes', 5);
+
+  if (error) throw new Error(`Failed to count focus sessions: ${error.message}`);
+  return count || 0;
+}
+
+/**
+ * Get total focus minutes for a user across all completed sessions.
+ * Used by FocusLog to show accurate total duration independent of pagination.
+ */
+export async function getTotalFocusMinutes(
+  userId: string,
+  workspaceId: string
+): Promise<number> {
+  const { data, error } = await supabase
+    .from('focus_sessions')
+    .select('duration_minutes')
+    .eq('user_id', userId)
+    .eq('workspace_id', workspaceId)
+    .not('ended_at', 'is', null)
+    .gte('duration_minutes', 5);
+
+  if (error) throw new Error(`Failed to sum focus minutes: ${error.message}`);
+  return (data || []).reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+}
 
 /**
  * Get focus session log for a user, enriched with context titles.
@@ -1561,6 +1650,51 @@ export async function getAssignedTaskCount(
 
   if (error) throw new Error(`Failed to count assigned tasks: ${error.message}`);
   return count || 0;
+}
+
+/**
+ * Get task count assigned to a user that were created or completed within a
+ * rolling window. Used alongside getCompletedTaskCountInWindow so numerator
+ * and denominator share the same time scope.
+ */
+export async function getAssignedTaskCountInWindow(
+  userId: string,
+  workspaceId: string,
+  windowStartISO: string
+): Promise<number> {
+  const { data: plans } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .is('archived_at', null);
+
+  if (!plans || plans.length === 0) return 0;
+
+  const { data: stages } = await supabase
+    .from('stages')
+    .select('id')
+    .in('plan_id', plans.map((p: any) => p.id));
+
+  if (!stages || stages.length === 0) return 0;
+
+  const stageIds = stages.map((s: any) => s.id);
+
+  // Tasks that were active in the window: either incomplete or completed within the window
+  const { count: incompleteCount } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .in('stage_id', stageIds)
+    .eq('assigned_to', userId)
+    .is('completed_at', null);
+
+  const { count: completedInWindowCount } = await supabase
+    .from('tasks')
+    .select('*', { count: 'exact', head: true })
+    .in('stage_id', stageIds)
+    .eq('assigned_to', userId)
+    .gte('completed_at', windowStartISO);
+
+  return (incompleteCount || 0) + (completedInWindowCount || 0);
 }
 
 /**
