@@ -9,6 +9,7 @@ import type { TaskCreatePayload } from '../components/TaskCreateModal';
 import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
 import { AddStageModal } from '../components/AddStageModal';
+import { RenamePlanModal } from '../components/RenamePlanModal';
 import Checkbox from '../components/Checkbox';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
@@ -49,6 +50,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   const [linkGoalOpen, setLinkGoalOpen] = useState(false);
   const [addStageOpen, setAddStageOpen] = useState(false);
   const [linkedGoalNames, setLinkedGoalNames] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
 
   const resolveTaskStatus = (task: { status?: 'not_started' | 'in_progress' | 'completed'; completed?: boolean }) => {
     if (task.status) return task.status;
@@ -195,14 +198,14 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     return stages;
   }, [stages, groupingMode, planId]);
 
-  const handleRenamePlan = (planId: string) => {
-    const newTitle = prompt('Enter new plan name:', currentPlan.title);
-    if (newTitle && newTitle.trim()) {
-      renamePlan(planId, newTitle.trim()).then(() => {
-        setCurrentPlan({ ...currentPlan, title: newTitle.trim() });
-        if (onPlanUpdated) onPlanUpdated();
-      }).catch((error) => console.error('Failed to rename plan:', error));
-    }
+  const handleRenamePlan = (_planId: string) => {
+    setRenameModalOpen(true);
+  };
+
+  const handleRenameSubmit = async (newTitle: string) => {
+    await renamePlan(planId, newTitle);
+    setCurrentPlan({ ...currentPlan, title: newTitle });
+    if (onPlanUpdated) onPlanUpdated();
   };
 
   const handleTogglePin = async (planId: string, isPinned: boolean) => {
@@ -210,8 +213,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
       await togglePlanPin(planId, isPinned);
       setCurrentPlan({ ...currentPlan, is_pinned: isPinned });
       if (onPlanUpdated) onPlanUpdated();
-    } catch (error) {
-      console.error('Failed to toggle pin:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle pin');
     }
   };
 
@@ -223,7 +226,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
             setCurrentPlan({ ...currentPlan, status: 'active' });
             if (onPlanUpdated) onPlanUpdated();
           })
-          .catch((error) => console.error('Failed to unhide plan:', error));
+          .catch((err) => setError(err instanceof Error ? err.message : 'Failed to unhide plan'));
       }
       return;
     }
@@ -233,16 +236,17 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
           setCurrentPlan({ ...currentPlan, status: 'archived' });
           if (onPlanUpdated) onPlanUpdated();
         })
-        .catch((error) => console.error('Failed to hide plan:', error));
+        .catch((err) => setError(err instanceof Error ? err.message : 'Failed to hide plan'));
     }
   };
 
   const handleDeletePlan = (planId: string) => {
+    if (!window.confirm('Are you sure you want to delete this plan? This action cannot be undone.')) return;
     deletePlan(planId)
       .then(() => {
         if (onPlanDeleted) onPlanDeleted();
       })
-      .catch((error) => console.error('Failed to delete plan:', error));
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to delete plan'));
   };
 
   const fetchStages = useCallback(async () => {
@@ -250,8 +254,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
       setLoading(true);
       const fetchedStages = await getStagesByPlan(planId);
       setStages(fetchedStages);
-    } catch (error) {
-      console.error('Failed to load stages:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load stages');
     } finally {
       setLoading(false);
     }
@@ -269,8 +273,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         .filter((g) => goalIds.includes(g.id))
         .map((g) => g.title);
       setLinkedGoalNames(names);
-    } catch (error) {
-      console.error('Failed to load linked goals:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load linked goals');
     }
   }, [planId, currentPlan.workspace_id]);
 
@@ -282,8 +286,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     try {
       await createStage(planId, stageName);
       await fetchStages();
-    } catch (error) {
-      console.error('Failed to create stage:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create stage');
     }
   };
 
@@ -300,113 +304,132 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
   };
 
   const handleSaveTask = async (payload: TaskCreatePayload, existingTaskId?: string) => {
-    if (existingTaskId) {
-      await updateTask(existingTaskId, {
-        stage_id: payload.stageId,
-        title: payload.title,
-        status: payload.status,
-        priority: payload.priority,
-        start_date: payload.startDate || null,
-        due_date: payload.dueDate || null,
-        repeat: payload.repeat,
-        description: payload.description || null,
-        checklists: payload.checklists,
-        labels: payload.labels,
-        completed: payload.status === 'completed',
-        assigned_to: payload.assignedTo || undefined,
-      });
-    } else {
-      await createTask({
-        stageId: payload.stageId,
-        title: payload.title,
-        status: payload.status,
-        priority: payload.priority,
-        startDate: payload.startDate,
-        dueDate: payload.dueDate,
-        repeat: payload.repeat,
-        description: payload.description,
-        checklists: payload.checklists,
-        labels: payload.labels,
-        assignedTo: payload.assignedTo || currentUserId || '',
-      });
+    try {
+      if (existingTaskId) {
+        await updateTask(existingTaskId, {
+          stage_id: payload.stageId,
+          title: payload.title,
+          status: payload.status,
+          priority: payload.priority,
+          start_date: payload.startDate || null,
+          due_date: payload.dueDate || null,
+          repeat: payload.repeat,
+          description: payload.description || null,
+          checklists: payload.checklists,
+          labels: payload.labels,
+          completed: payload.status === 'completed',
+          assigned_to: payload.assignedTo || undefined,
+        });
+      } else {
+        await createTask({
+          stageId: payload.stageId,
+          title: payload.title,
+          status: payload.status,
+          priority: payload.priority,
+          startDate: payload.startDate,
+          dueDate: payload.dueDate,
+          repeat: payload.repeat,
+          description: payload.description,
+          checklists: payload.checklists,
+          labels: payload.labels,
+          assignedTo: payload.assignedTo || currentUserId || '',
+        });
+      }
+      setEditingTask(undefined);
+      await fetchStages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save task');
     }
-    setEditingTask(undefined);
-    await fetchStages();
   };
 
   const handleDeleteTask = async (taskId: string) => {
     if (!window.confirm('Delete this task?')) return;
-    await deleteTask(taskId);
-    await fetchStages();
+    try {
+      await deleteTask(taskId);
+      await fetchStages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task');
+    }
   };
 
   const handleCompleteTask = async (task: Task) => {
-    const normalized = Array.isArray(task.checklists)
-      ? task.checklists.map((item, index) => ({
-          id: item.id || `${index}-${Date.now()}`,
-          text: item.text,
-          completed: !!item.completed,
-        }))
-      : [];
+    try {
+      const normalized = Array.isArray(task.checklists)
+        ? task.checklists.map((item, index) => ({
+            id: item.id || `${index}-${Date.now()}`,
+            text: item.text,
+            completed: !!item.completed,
+          }))
+        : [];
 
-    const updatedChecklists = normalized.map((item) => ({ ...item, completed: true }));
+      const updatedChecklists = normalized.map((item) => ({ ...item, completed: true }));
 
-    await setTaskCompleted(task.id, true);
-    await updateTask(task.id, {
-      status: 'completed',
-      checklists: updatedChecklists,
-    });
-    await fetchStages();
+      await setTaskCompleted(task.id, true);
+      await updateTask(task.id, {
+        status: 'completed',
+        checklists: updatedChecklists,
+      });
+      await fetchStages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete task');
+    }
   };
 
   const handleToggleChecklistItem = async (task: Task, itemId: string) => {
     if (!task.checklists) return;
+    try {
+      const normalized = task.checklists.map((item, index) => ({
+        id: item.id || `${index}-${Date.now()}`,
+        text: item.text,
+        completed: !!item.completed,
+      }));
 
-    const normalized = task.checklists.map((item, index) => ({
-      id: item.id || `${index}-${Date.now()}`,
-      text: item.text,
-      completed: !!item.completed,
-    }));
+      const nextChecklists = normalized.map((item) =>
+        item.id === itemId ? { ...item, completed: !item.completed } : item
+      );
 
-    const nextChecklists = normalized.map((item) =>
-      item.id === itemId ? { ...item, completed: !item.completed } : item
-    );
+      const completedCount = nextChecklists.filter((item) => item.completed).length;
+      const allChecked = nextChecklists.length > 0 && completedCount === nextChecklists.length;
+      const someChecked = completedCount > 0 && !allChecked;
+      const newStatus = allChecked ? 'completed' : someChecked ? 'in_progress' : 'not_started';
+      const wasCompleted = !!task.completed;
 
-    const completedCount = nextChecklists.filter((item) => item.completed).length;
-    const allChecked = nextChecklists.length > 0 && completedCount === nextChecklists.length;
-    const someChecked = completedCount > 0 && !allChecked;
-    const newStatus = allChecked ? 'completed' : someChecked ? 'in_progress' : 'not_started';
-    const wasCompleted = !!task.completed;
+      if (allChecked !== wasCompleted) {
+        await setTaskCompleted(task.id, allChecked);
+      }
+      await updateTask(task.id, {
+        checklists: nextChecklists,
+        status: newStatus,
+      });
 
-    if (allChecked !== wasCompleted) {
-      await setTaskCompleted(task.id, allChecked);
+      await fetchStages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update checklist');
     }
-    await updateTask(task.id, {
-      checklists: nextChecklists,
-      status: newStatus,
-    });
-
-    await fetchStages();
   };
 
   const handleToggleTaskCheckbox = async (task: Task, nextChecked: boolean) => {
-    const normalized = Array.isArray(task.checklists)
-      ? task.checklists.map((item, index) => ({
-          id: item.id || `${index}-${Date.now()}`,
-          text: item.text,
-          completed: !!item.completed,
-        }))
-      : [];
+    try {
+      const normalized = Array.isArray(task.checklists)
+        ? task.checklists.map((item, index) => ({
+            id: item.id || `${index}-${Date.now()}`,
+            text: item.text,
+            completed: !!item.completed,
+          }))
+        : [];
 
-    const updatedChecklists = normalized.map((item) => ({ ...item, completed: nextChecked }));
+      const updatedChecklists = normalized.map((item) => ({ ...item, completed: nextChecked }));
 
-    await setTaskCompleted(task.id, nextChecked);
-    await updateTask(task.id, {
-      status: nextChecked ? 'completed' : 'not_started',
-      checklists: updatedChecklists,
-    });
+      await setTaskCompleted(task.id, nextChecked);
+      await updateTask(task.id, {
+        status: nextChecked ? 'completed' : 'not_started',
+        checklists: updatedChecklists,
+      });
 
-    await fetchStages();
+      await fetchStages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task');
+    }
   };
 
   const formatDate = (value?: string | null) => {
@@ -572,6 +595,12 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     return (
       <div className="plan-detail-wrapper">
         {headerContent}
+        {error && (
+          <div className="plan-detail-error glass" role="alert">
+            <span>{error}</span>
+            <button className="plan-detail-error-dismiss" onClick={() => setError(null)}>✕</button>
+          </div>
+        )}
         <div className="plan-detail-loading">Loading stages...</div>
       </div>
     );
@@ -581,6 +610,12 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     return (
       <div className="plan-detail-wrapper">
         {headerContent}
+        {error && (
+          <div className="plan-detail-error glass" role="alert">
+            <span>{error}</span>
+            <button className="plan-detail-error-dismiss" onClick={() => setError(null)}>✕</button>
+          </div>
+        )}
         <div className="plan-detail-empty">
           <p>No stages yet. Create your first stage to get started.</p>
         </div>
@@ -762,6 +797,13 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
     <div className="plan-detail-wrapper">
       {headerContent}
 
+      {error && (
+        <div className="plan-detail-error glass" role="alert">
+          <span>{error}</span>
+          <button className="plan-detail-error-dismiss" onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+
       {viewMode === 'boards' && (
         <div className="plan-board">
           {filteredStages.map((stage) => (
@@ -865,6 +907,13 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
         isOpen={addStageOpen}
         onClose={() => setAddStageOpen(false)}
         onSubmit={handleAddStageSubmit}
+      />
+
+      <RenamePlanModal
+        isOpen={renameModalOpen}
+        currentTitle={currentPlan.title}
+        onClose={() => setRenameModalOpen(false)}
+        onRename={handleRenameSubmit}
       />
     </div>
   );

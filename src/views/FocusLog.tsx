@@ -74,6 +74,7 @@ export function FocusLog() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const PAGE_SIZE = 50;
 
@@ -91,7 +92,7 @@ export function FocusLog() {
       setAvgDaily(avg);
       setHasMore(log.length >= PAGE_SIZE);
     } catch (err) {
-      console.error('Failed to load focus log:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load focus log');
     } finally {
       setLoading(false);
     }
@@ -109,7 +110,7 @@ export function FocusLog() {
       setSessions((prev) => [...prev, ...more]);
       setHasMore(more.length >= PAGE_SIZE);
     } catch (err) {
-      console.error('Failed to load more sessions:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load more sessions');
     } finally {
       setLoadingMore(false);
     }
@@ -131,6 +132,13 @@ export function FocusLog() {
 
   return (
     <div className="focus-log">
+
+      {error && (
+        <div className="focus-log-error glass" role="alert">
+          <span>{error}</span>
+          <button className="focus-log-error-dismiss" onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
 
       {/* ── Summary stats ── */}
       <div className="focus-log-stats glass">

@@ -297,34 +297,42 @@ export function Calendar() {
     repeatRule: RepeatRule;
   }) => {
     if (!activeWorkspace) return;
-    if (eventModalData?.event) {
-      await updateEvent(eventModalData.event.id, {
-        title: data.title,
-        notes: data.notes || null,
-        location: data.location || null,
-        start_at: data.startAt,
-        end_at: data.endAt,
-        repeat_rule: data.repeatRule,
-      });
-    } else {
-      await createEvent({
-        workspaceId: activeWorkspace.id,
-        title: data.title,
-        notes: data.notes,
-        location: data.location,
-        startAt: data.startAt,
-        endAt: data.endAt,
-        repeatRule: data.repeatRule,
-      });
+    try {
+      if (eventModalData?.event) {
+        await updateEvent(eventModalData.event.id, {
+          title: data.title,
+          notes: data.notes || null,
+          location: data.location || null,
+          start_at: data.startAt,
+          end_at: data.endAt,
+          repeat_rule: data.repeatRule,
+        });
+      } else {
+        await createEvent({
+          workspaceId: activeWorkspace.id,
+          title: data.title,
+          notes: data.notes,
+          location: data.location,
+          startAt: data.startAt,
+          endAt: data.endAt,
+          repeatRule: data.repeatRule,
+        });
+      }
+      setEventModalData(null);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save event');
     }
-    setEventModalData(null);
-    loadData();
   };
 
   const handleEventDelete = async (id: string) => {
-    await deleteEvent(id);
-    setEventModalData(null);
-    loadData();
+    try {
+      await deleteEvent(id);
+      setEventModalData(null);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete event');
+    }
   };
 
   /* Reminder CRUD */
@@ -335,31 +343,39 @@ export function Calendar() {
     repeatRule: RepeatRule;
   }) => {
     if (!activeWorkspace) return;
-    if (reminderModalData?.reminder) {
-      await updateReminder(reminderModalData.reminder.id, {
-        title: data.title,
-        notes: data.notes || null,
-        remind_at: data.remindAt,
-        repeat_rule: data.repeatRule,
-      });
-    } else {
-      await createReminder({
-        workspaceId: activeWorkspace.id,
-        title: data.title,
-        notes: data.notes,
-        remindAt: data.remindAt,
-        repeatRule: data.repeatRule,
-        userId: userId || undefined,
-      });
+    try {
+      if (reminderModalData?.reminder) {
+        await updateReminder(reminderModalData.reminder.id, {
+          title: data.title,
+          notes: data.notes || null,
+          remind_at: data.remindAt,
+          repeat_rule: data.repeatRule,
+        });
+      } else {
+        await createReminder({
+          workspaceId: activeWorkspace.id,
+          title: data.title,
+          notes: data.notes,
+          remindAt: data.remindAt,
+          repeatRule: data.repeatRule,
+          userId: userId || undefined,
+        });
+      }
+      setReminderModalData(null);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save reminder');
     }
-    setReminderModalData(null);
-    loadData();
   };
 
   const handleReminderDelete = async (id: string) => {
-    await deleteReminder(id);
-    setReminderModalData(null);
-    loadData();
+    try {
+      await deleteReminder(id);
+      setReminderModalData(null);
+      loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete reminder');
+    }
   };
 
   /* ────── Render helpers ────── */

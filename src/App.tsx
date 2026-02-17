@@ -51,8 +51,7 @@ function AppContent() {
         try {
           const plan = await getPlanById(selectedPlanId);
           setSelectedPlan(plan);
-        } catch (error) {
-          console.error('Failed to fetch plan:', error);
+        } catch {
           setSelectedPlanId(null);
         }
       };
@@ -142,7 +141,6 @@ function AppContent() {
       setSelectedPlanId(newPlan.id);
       setIsCreatePlanModalOpen(false);
     } catch (error) {
-      console.error('Failed to create plan:', error);
       throw error;
     }
   };

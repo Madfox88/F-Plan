@@ -24,7 +24,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setWorkspace(ws);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load workspace');
-        console.error('Workspace initialization error:', err);
       } finally {
         setLoading(false);
       }

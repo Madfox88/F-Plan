@@ -33,7 +33,6 @@ export function GoalsIndex() {
       setGoals(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load goals');
-      console.error('Failed to load goals:', err);
     } finally {
       setLoading(false);
     }

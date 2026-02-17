@@ -12,6 +12,7 @@ export const PendingInvitationsBanner: React.FC = () => {
   const { refreshWorkspaces } = useWorkspace();
   const [invitations, setInvitations] = useState<InviteWithWorkspace[]>([]);
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
 
   const loadInvitations = useCallback(async () => {
     if (!email) return;
@@ -29,12 +30,13 @@ export const PendingInvitationsBanner: React.FC = () => {
 
   const handleAccept = async (inv: InviteWithWorkspace) => {
     setAccepting(inv.id);
+    setErrorId(null);
     try {
       await acceptWorkspaceInvitation(inv.id);
       setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
       await refreshWorkspaces();
     } catch {
-      // error handling
+      setErrorId(inv.id);
     } finally {
       setAccepting(null);
     }
@@ -54,6 +56,9 @@ export const PendingInvitationsBanner: React.FC = () => {
             <strong>Workspace invitation:</strong> You've been invited to join{' '}
             <strong>{inv.workspace.name}</strong> as {inv.role === 'admin' ? 'an admin' : 'a member'}.
           </div>
+          {errorId === inv.id && (
+            <div className="pending-invite-error">Failed to accept invitation. Please try again.</div>
+          )}
           <div className="pending-invite-actions">
             <button
               className="settings-button primary small"

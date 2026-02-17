@@ -4,6 +4,7 @@ import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin
 import { useWorkspace } from '../context/WorkspaceContext';
 import { PlanCardMenu } from '../components/PlanCardMenu';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
+import { RenamePlanModal } from '../components/RenamePlanModal';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
 import SearchIcon from '../assets/icons/search.svg';
@@ -31,6 +32,8 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   const [searchOpen, setSearchOpen] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [linkGoalPlanId, setLinkGoalPlanId] = useState<string | null>(null);
+  const [renamePlanId, setRenamePlanId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadPlans = useCallback(async () => {
     if (!activeWorkspace) return;
@@ -42,8 +45,8 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
         ? await getPlansWithMetadataByStatus(activeWorkspace.id, status)
         : await getActivePlansWithMetadata(activeWorkspace.id);
       setPlans(loadedPlans);
-    } catch (error) {
-      console.error('Failed to load plans:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load plans');
     } finally {
       setLoading(false);
     }
@@ -66,8 +69,8 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
       if (onPinToggle) {
         onPinToggle();
       }
-    } catch (error) {
-      console.error('Failed to toggle pin:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle pin');
     }
   };
 
@@ -76,13 +79,16 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   };
 
   const handleRenamePlan = (planId: string) => {
-    const plan = plans.find((p) => p.id === planId);
-    if (!plan) return;
-    const newTitle = prompt('Enter new plan name:', plan.title);
-    if (newTitle && newTitle.trim()) {
-      renamePlan(planId, newTitle.trim()).then(() => loadPlans()).catch((error) => console.error('Failed to rename plan:', error));
-    }
+    setRenamePlanId(planId);
   };
+
+  const handleRenameSubmit = async (newTitle: string) => {
+    if (!renamePlanId) return;
+    await renamePlan(renamePlanId, newTitle);
+    await loadPlans();
+  };
+
+  const renamePlanTitle = renamePlanId ? plans.find((p) => p.id === renamePlanId)?.title ?? '' : '';
 
   const handleTogglePinFromMenu = async (planId: string, isPinned: boolean) => {
     try {
@@ -91,8 +97,8 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
       if (onPinToggle) {
         onPinToggle();
       }
-    } catch (error) {
-      console.error('Failed to toggle pin:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle pin');
     }
   };
 
@@ -101,7 +107,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
       if (window.confirm('Unhide this plan?')) {
         updatePlan(planId, { status: 'active' })
           .then(() => loadPlans())
-          .catch((error) => console.error('Failed to unhide plan:', error));
+          .catch((err) => setError(err instanceof Error ? err.message : 'Failed to unhide plan'));
       }
       return;
     }
@@ -109,13 +115,13 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
     if (window.confirm('Hide this plan?')) {
       archivePlan(planId)
         .then(() => loadPlans())
-        .catch((error) => console.error('Failed to hide plan:', error));
+        .catch((err) => setError(err instanceof Error ? err.message : 'Failed to hide plan'));
     }
   };
 
   const handleDeletePlan = (planId: string) => {
     if (window.confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
-      deletePlan(planId).then(() => loadPlans()).catch((error) => console.error('Failed to delete plan:', error));
+      deletePlan(planId).then(() => loadPlans()).catch((err) => setError(err instanceof Error ? err.message : 'Failed to delete plan'));
     }
   };
 
@@ -133,6 +139,12 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
 
   return (
     <div className="plans-index">
+      {error && (
+        <div className="plans-error glass" role="alert">
+          <span>{error}</span>
+          <button className="plans-error-dismiss" onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
       <div className="plans-toolbar">
         <div className={`search-wrapper ${searchOpen ? 'open' : ''}`}>
           <button
@@ -318,6 +330,13 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
           onChanged={loadPlans}
         />
       )}
+
+      <RenamePlanModal
+        isOpen={!!renamePlanId}
+        currentTitle={renamePlanTitle}
+        onClose={() => setRenamePlanId(null)}
+        onRename={handleRenameSubmit}
+      />
     </div>
   );
 }

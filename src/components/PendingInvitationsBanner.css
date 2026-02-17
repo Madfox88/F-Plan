@@ -13,7 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   background: rgba(var(--primary-color-rgb), 0.08);
@@ -31,6 +32,12 @@
   display: flex;
   gap: var(--space-sm);
   flex-shrink: 0;
+}
+
+.pending-invite-error {
+  font-size: var(--font-size-xs);
+  color: #f87171;
+  flex-basis: 100%;
 }
 
 @keyframes slideDown {

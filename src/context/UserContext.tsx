@@ -75,8 +75,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setEmail(authUser.email ?? '');
           setAvatarUrl(null);
         }
-      } catch (err) {
-        console.error('Failed to fetch user profile:', err);
+      } catch {
+        // Fallback to auth metadata if profile fetch fails
         setUserId(authUser.id);
         setDisplayName(authUser.email?.split('@')[0] ?? 'User');
         setEmail(authUser.email ?? '');

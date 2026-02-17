@@ -56,6 +56,8 @@ export function Profile() {
     if (!error) {
       const { data } = supabase.storage.from('avatars').getPublicUrl(path);
       setAvatarUrl(data.publicUrl);
+    } else {
+      setMessage({ type: 'error', text: 'Failed to upload avatar. Please try again.' });
     }
 
     setIsUploading(false);

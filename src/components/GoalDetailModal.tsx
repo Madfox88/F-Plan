@@ -23,14 +23,16 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
   const [linkedPlans, setLinkedPlans] = useState<LinkedPlanWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadLinkedPlans = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError(null);
       const plans = await getLinkedPlansWithProgress(goal.id, workspaceId);
       setLinkedPlans(plans);
     } catch (err) {
-      console.error('Failed to load linked plans:', err);
+      setLoadError(err instanceof Error ? err.message : 'Failed to load linked plans');
     } finally {
       setLoading(false);
     }
@@ -81,6 +83,11 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
           </div>
 
           <div className="goal-detail-body">
+            {loadError && (
+              <div style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                {loadError}
+              </div>
+            )}
             {goal.description && (
               <p className="goal-detail-description">{goal.description}</p>
             )}
