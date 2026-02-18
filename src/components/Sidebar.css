@@ -206,6 +206,12 @@ html[data-theme='dark'] .nav-icon-img {
   border-color: var(--glass-border-heavy);
 }
 
+.sidebar-footer-button.active {
+  background: var(--glass-bg);
+  border-color: var(--glass-border-heavy);
+  color: var(--text-primary);
+}
+
 .sidebar-footer-icon {
   width: 18px;
   height: 18px;

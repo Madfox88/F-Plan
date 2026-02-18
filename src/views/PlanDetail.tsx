@@ -32,9 +32,10 @@ interface PlanDetailProps {
   plan: Plan;
   onPlanUpdated?: () => void;
   onPlanDeleted?: () => void;
+  onBack?: () => void;
 }
 
-export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanDetailProps) {
+export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack }: PlanDetailProps) {
   const { userId: currentUserId } = useCurrentUser();
   const [stages, setStages] = useState<StageWithTasks[]>([]);
   const [loading, setLoading] = useState(true);
@@ -440,6 +441,11 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted }: PlanD
 
   const headerContent = (
     <>
+      {onBack && (
+        <button className="plan-detail-back-btn" onClick={onBack} type="button">
+          ← Back to Plans
+        </button>
+      )}
       <PageHeaderCard 
         title="Plan overview" 
         subtitle={currentPlan.title}

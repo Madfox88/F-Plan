@@ -136,6 +136,8 @@ export function GoalsIndex() {
     });
   }, [goals, searchTerm, dueFilter, selectedTags]);
 
+  const hasActiveFilters = searchTerm.trim() !== '' || dueFilter !== 'all' || selectedTags.size > 0;
+
   if (loading) {
     return <div className="goals-index"><div className="goals-loading">Loading goals…</div></div>;
   }
@@ -221,7 +223,31 @@ export function GoalsIndex() {
       </div>
 
       <div className="goals-container">
-        {filteredGoals.map((goal) => (
+        {filteredGoals.length === 0 && hasActiveFilters ? (
+          <div className="goals-no-filter-match">
+            <p className="goals-no-filter-title">No goals match your filters</p>
+            <p className="goals-no-filter-hint">Try adjusting your search or filter criteria.</p>
+            <button
+              className="goals-clear-filters-btn"
+              onClick={() => {
+                setSearchTerm('');
+                setSearchOpen(false);
+                setDueFilter('all');
+                setSelectedTags(new Set());
+              }}
+            >
+              Clear all filters
+            </button>
+          </div>
+        ) : filteredGoals.length === 0 ? (
+          <div className="goals-empty">
+            <div className="goals-empty-container">
+              <p className="goals-empty-title">No goals yet</p>
+              <p className="goals-empty-message">Create your first goal to start tracking progress.</p>
+            </div>
+          </div>
+        ) : (
+          filteredGoals.map((goal) => (
           <div
             key={goal.id}
             className="goal-card glass"
@@ -285,7 +311,8 @@ export function GoalsIndex() {
               }
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
 
       {activeWorkspace && (

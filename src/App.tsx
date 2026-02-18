@@ -173,6 +173,10 @@ function AppContent() {
           <PlanDetail
             planId={selectedPlanId}
             plan={selectedPlan}
+            onBack={() => {
+              setSelectedPlanId(null);
+              setSelectedPlan(null);
+            }}
             onPlanDeleted={() => {
               setSelectedPlanId(null);
               setSelectedPlan(null);
@@ -193,7 +197,7 @@ function AppContent() {
               title={activePage.title} 
               subtitle={activePage.subtitle}
             />
-            {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'dashboard' && <Dashboard onNavigate={handleTabChange} />}
             {activeTab === 'goals' && <GoalsIndex />}
             {activeTab === 'plans' && (
               <PlansIndex

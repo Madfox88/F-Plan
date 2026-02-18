@@ -425,7 +425,17 @@ export function Calendar() {
                 <div className="calendar-day-items">
                   {dayItems.slice(0, MAX_MONTH_ITEMS).map(renderItem)}
                   {dayItems.length > MAX_MONTH_ITEMS && (
-                    <span className="calendar-day-more">+{dayItems.length - MAX_MONTH_ITEMS} more</span>
+                    <button
+                      className="calendar-day-more"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentDate(day);
+                        setView('day');
+                      }}
+                    >
+                      +{dayItems.length - MAX_MONTH_ITEMS} more
+                    </button>
                   )}
                 </div>
               </div>

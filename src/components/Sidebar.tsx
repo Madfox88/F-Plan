@@ -95,7 +95,10 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
       </nav>
 
       <div className="sidebar-footer">
-        <button className="sidebar-footer-button" onClick={onSettingsClick}>
+        <button
+          className={`sidebar-footer-button${activeTab === 'profile' ? ' active' : ''}`}
+          onClick={onSettingsClick}
+        >
           <img src={SettingsSlidersIcon} alt="" className="sidebar-footer-icon" />
           <span>Settings</span>
         </button>

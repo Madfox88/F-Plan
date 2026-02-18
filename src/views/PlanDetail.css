@@ -5,6 +5,24 @@
   gap: var(--space-lg);
 }
 
+.plan-detail-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  padding: var(--space-xs) 0;
+  transition: color var(--transition-fast);
+}
+
+.plan-detail-back-btn:hover {
+  color: var(--text-primary);
+}
+
 .add-stage-btn {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--glass-border);

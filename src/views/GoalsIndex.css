@@ -393,6 +393,49 @@ html[data-theme='dark'] .goals-toolbar .search-icon-img {
   font-size: var(--font-size-base);
 }
 
+.goals-no-filter-match {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+}
+
+.goals-no-filter-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.goals-no-filter-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.goals-clear-filters-btn {
+  margin-top: var(--space-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.goals-clear-filters-btn:hover {
+  background: var(--glass-bg-heavy);
+  border-color: var(--glass-border-heavy);
+}
+
 @media (max-width: 860px) {
   .goals-container {
     grid-template-columns: repeat(2, 1fr);

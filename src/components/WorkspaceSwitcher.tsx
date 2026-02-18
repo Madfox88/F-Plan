@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useAuth } from '../context/AuthContext';
+import { getMyMembership } from '../lib/database';
+import type { WorkspaceMemberRole } from '../types/database';
 import './WorkspaceSwitcher.css';
 import WorkspaceIcon from '../assets/icons/workspace.svg';
 import AngleDownIcon from '../assets/icons/angle-small-down.svg';
@@ -19,10 +22,34 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
   onRenameClick,
 }) => {
   const { workspaces, activeWorkspace, setActiveWorkspace, deleteWorkspace, myRole } = useWorkspace();
+  const { user: authUser } = useAuth();
   const isAdmin = myRole === 'owner' || myRole === 'admin';
   const [isOpen, setIsOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [workspaceRoles, setWorkspaceRoles] = useState<Record<string, WorkspaceMemberRole>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch roles for all workspaces when dropdown opens
+  useEffect(() => {
+    if (!isOpen || !authUser) return;
+    let cancelled = false;
+    const fetchRoles = async () => {
+      const roles: Record<string, WorkspaceMemberRole> = {};
+      await Promise.all(
+        workspaces.map(async (ws) => {
+          try {
+            const m = await getMyMembership(ws.id, authUser.id);
+            if (m && !cancelled) roles[ws.id] = m.role;
+          } catch {
+            // ignore — role will simply not be shown
+          }
+        })
+      );
+      if (!cancelled) setWorkspaceRoles(roles);
+    };
+    fetchRoles();
+    return () => { cancelled = true; };
+  }, [isOpen, workspaces, authUser]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -112,6 +139,9 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                 onClick={() => handleSelectWorkspace(workspace.id)}
               >
                 <span className="workspace-item-name">{workspace.name}</span>
+                {workspaceRoles[workspace.id] && (
+                  <span className="workspace-item-role">{workspaceRoles[workspace.id]}</span>
+                )}
                 {isAdmin && (
                   <div className="workspace-item-actions">
                     <button

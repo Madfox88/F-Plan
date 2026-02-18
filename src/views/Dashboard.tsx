@@ -34,6 +34,8 @@ import {
 import type { TaskWithContext, DashboardGoal } from '../lib/database';
 import { TaskReadOnlyModal } from '../components/TaskReadOnlyModal';
 import { GoalReadOnlyModal } from '../components/GoalReadOnlyModal';
+import { EventReadOnlyModal } from '../components/EventReadOnlyModal';
+import { ReminderReadOnlyModal } from '../components/ReminderReadOnlyModal';
 import { FocusTimer } from '../components/FocusTimer';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './Dashboard.css';
@@ -57,7 +59,11 @@ function fmtTime(iso: string): string {
 
 /* ── Component ── */
 
-export function Dashboard() {
+interface DashboardProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export function Dashboard({ onNavigate }: DashboardProps) {
   const { activeWorkspace } = useWorkspace();
   const { userId } = useCurrentUser();
 
@@ -101,6 +107,8 @@ export function Dashboard() {
   /* Popups */
   const [selectedTask, setSelectedTask] = useState<TaskWithContext | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<DashboardGoal | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<(CalendarEvent & { occurrenceStart: string; occurrenceEnd: string }) | null>(null);
+  const [selectedReminder, setSelectedReminder] = useState<(Reminder & { occurrenceAt: string }) | null>(null);
 
   /* Loading */
   const [loading, setLoading] = useState(true);
@@ -306,7 +314,14 @@ export function Dashboard() {
 
       {/* ═══ CARD 1 — Today's Schedule ═══ */}
       <div className="dashboard-card glass">
-        <h3>Today's Schedule</h3>
+        <div className="dashboard-card-header">
+          <h3>Today's Schedule</h3>
+          {onNavigate && (
+            <button className="dashboard-view-all" onClick={() => onNavigate('calendar')}>
+              View all →
+            </button>
+          )}
+        </div>
         {scheduleEmpty ? (
           <p className="text-secondary dash-empty">Nothing scheduled for today. Enjoy your day.</p>
         ) : (
@@ -332,11 +347,11 @@ export function Dashboard() {
               <div className="schedule-group">
                 <span className="schedule-group-label">Events</span>
                 {todayEvents.map((ev, i) => (
-                  <div key={`${ev.id}-${i}`} className="schedule-item schedule-item--static">
+                  <button key={`${ev.id}-${i}`} className="schedule-item" onClick={() => setSelectedEvent(ev)}>
                     <span className="schedule-dot schedule-dot--event" />
                     <span className="schedule-item-text">{ev.title}</span>
                     <span className="schedule-item-meta">{fmtTime(ev.occurrenceStart)}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -345,11 +360,11 @@ export function Dashboard() {
               <div className="schedule-group">
                 <span className="schedule-group-label">Reminders</span>
                 {todayReminders.map((r, i) => (
-                  <div key={`${r.id}-${i}`} className="schedule-item schedule-item--static">
+                  <button key={`${r.id}-${i}`} className="schedule-item" onClick={() => setSelectedReminder(r)}>
                     <span className="schedule-dot schedule-dot--reminder" />
                     <span className="schedule-item-text">{r.title}</span>
                     <span className="schedule-item-meta">{fmtTime(r.occurrenceAt)}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -359,7 +374,14 @@ export function Dashboard() {
 
       {/* ═══ CARD 2 — Active Goals Progress ═══ */}
       <div className="dashboard-card glass">
-        <h3>Active Goals Progress</h3>
+        <div className="dashboard-card-header">
+          <h3>Active Goals Progress</h3>
+          {onNavigate && (
+            <button className="dashboard-view-all" onClick={() => onNavigate('goals')}>
+              View all →
+            </button>
+          )}
+        </div>
         {activeGoals.length === 0 ? (
           <p className="text-secondary dash-empty">No active goals with your tasks yet.</p>
         ) : (
@@ -582,6 +604,14 @@ export function Dashboard() {
           }}
           onClose={() => setSelectedGoal(null)}
         />
+      )}
+
+      {selectedEvent && (
+        <EventReadOnlyModal isOpen event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      )}
+
+      {selectedReminder && (
+        <ReminderReadOnlyModal isOpen reminder={selectedReminder} onClose={() => setSelectedReminder(null)} />
       )}
     </div>
   );

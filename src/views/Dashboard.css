@@ -25,6 +25,28 @@
   color: var(--text-primary);
 }
 
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-view-all {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  padding: var(--space-xs) 0;
+  transition: color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.dashboard-view-all:hover {
+  color: var(--text-primary);
+}
+
 .dashboard-loading {
   align-items: center;
   justify-content: center;
@@ -80,14 +102,6 @@
 
 .schedule-item:hover {
   background: var(--glass-hover);
-}
-
-.schedule-item--static {
-  cursor: default;
-}
-
-.schedule-item--static:hover {
-  background: transparent;
 }
 
 /* Coloured dots */
