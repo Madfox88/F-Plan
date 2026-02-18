@@ -534,7 +534,7 @@ html[data-theme='dark'] .view-switcher-icon {
   text-align: center;
 }
 
-.task-card {
+.plan-detail-wrapper .task-card {
   padding: var(--space-md);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -548,13 +548,13 @@ html[data-theme='dark'] .view-switcher-icon {
   justify-content: flex-start;
 }
 
-.task-card:hover {
+.plan-detail-wrapper .task-card:hover {
   background: var(--glass-bg-heavy);
   border-color: var(--glass-border-heavy);
   box-shadow: var(--shadow-sm);
 }
 
-.task-card.completed {
+.plan-detail-wrapper .task-card.completed {
   border-color: rgba(74, 222, 128, 0.6);
   opacity: 0.75;
 }
@@ -583,7 +583,7 @@ html[data-theme='dark'] .view-switcher-icon {
   overflow: hidden;
 }
 
-.task-card-meta {
+.plan-detail-wrapper .task-card-meta {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -841,7 +841,7 @@ html[data-theme='dark'] .view-switcher-icon {
   justify-content: center;
 }
 
-.task-card .task-status-indicator {
+.plan-detail-wrapper .task-card .task-status-indicator {
   transform: translateX(-8px) scale(0.9);
 }
 

@@ -36,9 +36,11 @@ interface SidebarProps {
   refreshKey?: number;
   onSettingsClick?: () => void;
   onLogoutClick?: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSettingsClick, onLogoutClick }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSettingsClick, onLogoutClick, isOpen, onClose }: SidebarProps) {
   const { activeWorkspace } = useWorkspace();
   const [pinnedPlans, setPinnedPlans] = useState<Plan[]>([]);
 
@@ -55,8 +57,23 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
 
     loadPinnedPlans();
   }, [activeWorkspace, refreshKey]);
+  const handleNavClick = (tabId: string) => {
+    onTabChange(tabId);
+    onClose?.();
+  };
+
+  const handlePlanClick = (planId: string) => {
+    onPlanSelect?.(planId);
+    onClose?.();
+  };
+
   return (
-    <aside className="sidebar glass">
+    <>
+      <div
+        className={`sidebar-backdrop${isOpen ? ' sidebar-backdrop-visible' : ''}`}
+        onClick={onClose}
+      />
+      <aside className={`sidebar glass${isOpen ? ' sidebar-open' : ''}`}>
       <div className="sidebar-header">
         <img src={Logo} alt="F-Plan" className="sidebar-logo sidebar-logo-default" />
         <img src={LogoDark} alt="F-Plan" className="sidebar-logo sidebar-logo-light" />
@@ -67,7 +84,7 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
           <button
             key={item.id}
             className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => handleNavClick(item.id)}
           >
             <img src={item.icon} alt="" className="nav-icon-img" />
             <span className="nav-label">{item.label}</span>
@@ -82,7 +99,7 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
                 <button
                   key={plan.id}
                   className="pinned-plan-item"
-                  onClick={() => onPlanSelect && onPlanSelect(plan.id)}
+                  onClick={() => handlePlanClick(plan.id)}
                   title={plan.title}
                 >
                   <span className="pinned-plan-bullet">•</span>
@@ -97,16 +114,17 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
       <div className="sidebar-footer">
         <button
           className={`sidebar-footer-button${activeTab === 'profile' ? ' active' : ''}`}
-          onClick={onSettingsClick}
+          onClick={() => { onSettingsClick?.(); onClose?.(); }}
         >
           <img src={SettingsSlidersIcon} alt="" className="sidebar-footer-icon" />
           <span>Settings</span>
         </button>
-        <button className="sidebar-footer-button" onClick={onLogoutClick}>
+        <button className="sidebar-footer-button" onClick={() => { onLogoutClick?.(); onClose?.(); }}>
           <img src={LogoutIcon} alt="" className="sidebar-footer-icon" />
           <span>Logout</span>
         </button>
       </div>
     </aside>
+    </>
   );
 }

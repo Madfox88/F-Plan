@@ -10,6 +10,7 @@ interface HeaderProps {
   onProfileClick: () => void;
   onSignOut: () => void;
   userName?: string;
+  onToggleSidebar?: () => void;
 }
 
 export function Header({
@@ -18,6 +19,7 @@ export function Header({
   onProfileClick,
   onSignOut,
   userName = 'User',
+  onToggleSidebar,
 }: HeaderProps) {
   return (
     <header className="header glass">
@@ -30,6 +32,11 @@ export function Header({
           <ThemeToggle />
           <ProfileAvatar onProfileClick={onProfileClick} onSignOut={onSignOut} />
         </div>
+        {onToggleSidebar && (
+          <button className="header-hamburger" onClick={onToggleSidebar} aria-label="Toggle menu">
+            ☰
+          </button>
+        )}
         <div className="header-text">
           <HeaderGreeting userName={userName} />
         </div>

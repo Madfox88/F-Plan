@@ -44,6 +44,7 @@ function AppContent() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (selectedPlanId) {
@@ -159,6 +160,8 @@ function AppContent() {
         refreshKey={refreshKey}
         onSettingsClick={() => setIsWorkspaceSettingsOpen(true)}
         onLogoutClick={() => signOut()}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <Header
         onCreateWorkspace={() => setIsCreateWorkspaceModalOpen(true)}
@@ -166,6 +169,7 @@ function AppContent() {
         onProfileClick={() => handleTabChange('profile')}
         onSignOut={() => signOut()}
         userName={userName}
+        onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
       />
       <MainLayout>
         <PendingInvitationsBanner />

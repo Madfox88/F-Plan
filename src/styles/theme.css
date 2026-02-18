@@ -68,6 +68,19 @@
   /* Transitions */
   --transition-fast: 150ms ease-out;
   --transition-normal: 220ms ease-out;
+
+  /* Interactive Hover States */
+  --glass-hover: rgba(0, 0, 0, 0.04);
+  --glass-bg-hover: rgba(255, 255, 255, 0.55);
+
+  /* Primary Brand Color */
+  --primary-color: #8b5cf6;
+  --primary-color-rgb: 139, 92, 246;
+
+  /* Accent Palette */
+  --accent-primary: #60a5fa;
+  --accent-success: #34d399;
+  --accent-warning: #fbbf24;
 }
 
 /* Dark Theme */
@@ -96,6 +109,19 @@
   --text-tertiary: rgba(255, 255, 255, 0.40);
   
   --bg-color: #0a0a0b;
+
+  /* Interactive Hover States */
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --glass-bg-hover: rgba(40, 40, 44, 0.72);
+
+  /* Primary Brand Color */
+  --primary-color: #a78bfa;
+  --primary-color-rgb: 167, 139, 250;
+
+  /* Accent Palette */
+  --accent-primary: #93c5fd;
+  --accent-success: #6ee7b7;
+  --accent-warning: #fcd34d;
 }
 
 /* Global Styles */

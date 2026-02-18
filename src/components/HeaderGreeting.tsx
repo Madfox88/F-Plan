@@ -27,16 +27,15 @@ export function HeaderGreeting({ userName = 'User' }: HeaderGreetingProps) {
 
     const updateDateTime = () => {
       const now = new Date();
-      const date = now.toLocaleDateString('en-US', {
+      const date = now.toLocaleDateString(undefined, {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       });
-      const time = now.toLocaleTimeString('en-US', {
+      const time = now.toLocaleTimeString(undefined, {
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true,
       });
 
       setDateTime({ date, time });

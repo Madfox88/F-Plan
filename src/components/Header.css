@@ -49,3 +49,41 @@
   margin: 0;
 }
 
+/* ─── Hamburger menu button (hidden on desktop) ─── */
+.header-hamburger {
+  display: none;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: var(--space-sm);
+  font-size: 20px;
+  line-height: 1;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.header-hamburger:hover {
+  background: var(--glass-bg-heavy);
+  border-color: var(--glass-border-heavy);
+}
+
+/* ─── Mobile Responsive ─── */
+@media (max-width: 768px) {
+  .header {
+    left: 0;
+    margin-left: 0;
+  }
+
+  .header-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-text {
+    display: none;
+  }
+}
+

@@ -40,7 +40,7 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
       .from('avatars')
       .getPublicUrl(path);
 
-    setAvatarUrl(publicUrlData.publicUrl);
+    setAvatarUrl(`${publicUrlData.publicUrl}?t=${Date.now()}`);
   };
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
         const { data: publicUrlData } = supabase.storage
           .from('avatars')
           .getPublicUrl(path);
-        setAvatarUrl(publicUrlData.publicUrl);
+        setAvatarUrl(`${publicUrlData.publicUrl}?t=${Date.now()}`);
       } else {
         setAvatarUrl(null);
       }
