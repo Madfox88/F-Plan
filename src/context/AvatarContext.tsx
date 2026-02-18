@@ -44,32 +44,15 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const initAvatar = async () => {
+    let cancelled = false;
+    const init = async () => {
       setLoading(true);
-      if (!userId) {
-        setAvatarUrl(null);
-        setLoading(false);
-        return;
-      }
-
-      const path = getAvatarPath(userId);
-      const { data: listData, error } = await supabase.storage
-        .from('avatars')
-        .list(`avatars/${userId}`, { search: 'avatar.jpg', limit: 1 });
-
-      if (!error && listData && listData.length > 0) {
-        const { data: publicUrlData } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(path);
-        setAvatarUrl(`${publicUrlData.publicUrl}?t=${Date.now()}`);
-      } else {
-        setAvatarUrl(null);
-      }
-      setLoading(false);
+      await refreshAvatar();
+      if (!cancelled) setLoading(false);
     };
-
-    initAvatar();
-  }, [userId]);
+    init();
+    return () => { cancelled = true; };
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AvatarContext.Provider value={{ avatarUrl, loading, setAvatarUrl, refreshAvatar }}>

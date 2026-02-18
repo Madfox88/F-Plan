@@ -63,6 +63,18 @@ export type ChecklistItem = {
   completed?: boolean;
 };
 
+/**
+ * Task repeat cadence — subset used for recurring tasks.
+ * Distinct from RepeatRule (calendar) which has bi_daily, bi_weekly, etc.
+ */
+export type TaskRepeatRule =
+  | 'none'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'yearly'
+  | 'customized';
+
 export type Task = {
   id: string;
   stage_id: string;
@@ -70,18 +82,22 @@ export type Task = {
   completed: boolean;
   completed_at: string | null;  // TASK_TEMPORAL_TRUTH_RULES.md §2 — sole temporal authority
   assigned_to: string;          // TASK_OWNERSHIP_RULES.md §3 — FK → users.id  (DB: NOT NULL)
-  status?: 'not_started' | 'in_progress' | 'completed';
-  priority?: 'urgent' | 'important' | 'medium' | 'low';
-  start_date?: string | null;
+  status: 'not_started' | 'in_progress' | 'completed' | null;
+  priority: 'urgent' | 'important' | 'medium' | 'low' | null;
+  start_date: string | null;
   due_date: string | null;
-  repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
-  description?: string | null;
-  checklists?: ChecklistItem[] | null;
-  labels?: Array<{ id: string; name: string; color: string }> | null;
+  repeat: TaskRepeatRule | null;
+  description: string | null;
+  checklists: ChecklistItem[] | null;
+  labels: Array<{ id: string; name: string; color: string }> | null;
   created_at: string;
-  // Dynamic fields added for grouping display
-  stage_name?: string;
 };
+
+/**
+ * Task with the stage title attached — UI-only extension
+ * used when tasks are displayed outside their stage context.
+ */
+export type TaskWithStageName = Task & { stage_name: string };
 
 export type GoalTagColor = 'neutral' | 'blue' | 'green' | 'orange' | 'red' | 'purple';
 

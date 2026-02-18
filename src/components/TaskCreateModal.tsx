@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Stage, Task, ChecklistItem, User } from '../types/database';
+import type { Stage, Task, ChecklistItem, User, TaskRepeatRule } from '../types/database';
 import { getUsers } from '../lib/database';
 import { TaskStatusIndicator } from './TaskStatusIndicator';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
@@ -23,7 +23,7 @@ export type TaskCreatePayload = {
   priority: 'urgent' | 'important' | 'medium' | 'low';
   startDate?: string;
   dueDate?: string;
-  repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
+  repeat: TaskRepeatRule;
   description?: string;
   checklists: ChecklistItem[];
   labels: TaskLabel[];

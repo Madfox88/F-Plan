@@ -54,7 +54,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   const [error, setError] = useState<string | null>(null);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
 
-  const resolveTaskStatus = (task: { status?: 'not_started' | 'in_progress' | 'completed'; completed?: boolean }) => {
+  const resolveTaskStatus = (task: { status: 'not_started' | 'in_progress' | 'completed' | null; completed: boolean }) => {
     if (task.status) return task.status;
     return task.completed ? 'completed' : 'not_started';
   };

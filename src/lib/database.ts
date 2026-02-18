@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Workspace, WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, FocusSession, User } from '../types/database';
+import type { Workspace, WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, TaskRepeatRule, FocusSession, User } from '../types/database';
 
 /* Workspace Operations */
 export async function getWorkspaces(): Promise<Workspace[]> {
@@ -636,7 +636,7 @@ export async function createTask(payload: {
   priority?: 'urgent' | 'important' | 'medium' | 'low';
   startDate?: string;
   dueDate?: string;
-  repeat?: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'customized';
+  repeat?: TaskRepeatRule;
   description?: string;
   checklists?: ChecklistPayloadItem[];
   labels?: Array<{ id: string; name: string; color: string }>;
