@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { AvatarProvider } from './context/AvatarContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -13,13 +13,6 @@ import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
 import { WorkspaceSettingsModal } from './components/WorkspaceSettingsModal';
 import { PendingInvitationsBanner } from './components/PendingInvitationsBanner';
 import { PlansIndex } from './views/PlansIndex';
-import { GoalsIndex } from './views/GoalsIndex';
-import { Dashboard } from './views/Dashboard';
-import { Profile } from './views/Profile';
-import { PlanDetail } from './views/PlanDetail';
-import { Tasks } from './views/Tasks';
-import { Calendar } from './views/Calendar';
-import { FocusLog } from './views/FocusLog';
 import { LoginPage } from './views/LoginPage';
 import { SignupPage } from './views/SignupPage';
 import { ForgotPasswordPage } from './views/ForgotPasswordPage';
@@ -28,6 +21,19 @@ import { supabaseConfigured } from './lib/supabase';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
 import type { Plan } from './types/database';
 import './App.css';
+
+/* Lazy-loaded heavy views */
+const Dashboard = lazy(() => import('./views/Dashboard').then(m => ({ default: m.Dashboard })));
+const GoalsIndex = lazy(() => import('./views/GoalsIndex').then(m => ({ default: m.GoalsIndex })));
+const PlanDetail = lazy(() => import('./views/PlanDetail').then(m => ({ default: m.PlanDetail })));
+const Tasks = lazy(() => import('./views/Tasks').then(m => ({ default: m.Tasks })));
+const Calendar = lazy(() => import('./views/Calendar').then(m => ({ default: m.Calendar })));
+const FocusLog = lazy(() => import('./views/FocusLog').then(m => ({ default: m.FocusLog })));
+const Profile = lazy(() => import('./views/Profile').then(m => ({ default: m.Profile })));
+
+function LazyFallback() {
+  return <div className="app-loading"><p>Loading…</p></div>;
+}
 
 function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
@@ -52,7 +58,8 @@ function AppContent() {
         try {
           const plan = await getPlanById(selectedPlanId);
           setSelectedPlan(plan);
-        } catch {
+        } catch (err) {
+          console.warn('Failed to fetch plan', selectedPlanId, err);
           setSelectedPlanId(null);
         }
       };
@@ -174,35 +181,37 @@ function AppContent() {
       <MainLayout>
         <PendingInvitationsBanner />
         {selectedPlanId && selectedPlan ? (
-          <PlanDetail
-            planId={selectedPlanId}
-            plan={selectedPlan}
-            onBack={() => {
-              setSelectedPlanId(null);
-              setSelectedPlan(null);
-            }}
-            onPlanDeleted={() => {
-              setSelectedPlanId(null);
-              setSelectedPlan(null);
-              setRefreshKey((k) => k + 1);
-            }}
-            onPlanUpdated={() => {
-              setRefreshKey((k) => k + 1);
-              // Re-fetch plan to reflect rename/archive
-              getPlanById(selectedPlanId).then(setSelectedPlan).catch(() => {
+          <Suspense fallback={<LazyFallback />}>
+            <PlanDetail
+              planId={selectedPlanId}
+              plan={selectedPlan}
+              onBack={() => {
                 setSelectedPlanId(null);
                 setSelectedPlan(null);
-              });
-            }}
-          />
+              }}
+              onPlanDeleted={() => {
+                setSelectedPlanId(null);
+                setSelectedPlan(null);
+                setRefreshKey((k) => k + 1);
+              }}
+              onPlanUpdated={() => {
+                setRefreshKey((k) => k + 1);
+                // Re-fetch plan to reflect rename/archive
+                getPlanById(selectedPlanId).then(setSelectedPlan).catch(() => {
+                  setSelectedPlanId(null);
+                  setSelectedPlan(null);
+                });
+              }}
+            />
+          </Suspense>
         ) : (
           <div className="page-stack">
             <PageHeaderCard 
               title={activePage.title} 
               subtitle={activePage.subtitle}
             />
-            {activeTab === 'dashboard' && <Dashboard onNavigate={handleTabChange} />}
-            {activeTab === 'goals' && <GoalsIndex />}
+            {activeTab === 'dashboard' && <Suspense fallback={<LazyFallback />}><Dashboard onNavigate={handleTabChange} /></Suspense>}
+            {activeTab === 'goals' && <Suspense fallback={<LazyFallback />}><GoalsIndex /></Suspense>}
             {activeTab === 'plans' && (
               <PlansIndex
                 onCreatePlan={() => setIsCreatePlanModalOpen(true)}
@@ -211,13 +220,13 @@ function AppContent() {
               />
             )}
             {activeTab === 'tasks' && (
-              <Tasks />
+              <Suspense fallback={<LazyFallback />}><Tasks /></Suspense>
             )}
             {activeTab === 'calendar' && (
-              <Calendar />
+              <Suspense fallback={<LazyFallback />}><Calendar /></Suspense>
             )}
-            {activeTab === 'focus' && <FocusLog />}
-            {activeTab === 'profile' && <Profile />}
+            {activeTab === 'focus' && <Suspense fallback={<LazyFallback />}><FocusLog /></Suspense>}
+            {activeTab === 'profile' && <Suspense fallback={<LazyFallback />}><Profile /></Suspense>}
           </div>
         )}
       </MainLayout>

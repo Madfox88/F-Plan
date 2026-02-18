@@ -1,5 +1,15 @@
 import { supabase } from './supabase';
 import type { Workspace, WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, Plan, Stage, Task, Goal, StageWithTasks, CalendarEvent, Reminder, RepeatRule, TaskRepeatRule, FocusSession, User } from '../types/database';
+import { expandEventOccurrences, expandRecurrences } from './recurrence';
+
+/** Supabase row shapes — used instead of `:any` in query callbacks */
+type IdRow = { id: string };
+type IdTitleRow = { id: string; title: string };
+type StageRef = { id: string; plan_id: string; title: string };
+type StageIdRow = { id: string; plan_id: string };
+type PlanGoalLink = { plan_id: string; goal_id: string };
+type PlanWithNestedStages = Plan & { stages?: Array<{ id: string; tasks?: Array<{ id: string }> }> };
+type GoalJoinRow = { goals: Goal[] | Goal | null };
 
 /* Workspace Operations */
 export async function getWorkspaces(): Promise<Workspace[]> {
@@ -305,10 +315,10 @@ export async function getActivePlansWithMetadata(
 
   if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
 
-  return (data || []).map((plan: any) => {
+  return (data || []).map((plan: PlanWithNestedStages) => {
     const stageCount = plan.stages?.length || 0;
     const taskCount = plan.stages?.reduce(
-      (sum: number, stage: any) => sum + (stage.tasks?.length || 0),
+      (sum: number, stage: { tasks?: { id: string }[] }) => sum + (stage.tasks?.length || 0),
       0
     ) || 0;
 
@@ -342,10 +352,10 @@ export async function getPlansWithMetadataByStatus(
 
   if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
 
-  return (data || []).map((plan: any) => {
+  return (data || []).map((plan: PlanWithNestedStages) => {
     const stageCount = plan.stages?.length || 0;
     const taskCount = plan.stages?.reduce(
-      (sum: number, stage: any) => sum + (stage.tasks?.length || 0),
+      (sum: number, stage: { tasks?: { id: string }[] }) => sum + (stage.tasks?.length || 0),
       0
     ) || 0;
 
@@ -768,7 +778,7 @@ export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWit
   const goalLinks = links || [];
 
   // 3. Get unique plan IDs that are linked to any goal
-  const linkedPlanIds = [...new Set(goalLinks.map((l: any) => l.plan_id))];
+  const linkedPlanIds = [...new Set(goalLinks.map((l: PlanGoalLink) => l.plan_id))];
 
   // 3b. Fetch plan names for all linked plans
   const planNamesMap: Record<string, string> = {};
@@ -777,7 +787,7 @@ export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWit
       .from('plans')
       .select('id, title')
       .in('id', linkedPlanIds);
-    (plans || []).forEach((p: any) => { planNamesMap[p.id] = p.title; });
+    (plans || []).forEach((p: IdTitleRow) => { planNamesMap[p.id] = p.title; });
   }
 
   // 4. For each linked plan, load stages and tasks to compute progress
@@ -795,7 +805,8 @@ export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWit
           });
         });
         tasksByPlan[planId] = { total, completed };
-      } catch {
+      } catch (err) {
+        console.warn('Failed to count tasks for plan', planId, err);
         tasksByPlan[planId] = { total: 0, completed: 0 };
       }
     })
@@ -804,8 +815,8 @@ export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWit
   // 5. Compute per-goal progress
   return goals.map((goal) => {
     const goalPlanIds = goalLinks
-      .filter((l: any) => l.goal_id === goal.id)
-      .map((l: any) => l.plan_id);
+      .filter((l: PlanGoalLink) => l.goal_id === goal.id)
+      .map((l: PlanGoalLink) => l.plan_id);
 
     let totalTasks = 0;
     let completedTasks = 0;
@@ -826,7 +837,8 @@ export async function getGoalsWithProgress(workspaceId: string): Promise<GoalWit
     } else if (typeof goal.tags === 'string') {
       try {
         tags = JSON.parse(goal.tags);
-      } catch {
+      } catch (err) {
+        console.warn('Malformed tags JSON for goal', goal.id, err);
         tags = [];
       }
     } else if (goal.tags) {
@@ -920,7 +932,7 @@ export async function getLinkedPlanIdsForGoal(goalId: string): Promise<string[]>
     .eq('goal_id', goalId);
 
   if (error) throw new Error(`Failed to fetch linked plans: ${error.message}`);
-  return (data || []).map((row: any) => row.plan_id);
+  return (data || []).map((row: { plan_id: string }) => row.plan_id);
 }
 
 export async function getLinkedGoalIdsForPlan(planId: string): Promise<string[]> {
@@ -930,7 +942,7 @@ export async function getLinkedGoalIdsForPlan(planId: string): Promise<string[]>
     .eq('plan_id', planId);
 
   if (error) throw new Error(`Failed to fetch linked goals: ${error.message}`);
-  return (data || []).map((row: any) => row.goal_id);
+  return (data || []).map((row: { goal_id: string }) => row.goal_id);
 }
 
 export type LinkedPlanWithProgress = Plan & {
@@ -959,7 +971,8 @@ export async function getLinkedPlansWithProgress(goalId: string, workspaceId: st
           });
         });
         return { ...plan, totalTasks: total, completedTasks: completed, progress: total > 0 ? Math.round((completed / total) * 100) : 0 };
-      } catch {
+      } catch (err) {
+        console.warn('Failed to compute progress for plan', plan.id, err);
         return { ...plan, totalTasks: 0, completedTasks: 0, progress: 0 };
       }
     })
@@ -976,9 +989,9 @@ export async function getGoalsByPlan(planId: string): Promise<Goal[]> {
   if (!data) return [];
   
   return data
-    .map((row: any) => row.goals)
+    .map((row: GoalJoinRow) => row.goals)
     .flat()
-    .filter((goal: any): goal is Goal => goal !== null && goal !== undefined);
+    .filter((goal: Goal | null): goal is Goal => goal !== null && goal !== undefined);
 }
 
 /* ──────────────────────────────────────────────
@@ -1148,9 +1161,9 @@ export async function getTasksWithDueDatesInRange(
   if (plansError) throw new Error(`Failed to fetch plans: ${plansError.message}`);
   if (!plans || plans.length === 0) return [];
 
-  const planIds = plans.map((p: any) => p.id);
+  const planIds = plans.map((p: IdTitleRow) => p.id);
   const planMap: Record<string, string> = {};
-  plans.forEach((p: any) => { planMap[p.id] = p.title; });
+  plans.forEach((p: IdTitleRow) => { planMap[p.id] = p.title; });
 
   const { data: stages, error: stagesError } = await supabase
     .from('stages')
@@ -1160,9 +1173,9 @@ export async function getTasksWithDueDatesInRange(
   if (stagesError) throw new Error(`Failed to fetch stages: ${stagesError.message}`);
   if (!stages || stages.length === 0) return [];
 
-  const stageIds = stages.map((s: any) => s.id);
+  const stageIds = stages.map((s: StageRef) => s.id);
   const stageMap: Record<string, { title: string; planId: string }> = {};
-  stages.forEach((s: any) => { stageMap[s.id] = { title: s.title, planId: s.plan_id }; });
+  stages.forEach((s: StageRef) => { stageMap[s.id] = { title: s.title, planId: s.plan_id }; });
 
   const { data: tasks, error: tasksError } = await supabase
     .from('tasks')
@@ -1175,7 +1188,7 @@ export async function getTasksWithDueDatesInRange(
   if (tasksError) throw new Error(`Failed to fetch tasks: ${tasksError.message}`);
   if (!tasks) return [];
 
-  return tasks.map((t: any) => {
+  return tasks.map((t: Task) => {
     const stageInfo = stageMap[t.stage_id] || { title: 'Unknown', planId: '' };
     return {
       ...t,
@@ -1445,17 +1458,17 @@ export async function getFocusSessionLog(
   if (planIds.length > 0) {
     const { data: plans } = await supabase
       .from('plans').select('id, title').in('id', planIds);
-    plans?.forEach((p: any) => { planMap[p.id] = p.title; });
+    plans?.forEach((p: IdTitleRow) => { planMap[p.id] = p.title; });
   }
   if (goalIds.length > 0) {
     const { data: goals } = await supabase
       .from('goals').select('id, title').in('id', goalIds);
-    goals?.forEach((g: any) => { goalMap[g.id] = g.title; });
+    goals?.forEach((g: IdTitleRow) => { goalMap[g.id] = g.title; });
   }
   if (taskIds.length > 0) {
     const { data: tasks } = await supabase
       .from('tasks').select('id, title').in('id', taskIds);
-    tasks?.forEach((t: any) => { taskMap[t.id] = t.title; });
+    tasks?.forEach((t: IdTitleRow) => { taskMap[t.id] = t.title; });
   }
 
   return sessions.map((s) => {
@@ -1492,7 +1505,7 @@ export async function computeFocusStreak(userId: string, workspaceId: string): P
 
   // Build set of unique calendar dates (user local timezone)
   const daySet = new Set<string>();
-  sessions.forEach((s: any) => {
+  sessions.forEach((s: { started_at: string }) => {
     const d = new Date(s.started_at);
     daySet.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
   });
@@ -1560,9 +1573,9 @@ export async function getTasksDueForUser(
   if (plansError) throw new Error(`Failed to fetch plans: ${plansError.message}`);
   if (!plans || plans.length === 0) return [];
 
-  const planIds = plans.map((p: any) => p.id);
+  const planIds = plans.map((p: IdTitleRow) => p.id);
   const planMap: Record<string, string> = {};
-  plans.forEach((p: any) => { planMap[p.id] = p.title; });
+  plans.forEach((p: IdTitleRow) => { planMap[p.id] = p.title; });
 
   const { data: stages, error: stagesError } = await supabase
     .from('stages')
@@ -1572,9 +1585,9 @@ export async function getTasksDueForUser(
   if (stagesError) throw new Error(`Failed to fetch stages: ${stagesError.message}`);
   if (!stages || stages.length === 0) return [];
 
-  const stageIds = stages.map((s: any) => s.id);
+  const stageIds = stages.map((s: StageRef) => s.id);
   const stageMap: Record<string, { title: string; planId: string }> = {};
-  stages.forEach((s: any) => { stageMap[s.id] = { title: s.title, planId: s.plan_id }; });
+  stages.forEach((s: StageRef) => { stageMap[s.id] = { title: s.title, planId: s.plan_id }; });
 
   // Tasks due today or overdue, assigned to user, not completed
   const { data: tasks, error: tasksError } = await supabase
@@ -1588,7 +1601,7 @@ export async function getTasksDueForUser(
   if (tasksError) throw new Error(`Failed to fetch tasks: ${tasksError.message}`);
   if (!tasks) return [];
 
-  return tasks.map((t: any) => {
+  return tasks.map((t: Task) => {
     const stageInfo = stageMap[t.stage_id] || { title: 'Unknown', planId: '' };
     return {
       ...t,
@@ -1638,14 +1651,14 @@ export async function getAssignedTaskCount(
   const { data: stages } = await supabase
     .from('stages')
     .select('id')
-    .in('plan_id', plans.map((p: any) => p.id));
+    .in('plan_id', plans.map((p: IdRow) => p.id));
 
   if (!stages || stages.length === 0) return 0;
 
   const { count, error } = await supabase
     .from('tasks')
     .select('*', { count: 'exact', head: true })
-    .in('stage_id', stages.map((s: any) => s.id))
+    .in('stage_id', stages.map((s: IdRow) => s.id))
     .eq('assigned_to', userId);
 
   if (error) throw new Error(`Failed to count assigned tasks: ${error.message}`);
@@ -1673,11 +1686,11 @@ export async function getAssignedTaskCountInWindow(
   const { data: stages } = await supabase
     .from('stages')
     .select('id')
-    .in('plan_id', plans.map((p: any) => p.id));
+    .in('plan_id', plans.map((p: IdRow) => p.id));
 
   if (!stages || stages.length === 0) return 0;
 
-  const stageIds = stages.map((s: any) => s.id);
+  const stageIds = stages.map((s: IdRow) => s.id);
 
   // Tasks that were active in the window: either incomplete or completed within the window
   const { count: incompleteCount } = await supabase
@@ -1717,14 +1730,14 @@ export async function getIncompleteTasksForUser(
   const { data: stages } = await supabase
     .from('stages')
     .select('id')
-    .in('plan_id', plans.map((p: any) => p.id));
+    .in('plan_id', plans.map((p: IdRow) => p.id));
 
   if (!stages || stages.length === 0) return [];
 
   const { data: tasks, error } = await supabase
     .from('tasks')
     .select('*')
-    .in('stage_id', stages.map((s: any) => s.id))
+    .in('stage_id', stages.map((s: IdRow) => s.id))
     .eq('completed', false)
     .eq('assigned_to', userId)
     .order('created_at', { ascending: false });
@@ -1749,7 +1762,6 @@ export async function getTodaysEvents(workspaceId: string): Promise<Array<Calend
   const events = await getEvents(workspaceId, todayStart.toISOString(), todayEnd.toISOString());
 
   // Expand recurrences for today
-  const { expandEventOccurrences } = await import('./recurrence');
   const result: Array<CalendarEvent & { occurrenceStart: string; occurrenceEnd: string }> = [];
 
   for (const event of events) {
@@ -1790,7 +1802,6 @@ export async function getTodaysRemindersForUser(
   const userReminders = reminders.filter((r) => r.user_id === userId || r.user_id === null);
 
   // Expand recurrences for today
-  const { expandRecurrences } = await import('./recurrence');
   const result: Array<Reminder & { occurrenceAt: string }> = [];
 
   for (const reminder of userReminders) {
@@ -1845,9 +1856,9 @@ export async function getActiveGoalsForUser(
     .eq('workspace_id', workspaceId)
     .is('archived_at', null);
 
-  const activePlanIds = new Set((activePlans || []).map((p: any) => p.id));
+  const activePlanIds = new Set((activePlans || []).map((p: IdTitleRow) => p.id));
   const planNameMap: Record<string, string> = {};
-  (activePlans || []).forEach((p: any) => { planNameMap[p.id] = p.title; });
+  (activePlans || []).forEach((p: IdTitleRow) => { planNameMap[p.id] = p.title; });
 
   // 4. For each active plan, get stages → tasks (only if we have plans)
   const planStats: Record<string, { total: number; completed: number; userHasTask: boolean }> = {};
@@ -1859,9 +1870,9 @@ export async function getActiveGoalsForUser(
       .in('plan_id', Array.from(activePlanIds));
 
     if (stages && stages.length > 0) {
-      const stageIds = stages.map((s: any) => s.id);
+      const stageIds = stages.map((s: StageIdRow) => s.id);
       const stagePlanMap: Record<string, string> = {};
-      stages.forEach((s: any) => { stagePlanMap[s.id] = s.plan_id; });
+      stages.forEach((s: StageIdRow) => { stagePlanMap[s.id] = s.plan_id; });
 
       const { data: tasks } = await supabase
         .from('tasks')
@@ -1889,8 +1900,8 @@ export async function getActiveGoalsForUser(
 
   for (const goal of goals) {
     const goalPlanIds = goalLinks
-      .filter((l: any) => l.goal_id === goal.id)
-      .map((l: any) => l.plan_id)
+      .filter((l: PlanGoalLink) => l.goal_id === goal.id)
+      .map((l: PlanGoalLink) => l.plan_id)
       .filter((pid: string) => activePlanIds.has(pid));
 
     let totalTasks = 0;
@@ -1920,7 +1931,7 @@ export async function getActiveGoalsForUser(
     let tags = [];
     if (Array.isArray(goal.tags)) tags = goal.tags;
     else if (typeof goal.tags === 'string') {
-      try { tags = JSON.parse(goal.tags); } catch { tags = []; }
+      try { tags = JSON.parse(goal.tags); } catch (err) { console.warn('Malformed tags JSON', err); tags = []; }
     }
 
     result.push({

@@ -139,7 +139,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className="create-goal-modal modal-content"
         onClick={(e) => e.stopPropagation()}

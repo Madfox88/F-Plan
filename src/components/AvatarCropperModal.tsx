@@ -112,7 +112,7 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="avatar-cropper-modal modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Crop Avatar</h2>

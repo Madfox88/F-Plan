@@ -1,41 +1,17 @@
-import { useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import './Checkbox.css';
 
-const Checkbox = () => {
-  return (
-    <StyledWrapper>
-      <div className="container">
-        <input type="checkbox" id="cbx2" style={{ display: 'none' }} />
-        <label htmlFor="cbx2" className="check">
-          <svg width="18px" height="18px" viewBox="0 0 18 18">
-            <path d="M 1 9 L 1 9 c 0 -5 3 -8 8 -8 L 9 1 C 14 1 17 5 17 9 L 17 9 c 0 4 -4 8 -8 8 L 9 17 C 5 17 1 14 1 9 L 1 9 Z" />
-            <polyline points="1 9 7 14 15 4" />
-          </svg>
-        </label>
-      </div>
-    </StyledWrapper>
-  );
-};
-
-export const AnimatedCheckbox = ({ id, checked, onToggle, disabled }: { id: string; checked: boolean; onToggle: () => void; disabled?: boolean }) => {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const input = ref.current?.querySelector('input');
-    const label = ref.current?.querySelector('label');
-    if (input) {
-      input.id = id;
-      (input as HTMLInputElement).checked = checked;
-      (input as HTMLInputElement).disabled = !!disabled;
-    }
-    if (label) {
-      (label as HTMLLabelElement).htmlFor = id;
-    }
-  }, [id, checked, disabled]);
-
+export const AnimatedCheckbox = ({
+  checked,
+  onToggle,
+  disabled,
+}: {
+  id: string;
+  checked: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+}) => {
   return (
     <div
-      ref={ref}
       className="task-checkbox-wrap"
       role="checkbox"
       tabIndex={disabled ? -1 : 0}
@@ -54,72 +30,15 @@ export const AnimatedCheckbox = ({ id, checked, onToggle, disabled }: { id: stri
         }
       }}
     >
-      <Checkbox />
+      <svg
+        className={`animated-checkbox-svg${checked ? ' checked' : ''}`}
+        width="18px"
+        height="18px"
+        viewBox="0 0 18 18"
+      >
+        <path d="M 1 9 L 1 9 c 0 -5 3 -8 8 -8 L 9 1 C 14 1 17 5 17 9 L 17 9 c 0 4 -4 8 -8 8 L 9 17 C 5 17 1 14 1 9 L 1 9 Z" />
+        <polyline points="1 9 7 14 15 4" />
+      </svg>
     </div>
   );
 };
-
-const StyledWrapper = styled.div`
-  .check {
-    cursor: pointer;
-    position: relative;
-    margin: auto;
-    width: 18px;
-    height: 18px;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .check:before {
-    content: "";
-    position: absolute;
-    top: -15px;
-    left: -15px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(34, 50, 84, 0.03);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  .check svg {
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke: #c8ccd4;
-    stroke-width: 1.5;
-    transition: all 0.2s ease;
-  }
-
-  .check svg path {
-    stroke-dasharray: 60;
-  }
-
-  .check svg polyline {
-    stroke-dasharray: 22;
-    stroke-dashoffset: 66;
-  }
-
-  .check:hover:before {
-    opacity: 1;
-  }
-
-  .check:hover svg {
-    stroke: var(--accent-color, #a3e583);
-  }
-
-  #cbx2:checked + .check svg {
-    stroke: var(--accent-color, #a3e583);
-  }
-
-  #cbx2:checked + .check svg path {
-    stroke-dashoffset: 60;
-  }
-
-  #cbx2:checked + .check svg polyline {
-    stroke-dashoffset: 42;
-    transition-delay: 0.15s;
-  }
-`;
-
-export default Checkbox;

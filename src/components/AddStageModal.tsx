@@ -38,7 +38,7 @@ export const AddStageModal: React.FC<AddStageModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className="add-stage-modal modal-content"
         onClick={(e) => e.stopPropagation()}

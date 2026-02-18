@@ -96,7 +96,7 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="create-plan-modal modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Create New Plan</h2>

@@ -24,7 +24,7 @@ export function GoalReadOnlyModal({ isOpen, goal, onClose }: GoalReadOnlyModalPr
   const tags = (goal.tags || []) as GoalTag[];
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content goal-readonly-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Goal Details</h2>

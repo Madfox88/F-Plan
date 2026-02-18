@@ -57,7 +57,7 @@ export const RenameWorkspaceModal: React.FC<RenameWorkspaceModalProps> = ({
   if (!isOpen || !workspace) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Rename Workspace</h2>

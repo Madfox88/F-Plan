@@ -100,7 +100,7 @@ export function EventModal({ isOpen, event, defaultStart, onClose, onSave, onDel
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
         <div className="modal-header">
           <h2>{event ? 'Edit Event' : 'Create Event'}</h2>

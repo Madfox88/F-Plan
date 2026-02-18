@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import type { Plan, StageWithTasks, Task } from '../types/database';
 import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask, setTaskCompleted, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
@@ -10,7 +10,7 @@ import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
 import { AddStageModal } from '../components/AddStageModal';
 import { RenamePlanModal } from '../components/RenamePlanModal';
-import Checkbox from '../components/Checkbox';
+import { AnimatedCheckbox } from '../components/Checkbox';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
@@ -640,45 +640,6 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
           task.title.toLowerCase().includes(searchTerm.toLowerCase())
         ) || []
       })).filter(stage => stage.tasks.length > 0);
-
-  const AnimatedCheckbox = ({ id, checked, onToggle }: { id: string; checked: boolean; onToggle: () => void }) => {
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      const input = ref.current?.querySelector('input');
-      const label = ref.current?.querySelector('label');
-      if (input) {
-        input.id = id;
-        (input as HTMLInputElement).checked = checked;
-      }
-      if (label) {
-        (label as HTMLLabelElement).htmlFor = id;
-      }
-    }, [id, checked]);
-
-    return (
-      <div
-        ref={ref}
-        className="task-checkbox-wrap"
-        role="checkbox"
-        tabIndex={0}
-        aria-checked={checked}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            onToggle();
-          }
-        }}
-      >
-        <Checkbox />
-      </div>
-    );
-  };
 
   const renderTaskCard = (task: Task) => {
     const status = resolveTaskStatus(task);

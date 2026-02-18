@@ -33,7 +33,7 @@ export function TaskReadOnlyModal({ isOpen, task, onClose }: TaskReadOnlyModalPr
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content task-readonly-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Task Details</h2>

@@ -23,7 +23,7 @@ export function CalendarChooserModal({ isOpen, onClose, onSelect }: CalendarChoo
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content calendar-chooser-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Create</h2>

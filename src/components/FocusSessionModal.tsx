@@ -187,7 +187,7 @@ export function FocusSessionModal({
   })();
 
   return (
-    <div className="modal-overlay" onClick={handleClose}>
+    <div className="modal-overlay" onClick={handleClose} role="dialog" aria-modal="true">
       <div className="modal-content focus-session-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{activeSession ? 'Focus Session' : 'Start Focus Session'}</h2>

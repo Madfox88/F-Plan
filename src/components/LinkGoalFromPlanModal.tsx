@@ -73,7 +73,7 @@ export const LinkGoalFromPlanModal: React.FC<LinkGoalFromPlanModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className="link-goal-modal modal-content"
         onClick={(e) => e.stopPropagation()}

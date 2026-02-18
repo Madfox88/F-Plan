@@ -50,7 +50,8 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
       try {
         const plans = await getPinnedPlans(activeWorkspace.id);
         setPinnedPlans(plans);
-      } catch {
+      } catch (err) {
+        console.warn('Failed to load pinned plans', err);
         // Non-critical — sidebar still functions without pinned plans
       }
     };

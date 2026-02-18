@@ -58,7 +58,7 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
 
   return (
     <>
-      <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
         <div
           className="goal-detail-modal modal-content"
           onClick={(e) => e.stopPropagation()}

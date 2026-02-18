@@ -20,7 +20,7 @@ export function ReminderReadOnlyModal({ isOpen, reminder, onClose }: ReminderRea
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content glass" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{reminder.title}</h2>

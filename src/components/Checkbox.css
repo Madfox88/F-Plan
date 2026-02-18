@@ -1,0 +1,46 @@
+/* AnimatedCheckbox — pure CSS replacement for styled-components */
+
+.animated-checkbox-svg {
+  cursor: pointer;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  -webkit-tap-highlight-color: transparent;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke: #c8ccd4;
+  stroke-width: 1.5;
+  transition: all 0.2s ease;
+}
+
+.animated-checkbox-svg path {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+.animated-checkbox-svg polyline {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 66;
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+/* Hover state */
+.task-checkbox-wrap:hover .animated-checkbox-svg {
+  stroke: var(--accent-color, #a3e583);
+}
+
+/* Checked state */
+.animated-checkbox-svg.checked {
+  stroke: var(--accent-color, #a3e583);
+}
+
+.animated-checkbox-svg.checked path {
+  stroke-dashoffset: 60;
+}
+
+.animated-checkbox-svg.checked polyline {
+  stroke-dashoffset: 42;
+  transition-delay: 0.15s;
+}

@@ -83,7 +83,8 @@ export function Profile() {
       setIsEditingEmail(false);
       setMessage({ type: 'success', text: 'Confirmation email sent to your new address. Click the link to confirm.' });
       setTimeout(() => setMessage(null), 5000);
-    } catch {
+    } catch (err) {
+      console.error('Failed to update email:', err);
       setMessage({ type: 'error', text: 'Failed to update email' });
     }
   };
@@ -100,7 +101,8 @@ export function Profile() {
       setIsEditingName(false);
       setMessage({ type: 'success', text: 'Name updated successfully' });
       setTimeout(() => setMessage(null), 3000);
-    } catch {
+    } catch (err) {
+      console.error('Failed to update name:', err);
       setMessage({ type: 'error', text: 'Failed to update name' });
     }
   };
@@ -180,7 +182,8 @@ export function Profile() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       setMessage({ type: 'success', text: 'Data exported successfully' });
-    } catch {
+    } catch (err) {
+      console.error('Failed to export data:', err);
       setMessage({ type: 'error', text: 'Failed to export data. Please try again.' });
     } finally {
       setIsExporting(false);
