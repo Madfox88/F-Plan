@@ -315,7 +315,7 @@ export async function getOrCreateInboxPlan(workspaceId: string): Promise<{ plan:
     return { plan: existing, stageId: stage.id };
   }
 
-  // Create the inbox plan
+  // Create the inbox plan (handle race condition: another call may have just created it)
   const { data: newPlan, error: createErr } = await supabase
     .from('plans')
     .insert([{
@@ -331,7 +331,13 @@ export async function getOrCreateInboxPlan(workspaceId: string): Promise<{ plan:
     .select()
     .single();
 
-  if (createErr) throw new Error(`Failed to create inbox plan: ${createErr.message}`);
+  if (createErr) {
+    // Unique constraint violation → another call created it; re-fetch
+    if (createErr.code === '23505') {
+      return getOrCreateInboxPlan(workspaceId);
+    }
+    throw new Error(`Failed to create inbox plan: ${createErr.message}`);
+  }
 
   // Create a single default stage
   const stage = await createStage(newPlan.id, 'Tasks');
