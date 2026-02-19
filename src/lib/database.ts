@@ -288,7 +288,7 @@ export async function getActivePlans(workspaceId: string): Promise<Plan[]> {
     .from('plans')
     .select('*')
     .eq('workspace_id', workspaceId)
-    .eq('status', 'active')
+    .in('status', ['active', 'completed'])
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
@@ -310,7 +310,7 @@ export async function getActivePlansWithMetadata(
     `
     )
     .eq('workspace_id', workspaceId)
-    .eq('status', 'active')
+    .in('status', ['active', 'completed'])
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
@@ -333,7 +333,7 @@ export async function getActivePlansWithMetadata(
 
 export async function getPlansWithMetadataByStatus(
   workspaceId: string,
-  status: 'active' | 'archived'
+  status: 'active' | 'completed' | 'archived'
 ): Promise<Array<Plan & { stageCount: number; taskCount: number }>> {
   const { data, error } = await supabase
     .from('plans')
@@ -448,6 +448,16 @@ export async function updatePlan(
 
 export async function archivePlan(id: string): Promise<Plan> {
   return updatePlan(id, { status: 'archived', archived_at: new Date().toISOString() } as Partial<Plan>);
+}
+
+/** Mark a plan as completed (user-confirmed prompt). */
+export async function completePlan(id: string): Promise<Plan> {
+  return updatePlan(id, { status: 'completed', completed_at: new Date().toISOString() } as Partial<Plan>);
+}
+
+/** Reopen a completed plan back to active. */
+export async function reopenPlan(id: string): Promise<Plan> {
+  return updatePlan(id, { status: 'active', completed_at: null } as Partial<Plan>);
 }
 
 export async function deletePlan(id: string): Promise<void> {
@@ -904,6 +914,16 @@ export async function deleteGoal(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) throw new Error(`Failed to delete goal: ${error.message}`);
+}
+
+/** Mark a goal as completed (user-confirmed prompt). */
+export async function completeGoal(id: string): Promise<Goal> {
+  return updateGoal(id, { completed_at: new Date().toISOString() } as Partial<Goal>);
+}
+
+/** Reopen a completed goal. */
+export async function reopenGoal(id: string): Promise<Goal> {
+  return updateGoal(id, { completed_at: null } as Partial<Goal>);
 }
 
 /* Plan-Goal Links */

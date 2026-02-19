@@ -193,8 +193,13 @@ export function Tasks() {
     const nextStatus = nextCompleted ? 'completed' : 'not_started';
     setUpdatingId(taskId);
     try {
+      // Persist checklist items as all-completed (or restore) to DB
+      const updatedChecklists = (task.checklists || []).map((item) => ({
+        ...item,
+        completed: nextCompleted ? true : item.completed,
+      }));
       await setTaskCompleted(taskId, nextCompleted);
-      await updateTask(taskId, { status: nextStatus });
+      await updateTask(taskId, { status: nextStatus, checklists: updatedChecklists });
       setTasks((prev) =>
         prev.map((t) =>
           t.id === taskId
@@ -202,12 +207,13 @@ export function Tasks() {
                 ...t,
                 completed: nextCompleted,
                 status: nextStatus,
+                checklists: updatedChecklists,
               }
             : t
         )
       );
       if (expandedId === taskId) {
-        setEditChecklist((prev) => prev.map((item) => ({ ...item, completed: nextCompleted ? true : item.completed })));
+        setEditChecklist(updatedChecklists);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
@@ -231,10 +237,21 @@ export function Tasks() {
     const nextChecklist = (task.checklists || []).map((item) =>
       item.id === itemId ? { ...item, completed: !item.completed } : item
     );
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, checklists: nextChecklist } : t)));
+
+    // Derive task status from checklist state (same as PlanDetail)
+    const completedCount = nextChecklist.filter((item) => item.completed).length;
+    const allChecked = nextChecklist.length > 0 && completedCount === nextChecklist.length;
+    const someChecked = completedCount > 0 && !allChecked;
+    const newStatus = allChecked ? 'completed' : someChecked ? 'in_progress' : 'not_started';
+    const wasCompleted = !!task.completed;
+
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, checklists: nextChecklist, status: newStatus, completed: allChecked } : t)));
     if (expandedId === taskId) setEditChecklist(nextChecklist);
     try {
-      await updateTask(taskId, { checklists: nextChecklist });
+      if (allChecked !== wasCompleted) {
+        await setTaskCompleted(taskId, allChecked);
+      }
+      await updateTask(taskId, { checklists: nextChecklist, status: newStatus });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update checklist');
     }

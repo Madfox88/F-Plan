@@ -567,6 +567,12 @@ html[data-theme='dark'] .plan-pin-icon {
   text-transform: capitalize;
 }
 
+.plan-card .plan-status[data-status='completed'] {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
 .plan-due-pill {
   margin-left: auto;
   display: inline-flex;

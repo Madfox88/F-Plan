@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import type { Plan, StageWithTasks, Task } from '../types/database';
-import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, createStage, createTask, updateTask, deleteTask, setTaskCompleted, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
+import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, completePlan, reopenPlan, createStage, createTask, updateTask, deleteTask, setTaskCompleted, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
 import { TaskCreateModal } from '../components/TaskCreateModal';
@@ -53,6 +53,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   const [linkedGoalNames, setLinkedGoalNames] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [showCompletionPrompt, setShowCompletionPrompt] = useState(false);
 
   const resolveTaskStatus = (task: { status: 'not_started' | 'in_progress' | 'completed' | null; completed: boolean }) => {
     if (task.status) return task.status;
@@ -250,17 +251,30 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to delete plan'));
   };
 
+  /** Check whether all tasks in the plan are completed and show the prompt. */
+  const checkAllTasksCompleted = useCallback((currentStages: StageWithTasks[]) => {
+    const allTasks = currentStages.flatMap((s) => s.tasks || []);
+    if (allTasks.length === 0) {
+      setShowCompletionPrompt(false);
+      return;
+    }
+    const allDone = allTasks.every((t) => t.completed);
+    // Only prompt if plan is still active (not already completed/archived)
+    setShowCompletionPrompt(allDone && currentPlan.status === 'active');
+  }, [currentPlan.status]);
+
   const fetchStages = useCallback(async () => {
     try {
       setLoading(true);
       const fetchedStages = await getStagesByPlan(planId);
       setStages(fetchedStages);
+      checkAllTasksCompleted(fetchedStages);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stages');
     } finally {
       setLoading(false);
     }
-  }, [planId]);
+  }, [planId, checkAllTasksCompleted]);
 
   const fetchLinkedGoals = useCallback(async () => {
     try {
@@ -278,6 +292,27 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
       setError(err instanceof Error ? err.message : 'Failed to load linked goals');
     }
   }, [planId, currentPlan.workspace_id]);
+
+  const handleCompletePlan = async () => {
+    try {
+      await completePlan(planId);
+      setCurrentPlan({ ...currentPlan, status: 'completed', completed_at: new Date().toISOString() });
+      setShowCompletionPrompt(false);
+      if (onPlanUpdated) onPlanUpdated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete plan');
+    }
+  };
+
+  const handleReopenPlan = async () => {
+    try {
+      await reopenPlan(planId);
+      setCurrentPlan({ ...currentPlan, status: 'active', completed_at: null });
+      if (onPlanUpdated) onPlanUpdated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reopen plan');
+    }
+  };
 
   const handleAddStage = () => {
     setAddStageOpen(true);
@@ -768,6 +803,25 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
         <div className="plan-detail-error glass" role="alert">
           <span>{error}</span>
           <button className="plan-detail-error-dismiss" onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+
+      {currentPlan.status === 'completed' && (
+        <div className="completion-banner completed glass" role="status">
+          <span className="completion-banner-icon">✅</span>
+          <span className="completion-banner-text">This plan has been marked as completed.</span>
+          <button className="completion-banner-action secondary" onClick={handleReopenPlan}>Reopen Plan</button>
+        </div>
+      )}
+
+      {showCompletionPrompt && (
+        <div className="completion-banner prompt glass" role="status">
+          <span className="completion-banner-icon">🎉</span>
+          <span className="completion-banner-text">All tasks are completed! Would you like to mark this plan as complete?</span>
+          <div className="completion-banner-actions">
+            <button className="completion-banner-action secondary" onClick={() => setShowCompletionPrompt(false)}>Dismiss</button>
+            <button className="completion-banner-action primary" onClick={handleCompletePlan}>Complete Plan</button>
+          </div>
         </div>
       )}
 

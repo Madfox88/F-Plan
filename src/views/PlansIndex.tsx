@@ -310,7 +310,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
                 )}
               </div>
               <div className="plan-card-footer">
-                <span className="plan-status">{plan.status}</span>
+                <span className="plan-status" data-status={plan.status}>{plan.status}</span>
                 {plan.due_date && (
                   <span className="plan-due-pill">
                     Due: {new Date(plan.due_date + 'T00:00:00').toLocaleDateString()}

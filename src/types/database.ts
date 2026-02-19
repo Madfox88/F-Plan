@@ -42,10 +42,11 @@ export type Plan = {
   title: string;
   description: string | null;
   intent: string | null;
-  status: 'active' | 'archived' | 'draft';
+  status: 'active' | 'completed' | 'archived' | 'draft';
   is_pinned: boolean;
   due_date: string | null;
   archived_at: string | null;   // PLAN_ARCHIVAL_TRUTH_RULES.md §2 — sole archival truth
+  completed_at: string | null;  // set when user confirms plan completion prompt
   created_at: string;
 };
 
@@ -113,6 +114,7 @@ export type Goal = {
   description: string | null;
   due_date: string | null;
   tags: GoalTag[];
+  completed_at: string | null;  // set when user manually marks goal as completed
   created_at: string;
 };
 

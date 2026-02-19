@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getGoalsWithProgress, createGoal, linkGoalToPlan } from '../lib/database';
+import { getGoalsWithProgress, createGoal, linkGoalToPlan, completeGoal, reopenGoal } from '../lib/database';
 import type { GoalWithProgress } from '../lib/database';
 import type { GoalTag } from '../types/database';
 import { CreateGoalModal } from '../components/CreateGoalModal';
@@ -61,6 +61,24 @@ export function GoalsIndex() {
       await linkGoalToPlan(planId, goal.id);
     }
     await loadGoals();
+  };
+
+  const handleCompleteGoal = async (goalId: string) => {
+    try {
+      await completeGoal(goalId);
+      await loadGoals();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete goal');
+    }
+  };
+
+  const handleReopenGoal = async (goalId: string) => {
+    try {
+      await reopenGoal(goalId);
+      await loadGoals();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reopen goal');
+    }
   };
 
   const uniqueTagLabels = useMemo(() => {
@@ -247,10 +265,13 @@ export function GoalsIndex() {
             </div>
           </div>
         ) : (
-          filteredGoals.map((goal) => (
+          filteredGoals.map((goal) => {
+            const isCompleted = !!goal.completed_at;
+            const isFullProgress = goal.progress === 100 && goal.totalTasks > 0 && !isCompleted;
+            return (
           <div
             key={goal.id}
-            className="goal-card glass"
+            className={`goal-card glass${isCompleted ? ' goal-completed' : ''}${isFullProgress ? ' goal-full-progress' : ''}`}
             onClick={() => setSelectedGoal(goal)}
             role="button"
             tabIndex={0}
@@ -258,6 +279,32 @@ export function GoalsIndex() {
               if (e.key === 'Enter' || e.key === ' ') setSelectedGoal(goal);
             }}
           >
+            {isCompleted && (
+              <div className="goal-completion-banner completed">
+                <span>✅ Completed</span>
+                <button
+                  className="completion-banner-action secondary"
+                  onClick={(e) => { e.stopPropagation(); handleReopenGoal(goal.id); }}
+                >
+                  Reopen
+                </button>
+              </div>
+            )}
+
+            {isFullProgress && (
+              <div className="goal-completion-banner prompt">
+                <span>🎉 All tasks done!</span>
+                <div className="completion-banner-actions">
+                  <button
+                    className="completion-banner-action primary"
+                    onClick={(e) => { e.stopPropagation(); handleCompleteGoal(goal.id); }}
+                  >
+                    Mark Complete
+                  </button>
+                </div>
+              </div>
+            )}
+
             <h3 className="goal-card-title">{goal.title}</h3>
 
             {goal.description && (
@@ -311,7 +358,8 @@ export function GoalsIndex() {
               }
             </div>
           </div>
-        ))
+        );
+        })
         )}
       </div>
 
