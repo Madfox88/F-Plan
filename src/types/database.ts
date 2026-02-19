@@ -44,6 +44,7 @@ export type Plan = {
   intent: string | null;
   status: 'active' | 'completed' | 'archived' | 'draft';
   is_pinned: boolean;
+  is_inbox: boolean;            // hidden inbox plan for standalone tasks
   due_date: string | null;
   archived_at: string | null;   // PLAN_ARCHIVAL_TRUTH_RULES.md §2 — sole archival truth
   completed_at: string | null;  // set when user confirms plan completion prompt

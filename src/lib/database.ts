@@ -283,7 +283,77 @@ export async function acceptWorkspaceInvitation(invitationId: string): Promise<v
 }
 
 /* Plan Operations */
+
+/** Get or create the hidden inbox plan for standalone tasks. */
+export async function getOrCreateInboxPlan(workspaceId: string): Promise<{ plan: Plan; stageId: string }> {
+  // Try to find existing inbox plan
+  const { data: existing, error: fetchErr } = await supabase
+    .from('plans')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .eq('is_inbox', true)
+    .limit(1)
+    .maybeSingle();
+
+  if (fetchErr) throw new Error(`Failed to fetch inbox plan: ${fetchErr.message}`);
+
+  if (existing) {
+    // Get the inbox stage
+    const { data: stages, error: stageErr } = await supabase
+      .from('stages')
+      .select('id')
+      .eq('plan_id', existing.id)
+      .order('position', { ascending: true })
+      .limit(1);
+
+    if (stageErr) throw new Error(`Failed to fetch inbox stage: ${stageErr.message}`);
+    if (stages && stages.length > 0) {
+      return { plan: existing, stageId: stages[0].id };
+    }
+    // Stage somehow missing — recreate it
+    const stage = await createStage(existing.id, 'Tasks');
+    return { plan: existing, stageId: stage.id };
+  }
+
+  // Create the inbox plan
+  const { data: newPlan, error: createErr } = await supabase
+    .from('plans')
+    .insert([{
+      workspace_id: workspaceId,
+      title: 'Inbox',
+      description: null,
+      intent: null,
+      status: 'active',
+      is_inbox: true,
+      is_pinned: false,
+      due_date: null,
+    }])
+    .select()
+    .single();
+
+  if (createErr) throw new Error(`Failed to create inbox plan: ${createErr.message}`);
+
+  // Create a single default stage
+  const stage = await createStage(newPlan.id, 'Tasks');
+  return { plan: newPlan, stageId: stage.id };
+}
+
+/** Get active + completed plans EXCLUDING the hidden inbox plan (for Plans page). */
 export async function getActivePlans(workspaceId: string): Promise<Plan[]> {
+  const { data, error } = await supabase
+    .from('plans')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .in('status', ['active', 'completed'])
+    .or('is_inbox.is.null,is_inbox.eq.false')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
+  return data || [];
+}
+
+/** Get ALL active + completed plans INCLUDING the inbox plan (for Tasks view). */
+export async function getAllActivePlansIncludingInbox(workspaceId: string): Promise<Plan[]> {
   const { data, error } = await supabase
     .from('plans')
     .select('*')
@@ -311,6 +381,7 @@ export async function getActivePlansWithMetadata(
     )
     .eq('workspace_id', workspaceId)
     .in('status', ['active', 'completed'])
+    .or('is_inbox.is.null,is_inbox.eq.false')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
@@ -348,6 +419,7 @@ export async function getPlansWithMetadataByStatus(
     )
     .eq('workspace_id', workspaceId)
     .eq('status', status)
+    .or('is_inbox.is.null,is_inbox.eq.false')
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(`Failed to fetch plans: ${error.message}`);
@@ -398,6 +470,7 @@ export async function getPinnedPlans(workspaceId: string): Promise<Plan[]> {
     .eq('workspace_id', workspaceId)
     .eq('is_pinned', true)
     .eq('status', 'active')
+    .or('is_inbox.is.null,is_inbox.eq.false')
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(`Failed to fetch pinned plans: ${error.message}`);

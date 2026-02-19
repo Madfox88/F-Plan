@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getActivePlans, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted } from '../lib/database';
+import { getAllActivePlansIncludingInbox, getOrCreateInboxPlan, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted } from '../lib/database';
 import type { Task, Plan, StageWithTasks, ChecklistItem, Stage } from '../types/database';
 import { AnimatedCheckbox } from '../components/Checkbox';
 import { TaskCreateModal, type TaskCreatePayload } from '../components/TaskCreateModal';
@@ -74,6 +74,8 @@ export function Tasks() {
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<TaskWithMeta[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [inboxPlanId, setInboxPlanId] = useState<string | null>(null);
+  const [inboxStageId, setInboxStageId] = useState<string | null>(null);
   const [stagesByPlan, setStagesByPlan] = useState<Record<string, Stage[]>>({});
   const [stageOptions, setStageOptions] = useState<Array<{ id: string; title: string; planId: string }>>([]);
   const [error, setError] = useState<string | null>(null);
@@ -127,8 +129,15 @@ export function Tasks() {
       setLoading(true);
       setError(null);
       try {
-        const activePlans = await getActivePlans(activeWorkspace.id);
+        // Ensure inbox plan exists and get all plans including inbox
+        const [inbox, activePlans] = await Promise.all([
+          getOrCreateInboxPlan(activeWorkspace.id),
+          getAllActivePlansIncludingInbox(activeWorkspace.id),
+        ]);
+        setInboxPlanId(inbox.plan.id);
+        setInboxStageId(inbox.stageId);
         setPlans(activePlans);
+
         const stagesPerPlan: Array<{ plan: Plan; stages: StageWithTasks[] }> = await Promise.all(
           activePlans.map(async (plan) => ({ plan, stages: await getStagesByPlan(plan.id) }))
         );
@@ -137,8 +146,8 @@ export function Tasks() {
           stages.flatMap((stage) => (stage.tasks || []).map((task) => ({
             ...task,
             planId: plan.id,
-            planTitle: plan.title,
-            stageTitle: stage.title,
+            planTitle: plan.is_inbox ? 'Standalone' : plan.title,
+            stageTitle: plan.is_inbox ? '' : stage.title,
           })))
         );
 
@@ -346,8 +355,9 @@ export function Tasks() {
 
         const stageOption = stageOptions.find((s) => s.id === payload.stageId);
         const planId = stageOption?.planId || createPlanId || plans[0]?.id || '';
-        const stageTitle = stageOption?.title || stagesByPlan[planId]?.find((s) => s.id === payload.stageId)?.title || 'Stage';
-        const planTitle = plans.find((p) => p.id === planId)?.title || 'Plan';
+        const isInbox = planId === inboxPlanId;
+        const stageTitle = isInbox ? '' : (stageOption?.title || stagesByPlan[planId]?.find((s) => s.id === payload.stageId)?.title || 'Stage');
+        const planTitle = isInbox ? 'Standalone' : (plans.find((p) => p.id === planId)?.title || 'Plan');
 
         setTasks((prev) => [
           {
@@ -518,7 +528,7 @@ export function Tasks() {
                 onChange={(e) => setPlanFilter(e.target.value as 'all' | string)}
               >
                 <option value="all">All</option>
-                {plans.map((plan) => (
+                {plans.filter((p) => !p.is_inbox).map((plan) => (
                   <option key={plan.id} value={plan.id}>
                     {plan.title}
                   </option>
@@ -530,11 +540,14 @@ export function Tasks() {
             type="button"
             className="btn-primary add-task-button"
             onClick={() => {
-              const defaultPlan = planFilter !== 'all' ? planFilter : createPlanId || plans[0]?.id || null;
-              if (defaultPlan) {
-                setCreatePlanId(defaultPlan);
-                const firstStage = (stagesByPlan[defaultPlan] || [])[0];
+              // Default to inbox (standalone) unless a plan filter is active
+              if (planFilter !== 'all') {
+                setCreatePlanId(planFilter);
+                const firstStage = (stagesByPlan[planFilter] || [])[0];
                 if (firstStage) setCreateStageId(firstStage.id);
+              } else if (inboxPlanId && inboxStageId) {
+                setCreatePlanId(inboxPlanId);
+                setCreateStageId(inboxStageId);
               }
               setShowCreateModal(true);
             }}
@@ -548,9 +561,10 @@ export function Tasks() {
 
       <TaskCreateModal
         isOpen={showCreateModal}
-        planId={createPlanId || plans[0]?.id || ''}
+        planId={createPlanId || inboxPlanId || plans[0]?.id || ''}
         stages={(createPlanId && stagesByPlan[createPlanId]) || []}
         defaultStageId={createStageId || (createPlanId ? stagesByPlan[createPlanId]?.[0]?.id : undefined)}
+        hideStageSelector={createPlanId === inboxPlanId}
         currentUserId={currentUserId}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateSubmit}
@@ -571,7 +585,7 @@ export function Tasks() {
       ) : !hasAnyTasks ? (
         <div className="tasks-empty">
           <p className="empty-title">No tasks yet</p>
-          <p className="empty-subtitle">Go to Plans to create tasks.</p>
+          <p className="empty-subtitle">Click "+ Add Task" to create a standalone task, or go to Plans to create tasks within a plan.</p>
         </div>
       ) : !hasFilteredTasks ? (
         <div className="tasks-empty">
@@ -618,7 +632,11 @@ export function Tasks() {
                         </div>
                         <div className="task-card-main">
                           <div className="task-card-title" title={task.title}>{task.title}</div>
-                          <div className="task-card-context">{task.planTitle} · {task.stageTitle}</div>
+                          <div className="task-card-context">
+                            {task.planId === inboxPlanId
+                              ? 'Standalone'
+                              : `${task.planTitle} · ${task.stageTitle}`}
+                          </div>
                           <div className="task-card-meta">
                             <span className={`meta-item due ${classifyDue(task.due_date)}`}>{formatDate(task.due_date)}</span>
                             <span className={`meta-item priority ${task.priority || 'medium'}`}>

@@ -35,6 +35,7 @@ interface TaskCreateModalProps {
   planId: string;
   stages: Stage[];
   defaultStageId?: string;
+  hideStageSelector?: boolean;
   editingTask?: Task;
   currentUserId?: string | null;
   onClose: () => void;
@@ -48,7 +49,7 @@ const defaultLabelSet: TaskLabel[] = [
   { id: 'learning', name: 'Learning', color: '#ffd37a' },
 ];
 
-export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
+export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideStageSelector, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
   const [title, setTitle] = useState('');
   const [stageId, setStageId] = useState('');
   const [status, setStatus] = useState<TaskCreatePayload['status']>('not_started');
@@ -251,7 +252,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
       return;
     }
 
-    if (!stageId) {
+    if (!stageId && !hideStageSelector) {
       setError('Please select a stage');
       return;
     }
@@ -323,6 +324,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
           </div>
 
           <div className="form-row">
+            {!hideStageSelector && (
             <div className="form-group">
               <label className="form-label">Stage</label>
               <div className="dropdown" ref={stageMenuRef}>
@@ -356,6 +358,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, editin
                 )}
               </div>
             </div>
+            )}
             <div className="form-group">
               <label className="form-label">Progress</label>
               <div className="dropdown" ref={statusMenuRef}>
