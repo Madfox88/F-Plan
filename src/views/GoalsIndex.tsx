@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getGoalsWithProgress, createGoal, linkGoalToPlan, completeGoal, reopenGoal } from '../lib/database';
+import { getGoalsWithProgress, createGoal, linkGoalToPlan, completeGoal, reopenGoal, deleteGoal } from '../lib/database';
 import type { GoalWithProgress } from '../lib/database';
 import type { GoalTag } from '../types/database';
 import { CreateGoalModal } from '../components/CreateGoalModal';
 import { GoalDetailModal } from '../components/GoalDetailModal';
 import SearchIcon from '../assets/icons/search.svg';
+import TrashIcon from '../assets/icons/trash.svg';
 import './GoalsIndex.css';
 
 type DueDateFilter = 'all' | 'none' | 'this_month' | 'next_month' | 'overdue';
@@ -23,6 +24,7 @@ export function GoalsIndex() {
   const tagDropdownRef = useRef<HTMLDivElement>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalWithProgress | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const loadGoals = useCallback(async () => {
     if (!activeWorkspace) return;
@@ -84,6 +86,17 @@ export function GoalsIndex() {
   const handleDeleteGoal = async () => {
     setSelectedGoal(null);
     await loadGoals();
+  };
+
+  const handleCardDelete = async (goalId: string) => {
+    try {
+      await deleteGoal(goalId);
+      setConfirmDeleteId(null);
+      await loadGoals();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete goal');
+      setConfirmDeleteId(null);
+    }
   };
 
   const uniqueTagLabels = useMemo(() => {
@@ -284,6 +297,24 @@ export function GoalsIndex() {
               if (e.key === 'Enter' || e.key === ' ') setSelectedGoal(goal);
             }}
           >
+            {confirmDeleteId === goal.id ? (
+              <div className="goal-card-delete-confirm" onClick={(e) => e.stopPropagation()}>
+                <span>Delete this goal?</span>
+                <div className="goal-card-delete-actions">
+                  <button className="btn-danger-sm" onClick={() => handleCardDelete(goal.id)}>Delete</button>
+                  <button className="btn-secondary-sm" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="goal-card-delete-icon"
+                title="Delete goal"
+                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(goal.id); }}
+              >
+                <img src={TrashIcon} alt="Delete" />
+              </button>
+            )}
+
             {isCompleted && (
               <div className="goal-completion-banner completed">
                 <span>✅ Completed</span>
