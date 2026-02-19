@@ -81,6 +81,11 @@ export function GoalsIndex() {
     }
   };
 
+  const handleDeleteGoal = async () => {
+    setSelectedGoal(null);
+    await loadGoals();
+  };
+
   const uniqueTagLabels = useMemo(() => {
     const set = new Set<string>();
     for (const goal of goals) {
@@ -379,6 +384,7 @@ export function GoalsIndex() {
           workspaceId={activeWorkspace.id}
           onClose={() => setSelectedGoal(null)}
           onLinksChanged={loadGoals}
+          onDeleted={handleDeleteGoal}
         />
       )}
     </div>

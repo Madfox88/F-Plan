@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getLinkedPlansWithProgress } from '../lib/database';
+import { getLinkedPlansWithProgress, deleteGoal } from '../lib/database';
 import type { LinkedPlanWithProgress } from '../lib/database';
 import type { GoalWithProgress } from '../lib/database';
 import { LinkPlanModal } from './LinkPlanModal';
@@ -11,6 +11,7 @@ interface GoalDetailModalProps {
   workspaceId: string;
   onClose: () => void;
   onLinksChanged: () => void;
+  onDeleted: () => void;
 }
 
 export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
@@ -19,11 +20,27 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
   workspaceId,
   onClose,
   onLinksChanged,
+  onDeleted,
 }) => {
   const [linkedPlans, setLinkedPlans] = useState<LinkedPlanWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      await deleteGoal(goal.id);
+      onClose();
+      onDeleted();
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to delete goal');
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
 
   const loadLinkedPlans = useCallback(async () => {
     try {
@@ -157,6 +174,38 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+
+            {/* Delete section */}
+            <div className="goal-detail-danger-zone">
+              {!confirmDelete ? (
+                <button
+                  className="btn-danger-outline goal-delete-btn"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete Goal
+                </button>
+              ) : (
+                <div className="goal-delete-confirm">
+                  <p>Are you sure? This will permanently delete this goal and unlink all plans.</p>
+                  <div className="goal-delete-confirm-actions">
+                    <button
+                      className="btn-danger goal-delete-btn"
+                      onClick={handleDelete}
+                      disabled={deleting}
+                    >
+                      {deleting ? 'Deleting…' : 'Yes, Delete'}
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setConfirmDelete(false)}
+                      disabled={deleting}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

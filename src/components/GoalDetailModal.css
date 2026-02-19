@@ -140,3 +140,65 @@
   background: var(--color-active);
   transition: width var(--transition-normal);
 }
+
+/* Danger zone / Delete */
+.goal-detail-danger-zone {
+  border-top: 1px solid var(--glass-border);
+  padding-top: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.btn-danger-outline {
+  background: transparent;
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-danger-outline:hover {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: #f87171;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.btn-danger:disabled,
+.btn-danger-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.goal-delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.goal-delete-confirm p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: #f87171;
+  line-height: 1.4;
+}
+
+.goal-delete-confirm-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
