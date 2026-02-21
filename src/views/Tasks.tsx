@@ -8,6 +8,8 @@ import { useCurrentUser } from '../context/UserContext';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import TrashIcon from '../assets/icons/trash.svg';
 import SearchIcon from '../assets/icons/search.svg';
+import { useCompletionToast } from '../components/CompletionToast';
+import '../components/CompletionAnimation.css';
 import './Tasks.css';
 
 type Grouping = 'due_date' | 'plan' | 'status' | 'priority';
@@ -83,7 +85,9 @@ export function Tasks() {
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [grouping, setGrouping] = useState<Grouping>('due_date');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const { toast, showToast } = useCompletionToast();
   const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [planFilter, setPlanFilter] = useState<'all' | string>('all');
@@ -195,6 +199,13 @@ export function Tasks() {
     if (!task) return;
     const nextCompleted = !task.completed;
     const nextStatus = nextCompleted ? 'completed' : 'not_started';
+
+    // Ring animation + toast when completing
+    if (nextCompleted) {
+      setCompletingId(taskId);
+      showToast(`"${task.title}" completed!`);
+    }
+
     setUpdatingId(taskId);
     try {
       // Persist checklist items as all-completed (or restore) to DB
@@ -204,6 +215,12 @@ export function Tasks() {
       }));
       await setTaskCompleted(taskId, nextCompleted);
       await updateTask(taskId, { status: nextStatus, checklists: updatedChecklists });
+
+      if (nextCompleted) {
+        // Wait for slide-out animation, then update state
+        await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+
       setTasks((prev) =>
         prev.map((t) =>
           t.id === taskId
@@ -223,6 +240,7 @@ export function Tasks() {
       setError(err instanceof Error ? err.message : 'Failed to update task');
     } finally {
       setUpdatingId(null);
+      setCompletingId(null);
     }
   };
 
@@ -486,18 +504,7 @@ export function Tasks() {
                 <option value="priority">Priority</option>
               </select>
             </div>
-            <div className="control-group">
-              <label className="control-label">Status</label>
-              <select
-                className="filter-select"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              >
-                <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
+
             <div className="control-group">
               <label className="control-label">Due</label>
               <select
@@ -551,6 +558,25 @@ export function Tasks() {
         </div>
       </div>
 
+      <div className="completion-tab-bar" style={{ margin: '0 0 12px 0' }}>
+        <button
+          className={`completion-tab-btn ${statusFilter === 'active' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('active')}
+        >
+          Active
+          <span className="completion-tab-badge">{tasks.filter((t) => !t.completed).length}</span>
+        </button>
+        <button
+          className={`completion-tab-btn ${statusFilter === 'completed' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('completed')}
+        >
+          Completed
+          <span className="completion-tab-badge">{tasks.filter((t) => t.completed).length}</span>
+        </button>
+      </div>
+
+      {toast}
+
       {error && <div className="form-error tasks-error">{error}</div>}
 
       <TaskCreateModal
@@ -584,7 +610,12 @@ export function Tasks() {
         </div>
       ) : !hasFilteredTasks ? (
         <div className="tasks-empty">
-          <p className="empty-title">No tasks match your filters</p>
+          <p className="empty-title">
+            {statusFilter === 'completed' ? 'No completed tasks yet' : 'No tasks match your filters'}
+          </p>
+          {statusFilter === 'completed' && (
+            <p className="empty-subtitle">When you check off a task, it will appear here.</p>
+          )}
         </div>
       ) : (
         <div className="tasks-groups">
@@ -603,10 +634,11 @@ export function Tasks() {
                   const taskTags = taskTagsMap[task.id] || [];
                   const hasLabels = taskTags.length > 0;
                   const isExpanded = expandedId === task.id;
+                  const isCompleting = completingId === task.id;
                   return (
                     <div
                       key={task.id}
-                      className={`task-card ${status} ${isExpanded ? 'expanded' : ''}`}
+                      className={`task-card ${status} ${isExpanded ? 'expanded' : ''} ${isCompleting ? 'completing slide-out' : ''} ${statusFilter === 'completed' ? 'completed-entry' : ''}`}
                       role="button"
                       tabIndex={0}
                       onClick={() => handleExpand(task)}
@@ -617,6 +649,11 @@ export function Tasks() {
                         }
                       }}
                     >
+                      {isCompleting && (
+                        <div className="completion-ring-container">
+                          <div className="completion-ring" />
+                        </div>
+                      )}
                       <div className="task-card-top">
                         <div className="task-card-left">
                           <AnimatedCheckbox
@@ -634,12 +671,18 @@ export function Tasks() {
                               : `${task.planTitle} · ${task.stageTitle}`}
                           </div>
                           <div className="task-card-meta">
-                            <span className={`meta-item due ${classifyDue(task.due_date)}`}>{formatDate(task.due_date)}</span>
-                            <span className={`meta-item priority ${task.priority || 'medium'}`}>
-                              {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Medium'}
-                            </span>
-                            {hasChecklist && (
-                              <span className="meta-item checklist">{completedCount}/{checklist.length}</span>
+                            {statusFilter === 'completed' && task.completed_at ? (
+                              <span className="completed-stamp">✅ Completed {new Date(task.completed_at).toLocaleDateString()}</span>
+                            ) : (
+                              <>
+                                <span className={`meta-item due ${classifyDue(task.due_date)}`}>{formatDate(task.due_date)}</span>
+                                <span className={`meta-item priority ${task.priority || 'medium'}`}>
+                                  {task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Medium'}
+                                </span>
+                                {hasChecklist && (
+                                  <span className="meta-item checklist">{completedCount}/{checklist.length}</span>
+                                )}
+                              </>
                             )}
                           </div>
                           {hasLabels ? (

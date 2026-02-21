@@ -5,8 +5,10 @@ import type { GoalWithProgress } from '../lib/database';
 import type { Tag } from '../types/database';
 import { CreateGoalModal } from '../components/CreateGoalModal';
 import { GoalDetailModal } from '../components/GoalDetailModal';
+import { useCompletionToast } from '../components/CompletionToast';
 import SearchIcon from '../assets/icons/search.svg';
 import TrashIcon from '../assets/icons/trash.svg';
+import '../components/CompletionAnimation.css';
 import './GoalsIndex.css';
 
 type DueDateFilter = 'all' | 'none' | 'this_month' | 'next_month' | 'overdue';
@@ -25,6 +27,9 @@ export function GoalsIndex() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalWithProgress | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [completionTab, setCompletionTab] = useState<'active' | 'completed'>('active');
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const { toast, showToast } = useCompletionToast();
 
   const loadGoals = useCallback(async () => {
     if (!activeWorkspace) return;
@@ -69,10 +74,18 @@ export function GoalsIndex() {
 
   const handleCompleteGoal = async (goalId: string) => {
     try {
-      await completeGoal(goalId);
-      await loadGoals();
+      const goal = goals.find((g) => g.id === goalId);
+      setCompletingId(goalId);
+      showToast(`"${goal?.title || 'Goal'}" completed!`);
+      // Wait for ring + slide animation
+      setTimeout(async () => {
+        await completeGoal(goalId);
+        await loadGoals();
+        setCompletingId(null);
+      }, 800);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete goal');
+      setCompletingId(null);
     }
   };
 
@@ -174,6 +187,10 @@ export function GoalsIndex() {
     });
   }, [goals, searchTerm, dueFilter, selectedTags]);
 
+  const activeGoals = useMemo(() => filteredGoals.filter((g) => !g.completed_at), [filteredGoals]);
+  const completedGoals = useMemo(() => filteredGoals.filter((g) => !!g.completed_at), [filteredGoals]);
+  const displayGoals = completionTab === 'active' ? activeGoals : completedGoals;
+
   const hasActiveFilters = searchTerm.trim() !== '' || dueFilter !== 'all' || selectedTags.size > 0;
 
   if (loading) {
@@ -260,8 +277,25 @@ export function GoalsIndex() {
         </button>
       </div>
 
+      <div className="completion-tab-bar" style={{ marginBottom: 20 }}>
+        <button
+          className={`completion-tab-btn ${completionTab === 'active' ? 'active' : ''}`}
+          onClick={() => setCompletionTab('active')}
+        >
+          Active <span className="completion-tab-badge">{activeGoals.length}</span>
+        </button>
+        <button
+          className={`completion-tab-btn ${completionTab === 'completed' ? 'active' : ''}`}
+          onClick={() => setCompletionTab('completed')}
+        >
+          Completed <span className="completion-tab-badge">{completedGoals.length}</span>
+        </button>
+      </div>
+
+      {toast}
+
       <div className="goals-container">
-        {filteredGoals.length === 0 && hasActiveFilters ? (
+        {displayGoals.length === 0 && hasActiveFilters ? (
           <div className="goals-no-filter-match">
             <p className="goals-no-filter-title">No goals match your filters</p>
             <p className="goals-no-filter-hint">Try adjusting your search or filter criteria.</p>
@@ -277,28 +311,35 @@ export function GoalsIndex() {
               Clear all filters
             </button>
           </div>
-        ) : filteredGoals.length === 0 ? (
+        ) : displayGoals.length === 0 ? (
           <div className="goals-empty">
             <div className="goals-empty-container">
-              <p className="goals-empty-title">No goals yet</p>
-              <p className="goals-empty-message">Create your first goal to start tracking progress.</p>
+              <p className="goals-empty-title">{completionTab === 'active' ? 'No active goals' : 'No completed goals yet'}</p>
+              <p className="goals-empty-message">{completionTab === 'active' ? 'Create your first goal to start tracking progress.' : 'Complete a goal and it will appear here.'}</p>
             </div>
           </div>
         ) : (
-          filteredGoals.map((goal) => {
+          displayGoals.map((goal) => {
             const isCompleted = !!goal.completed_at;
             const isFullProgress = goal.progress === 100 && goal.totalTasks > 0 && !isCompleted;
+            const isAnimating = completingId === goal.id;
             return (
           <div
             key={goal.id}
-            className={`goal-card glass${isCompleted ? ' goal-completed' : ''}${isFullProgress ? ' goal-full-progress' : ''}`}
-            onClick={() => setSelectedGoal(goal)}
+            className={`goal-card glass${isCompleted ? ' goal-completed completed-entry' : ''}${isFullProgress ? ' goal-full-progress' : ''}${isAnimating ? ' completing slide-out' : ''}`}
+            onClick={() => !isAnimating && setSelectedGoal(goal)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') setSelectedGoal(goal);
             }}
           >
+            {/* Ring expansion animation */}
+            {isAnimating && (
+              <div className="completion-ring-container">
+                <div className="completion-ring" />
+              </div>
+            )}
             {confirmDeleteId === goal.id ? (
               <div className="goal-card-delete-confirm" onClick={(e) => e.stopPropagation()}>
                 <span>Delete this goal?</span>
@@ -319,12 +360,12 @@ export function GoalsIndex() {
 
             {isCompleted && (
               <div className="goal-completion-banner completed">
-                <span>✅ Completed</span>
+                <span>✅ Completed{goal.completed_at ? ` · ${new Date(goal.completed_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}</span>
                 <button
-                  className="completion-banner-action secondary"
+                  className="btn-reopen"
                   onClick={(e) => { e.stopPropagation(); handleReopenGoal(goal.id); }}
                 >
-                  Reopen
+                  ↩ Reopen
                 </button>
               </div>
             )}

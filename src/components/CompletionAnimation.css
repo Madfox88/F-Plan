@@ -1,0 +1,201 @@
+/* ═══════════════════════════════════════════════════════════════
+   Completion Animation — Ring Expansion + Slide Out
+   Shared across Goals, Plans, and Tasks views
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Active / Completed tab bar ─── */
+.completion-tab-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 10px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.completion-tab-btn {
+  padding: 7px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary, #a1a1aa);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.completion-tab-btn:hover {
+  color: var(--text-primary, #e4e4e7);
+}
+
+.completion-tab-btn.active {
+  background: var(--accent, #6366f1);
+  color: #fff;
+}
+
+.completion-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.completion-tab-btn.active .completion-tab-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.completion-tab-btn:not(.active) .completion-tab-badge {
+  background: var(--border, #2a2d3a);
+  color: var(--text-secondary, #a1a1aa);
+}
+
+/* ─── Ring expansion animation on card ─── */
+.completion-ring-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 3;
+  border-radius: inherit;
+}
+
+.completion-ring {
+  position: absolute;
+  border: 2px solid var(--color-success, #22c55e);
+  border-radius: 50%;
+  opacity: 0;
+  bottom: 20px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  transform: translate(50%, 50%);
+}
+
+.completing .completion-ring {
+  animation: completionRingExpand 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes completionRingExpand {
+  0%   { width: 0; height: 0; opacity: 0.8; }
+  70%  { opacity: 0.3; }
+  100% { width: 700px; height: 700px; opacity: 0; }
+}
+
+/* Card slide-out after ring */
+.completing {
+  transition: opacity 0.35s ease 0.4s, transform 0.35s ease 0.4s;
+}
+
+.completing.slide-out {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.97);
+}
+
+/* ─── Completed card treatment ─── */
+.completed-entry {
+  animation: completedFadeIn 0.3s ease;
+}
+
+@keyframes completedFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.completed-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-success, #22c55e);
+  background: rgba(34, 197, 94, 0.12);
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.completed-date-label {
+  font-size: 11px;
+  color: var(--text-tertiary, #71717a);
+  margin-bottom: 4px;
+}
+
+.btn-reopen {
+  padding: 5px 12px;
+  border: 1px solid var(--border, #2a2d3a);
+  background: transparent;
+  color: var(--text-secondary, #a1a1aa);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reopen:hover {
+  border-color: var(--accent, #6366f1);
+  color: var(--accent, #6366f1);
+}
+
+/* ─── Toast notification ─── */
+.completion-toast {
+  position: fixed;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--color-success, #22c55e);
+  border-radius: 12px;
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #e4e4e7);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.completion-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.completion-toast-icon {
+  width: 22px;
+  height: 22px;
+  background: var(--color-success, #22c55e);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.completion-toast-icon svg {
+  width: 12px;
+  height: 12px;
+  stroke: #fff;
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

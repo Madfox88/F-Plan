@@ -10,6 +10,7 @@ import GridViewIcon from '../assets/icons/grid.svg';
 import SearchIcon from '../assets/icons/search.svg';
 import PinIcon from '../assets/icons/pin.svg';
 import PinFilledIcon from '../assets/icons/pin-filled.svg';
+import '../components/CompletionAnimation.css';
 import './PlansIndex.css';
 
 interface PlansIndexProps {
@@ -30,7 +31,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [searchOpen, setSearchOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
+  const [planTab, setPlanTab] = useState<'active' | 'completed' | 'hidden'>('active');
   const [linkGoalPlanId, setLinkGoalPlanId] = useState<string | null>(null);
   const [renamePlanId, setRenamePlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,10 +42,16 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
 
     try {
       setLoading(true);
-      const status = showArchived ? 'archived' : 'active';
-      const loadedPlans = showArchived
-        ? await getPlansWithMetadataByStatus(activeWorkspace.id, status)
-        : await getActivePlansWithMetadata(activeWorkspace.id);
+      let loadedPlans;
+      if (planTab === 'active') {
+        // getActivePlansWithMetadata returns status in ('active','completed'), so filter to active only
+        const all = await getActivePlansWithMetadata(activeWorkspace.id);
+        loadedPlans = all.filter((p: PlanWithMetadata) => p.status === 'active');
+      } else if (planTab === 'completed') {
+        loadedPlans = await getPlansWithMetadataByStatus(activeWorkspace.id, 'completed');
+      } else {
+        loadedPlans = await getPlansWithMetadataByStatus(activeWorkspace.id, 'archived');
+      }
       setPlans(loadedPlans);
 
       // Load tags for plans
@@ -62,7 +69,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
     } finally {
       setLoading(false);
     }
-  }, [activeWorkspace, showArchived]);
+  }, [activeWorkspace, planTab]);
 
   useEffect(() => {
     // Defer data loading to allow toggle animation to complete (220ms + 30ms buffer)
@@ -118,7 +125,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
     if (status === 'archived') {
       if (window.confirm('Unhide this plan?')) {
         updatePlan(planId, { status: 'active' })
-          .then(() => loadPlans())
+          .then(() => { loadPlans(); setPlanTab('active'); })
           .catch((err) => setError(err instanceof Error ? err.message : 'Failed to unhide plan'));
       }
       return;
@@ -180,54 +187,25 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
           />
         </div>
         <div className="toolbar-actions">
-          <div className="toggle-container" title={showArchived ? 'Show active plans' : 'Show hidden plans'}>
-            <div className="toggle-wrap">
-              <input
-                className="toggle-input"
-                id="archive-toggle"
-                type="checkbox"
-                checked={showArchived}
-                onChange={() => setShowArchived(!showArchived)}
-              />
-              <label className="toggle-track" htmlFor="archive-toggle">
-                <div className="track-lines">
-                  <div className="track-line" />
-                </div>
-                <div className="toggle-thumb">
-                  <div className="thumb-core" />
-                  <div className="thumb-inner" />
-                  <div className="thumb-scan" />
-                  <div className="thumb-particles">
-                    <div className="thumb-particle" />
-                    <div className="thumb-particle" />
-                    <div className="thumb-particle" />
-                    <div className="thumb-particle" />
-                    <div className="thumb-particle" />
-                  </div>
-                </div>
-                <div className="toggle-data">
-                  <div className="data-text off">Hidden</div>
-                  <div className="data-text on">Active</div>
-                  <div className="status-indicator off" />
-                  <div className="status-indicator on" />
-                </div>
-                <div className="energy-rings">
-                  <div className="energy-ring" />
-                  <div className="energy-ring" />
-                  <div className="energy-ring" />
-                </div>
-                <div className="interface-lines">
-                  <div className="interface-line" />
-                  <div className="interface-line" />
-                  <div className="interface-line" />
-                  <div className="interface-line" />
-                  <div className="interface-line" />
-                  <div className="interface-line" />
-                </div>
-                <div className="toggle-reflection" />
-                <div className="holo-glow" />
-              </label>
-            </div>
+          <div className="completion-tab-bar">
+            <button
+              className={`completion-tab-btn ${planTab === 'active' ? 'active' : ''}`}
+              onClick={() => setPlanTab('active')}
+            >
+              Active
+            </button>
+            <button
+              className={`completion-tab-btn ${planTab === 'completed' ? 'active' : ''}`}
+              onClick={() => setPlanTab('completed')}
+            >
+              Completed
+            </button>
+            <button
+              className={`completion-tab-btn ${planTab === 'hidden' ? 'active' : ''}`}
+              onClick={() => setPlanTab('hidden')}
+            >
+              Hidden
+            </button>
           </div>
           <div className="view-toggle">
             <button
@@ -255,11 +233,27 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
       {filteredPlans.length === 0 ? (
         <div className="plans-empty">
           <div className="empty-container">
-            <p className="empty-title">No plans yet</p>
-            <p className="empty-message">Plans help you organize your work into stages and track progress on your goals.</p>
-            <button className="btn-primary btn-large" onClick={onCreatePlan}>
-              <span>+ Create Your First Plan</span>
-            </button>
+            {planTab === 'active' && (
+              <>
+                <p className="empty-title">No active plans</p>
+                <p className="empty-message">Plans help you organize your work into stages and track progress on your goals.</p>
+                <button className="btn-primary btn-large" onClick={onCreatePlan}>
+                  <span>+ Create Your First Plan</span>
+                </button>
+              </>
+            )}
+            {planTab === 'completed' && (
+              <>
+                <p className="empty-title">No completed plans yet</p>
+                <p className="empty-message">When you finish all tasks in a plan and mark it complete, it will appear here.</p>
+              </>
+            )}
+            {planTab === 'hidden' && (
+              <>
+                <p className="empty-title">No hidden plans</p>
+                <p className="empty-message">Plans you hide will appear here so you can restore them later.</p>
+              </>
+            )}
           </div>
         </div>
       ) : (
@@ -267,7 +261,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
           {filteredPlans.map((plan) => (
             <div
               key={plan.id}
-              className="plan-card glass"
+              className={`plan-card glass ${planTab === 'completed' ? 'completed-entry' : ''}`}
               onClick={() => onSelectPlan(plan.id)}
               role="button"
               tabIndex={0}
@@ -280,18 +274,34 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
               <div className="plan-card-header">
                 <h3 className="plan-card-title">{plan.title}</h3>
                 <div className="plan-card-actions">
-                  <button
-                    className="plan-pin-btn"
-                    onClick={(e) => handleTogglePin(e, plan.id, plan.is_pinned)}
-                    aria-label={plan.is_pinned ? 'Unpin plan' : 'Pin plan'}
-                    title={plan.is_pinned ? 'Unpin plan' : 'Pin plan'}
-                  >
-                    <img
-                      src={plan.is_pinned ? PinFilledIcon : PinIcon}
-                      alt=""
-                      className="plan-pin-icon"
-                    />
-                  </button>
+                  {planTab === 'completed' && (
+                    <button
+                      className="btn-reopen"
+                      title="Reopen plan"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updatePlan(plan.id, { status: 'active', completed_at: null })
+                          .then(() => loadPlans())
+                          .catch((err) => setError(err instanceof Error ? err.message : 'Failed to reopen plan'));
+                      }}
+                    >
+                      ↩ Reopen
+                    </button>
+                  )}
+                  {planTab !== 'completed' && (
+                    <button
+                      className="plan-pin-btn"
+                      onClick={(e) => handleTogglePin(e, plan.id, plan.is_pinned)}
+                      aria-label={plan.is_pinned ? 'Unpin plan' : 'Pin plan'}
+                      title={plan.is_pinned ? 'Unpin plan' : 'Pin plan'}
+                    >
+                      <img
+                        src={plan.is_pinned ? PinFilledIcon : PinIcon}
+                        alt=""
+                        className="plan-pin-icon"
+                      />
+                    </button>
+                  )}
                   <PlanCardMenu
                     plan={plan}
                     onOpen={handleOpenPlan}
@@ -322,7 +332,11 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
                 )}
               </div>
               <div className="plan-card-footer">
-                <span className="plan-status" data-status={plan.status}>{plan.status}</span>
+                {planTab === 'completed' && plan.completed_at ? (
+                  <span className="completed-stamp">✅ Completed {new Date(plan.completed_at).toLocaleDateString()}</span>
+                ) : (
+                  <span className="plan-status" data-status={plan.status}>{plan.status}</span>
+                )}
                 {plan.due_date && (
                   <span className="plan-due-pill">
                     Due: {new Date(plan.due_date + 'T00:00:00').toLocaleDateString()}
