@@ -76,7 +76,8 @@ ON CONFLICT (workspace_id, label) DO NOTHING;
 -- Link goals to their migrated tags
 INSERT INTO goal_tags (goal_id, tag_id)
 SELECT g.id, tg.id
-FROM goals g, jsonb_array_elements(g.tags) AS t
+FROM goals g
+CROSS JOIN LATERAL jsonb_array_elements(g.tags) AS t
 JOIN tags tg ON tg.workspace_id = g.workspace_id AND tg.label = (t->>'label')::text
 WHERE jsonb_typeof(g.tags) = 'array' AND jsonb_array_length(g.tags) > 0
 ON CONFLICT DO NOTHING;
@@ -103,8 +104,8 @@ INSERT INTO task_tags (task_id, tag_id)
 SELECT tk.id, tg.id
 FROM tasks tk
 JOIN stages s ON s.id = tk.stage_id
-JOIN plans p ON p.id = s.plan_id,
-jsonb_array_elements(tk.labels) AS l
+JOIN plans p ON p.id = s.plan_id
+CROSS JOIN LATERAL jsonb_array_elements(tk.labels) AS l
 JOIN tags tg ON tg.workspace_id = p.workspace_id AND tg.label = (l->>'name')::text
 WHERE jsonb_typeof(tk.labels) = 'array' AND jsonb_array_length(tk.labels) > 0
 ON CONFLICT DO NOTHING;
