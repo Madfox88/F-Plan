@@ -38,7 +38,7 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
       <div className="auth-page">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/Logo.png" alt="F-Plan" className="auth-logo-img" />
+            <img src={`${import.meta.env.BASE_URL}Logo.png`} alt="F-Plan" className="auth-logo-img" />
           </div>
           <h1 className="auth-title">Check your email</h1>
           <p className="auth-subtitle">
@@ -61,7 +61,7 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="/Logo.png" alt="F-Plan" className="auth-logo-img" />
+          <img src={`${import.meta.env.BASE_URL}Logo.png`} alt="F-Plan" className="auth-logo-img" />
         </div>
         <h1 className="auth-title">Reset your password</h1>
         <p className="auth-subtitle">

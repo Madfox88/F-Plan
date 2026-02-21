@@ -94,8 +94,6 @@ export function Tasks() {
   const [editDue, setEditDue] = useState('');
   const [editPriority, setEditPriority] = useState<'urgent' | 'important' | 'medium' | 'low'>('medium');
   const [editChecklist, setEditChecklist] = useState<ChecklistItem[]>([]);
-  const [createPlanId, setCreatePlanId] = useState<string | null>(null);
-  const [createStageId, setCreateStageId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Load persisted filters for the session
@@ -175,13 +173,6 @@ export function Tasks() {
           mappedStages[plan.id] = stages.map(({ tasks: _tasks, ...stage }) => stage as Stage);
         });
         setStagesByPlan(mappedStages);
-
-        if (activePlans.length && !createPlanId) {
-          setCreatePlanId(activePlans[0].id);
-        }
-        if (stageList.length && !createStageId) {
-          setCreateStageId(stageList[0].id);
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load tasks');
       } finally {
@@ -192,20 +183,12 @@ export function Tasks() {
     fetchTasks();
   }, [activeWorkspace]);
 
-  useEffect(() => {
-    if (!createPlanId) {
-      setCreateStageId(null);
-      return;
-    }
-    const options = stageOptions.filter((s) => s.planId === createPlanId);
-    if (!options.length) {
-      setCreateStageId(null);
-      return;
-    }
-    if (!createStageId || !options.some((s) => s.id === createStageId)) {
-      setCreateStageId(options[0].id);
-    }
-  }, [createPlanId, createStageId, stageOptions]);
+  // Build plan options for the task create modal's plan selector
+  const planOptions = useMemo(() => {
+    return plans
+      .filter((p) => !p.is_inbox)
+      .map((plan) => ({ plan, stages: stagesByPlan[plan.id] || [] }));
+  }, [plans, stagesByPlan]);
 
   const handleToggleComplete = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
@@ -376,7 +359,7 @@ export function Tasks() {
         }
 
         const stageOption = stageOptions.find((s) => s.id === payload.stageId);
-        const planId = stageOption?.planId || createPlanId || plans[0]?.id || '';
+        const planId = stageOption?.planId || inboxPlanId || plans[0]?.id || '';
         const isInbox = planId === inboxPlanId;
         const stageTitle = isInbox ? '' : (stageOption?.title || stagesByPlan[planId]?.find((s) => s.id === payload.stageId)?.title || 'Stage');
         const planTitle = isInbox ? 'Standalone' : (plans.find((p) => p.id === planId)?.title || 'Plan');
@@ -395,7 +378,7 @@ export function Tasks() {
         setError(err instanceof Error ? err.message : 'Failed to create task');
       }
     },
-    [createPlanId, plans, stageOptions, stagesByPlan, currentUserId]
+    [plans, stageOptions, stagesByPlan, currentUserId, inboxPlanId]
   );
 
   const groupedTasks: GroupBucket[] = useMemo(() => {
@@ -561,18 +544,7 @@ export function Tasks() {
           <button
             type="button"
             className="btn-primary add-task-button"
-            onClick={() => {
-              // Default to inbox (standalone) unless a plan filter is active
-              if (planFilter !== 'all') {
-                setCreatePlanId(planFilter);
-                const firstStage = (stagesByPlan[planFilter] || [])[0];
-                if (firstStage) setCreateStageId(firstStage.id);
-              } else if (inboxPlanId && inboxStageId) {
-                setCreatePlanId(inboxPlanId);
-                setCreateStageId(inboxStageId);
-              }
-              setShowCreateModal(true);
-            }}
+            onClick={() => setShowCreateModal(true)}
           >
             <span>+ Add Task</span>
           </button>
@@ -583,10 +555,10 @@ export function Tasks() {
 
       <TaskCreateModal
         isOpen={showCreateModal}
-        planId={createPlanId || inboxPlanId || plans[0]?.id || ''}
-        stages={(createPlanId && stagesByPlan[createPlanId]) || []}
-        defaultStageId={createStageId || (createPlanId ? stagesByPlan[createPlanId]?.[0]?.id : undefined)}
-        hideStageSelector={createPlanId === inboxPlanId}
+        planId={inboxPlanId || plans[0]?.id || ''}
+        stages={[]}
+        planOptions={planOptions}
+        inboxStageId={inboxStageId || undefined}
         currentUserId={currentUserId}
         workspaceId={activeWorkspace?.id}
         onClose={() => setShowCreateModal(false)}

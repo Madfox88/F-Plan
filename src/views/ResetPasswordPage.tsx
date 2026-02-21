@@ -53,7 +53,7 @@ export function ResetPasswordPage({ onComplete }: ResetPasswordPageProps) {
       <div className="auth-page">
         <div className="auth-card">
           <div className="auth-logo">
-            <img src="/Logo.png" alt="F-Plan" className="auth-logo-img" />
+            <img src={`${import.meta.env.BASE_URL}Logo.png`} alt="F-Plan" className="auth-logo-img" />
           </div>
           <h1 className="auth-title">Password updated</h1>
           <p className="auth-subtitle">
@@ -68,7 +68,7 @@ export function ResetPasswordPage({ onComplete }: ResetPasswordPageProps) {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="/Logo.png" alt="F-Plan" className="auth-logo-img" />
+          <img src={`${import.meta.env.BASE_URL}Logo.png`} alt="F-Plan" className="auth-logo-img" />
         </div>
         <h1 className="auth-title">Set new password</h1>
         <p className="auth-subtitle">Enter your new password below</p>

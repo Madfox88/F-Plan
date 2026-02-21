@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Stage, Task, ChecklistItem, User, TaskRepeatRule, Tag } from '../types/database';
+import type { Plan, Stage, Task, ChecklistItem, User, TaskRepeatRule, Tag } from '../types/database';
 import { getUsers, getTagsByWorkspace, getTaskTagIds } from '../lib/database';
 import { TagPicker } from './TagPicker';
 import { TaskStatusIndicator } from './TaskStatusIndicator';
@@ -25,6 +25,11 @@ export type TaskCreatePayload = {
   assignedTo?: string | null;
 };
 
+interface PlanOption {
+  plan: Plan;
+  stages: Stage[];
+}
+
 interface TaskCreateModalProps {
   isOpen: boolean;
   planId: string;
@@ -32,13 +37,17 @@ interface TaskCreateModalProps {
   stages: Stage[];
   defaultStageId?: string;
   hideStageSelector?: boolean;
+  /** When provided, shows a Plan dropdown (Tasks tab mode). Omit for Plan Detail mode. */
+  planOptions?: PlanOption[];
+  /** The inbox stage ID for standalone tasks. Required when planOptions is provided. */
+  inboxStageId?: string;
   editingTask?: Task;
   currentUserId?: string | null;
   onClose: () => void;
   onSubmit: (payload: TaskCreatePayload, existingTaskId?: string) => Promise<void>;
 }
 
-export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, defaultStageId, hideStageSelector, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
+export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, defaultStageId, hideStageSelector, planOptions, inboxStageId, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
   const [title, setTitle] = useState('');
   const [stageId, setStageId] = useState('');
   const [status, setStatus] = useState<TaskCreatePayload['status']>('not_started');
@@ -54,16 +63,26 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
   const [loading, setLoading] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isStageOpen, setIsStageOpen] = useState(false);
+  const [isPlanOpen, setIsPlanOpen] = useState(false);
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
   const [isRepeatOpen, setIsRepeatOpen] = useState(false);
   const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  // Plan selector state (Tasks tab mode)
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const statusMenuRef = useRef<HTMLDivElement>(null);
   const stageMenuRef = useRef<HTMLDivElement>(null);
+  const planMenuRef = useRef<HTMLDivElement>(null);
   const priorityMenuRef = useRef<HTMLDivElement>(null);
   const repeatMenuRef = useRef<HTMLDivElement>(null);
   const assigneeMenuRef = useRef<HTMLDivElement>(null);
+
+  // Derive the stages for the selected plan (Tasks tab mode)
+  const activeStages = planOptions
+    ? (selectedPlanId ? planOptions.find((po) => po.plan.id === selectedPlanId)?.stages || [] : [])
+    : stages;
+  const showStageSelector = planOptions ? selectedPlanId !== '' : !hideStageSelector;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -121,6 +140,9 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
       if (stageMenuRef.current && !stageMenuRef.current.contains(event.target as Node)) {
         setIsStageOpen(false);
       }
+      if (planMenuRef.current && !planMenuRef.current.contains(event.target as Node)) {
+        setIsPlanOpen(false);
+      }
       if (priorityMenuRef.current && !priorityMenuRef.current.contains(event.target as Node)) {
         setIsPriorityOpen(false);
       }
@@ -137,7 +159,8 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
 
   const resetForm = () => {
     setTitle('');
-    setStageId(defaultStageId || stages[0]?.id || '');
+    setSelectedPlanId('');
+    setStageId(planOptions ? (inboxStageId || '') : (defaultStageId || stages[0]?.id || ''));
     setStatus('not_started');
     setPriority('medium');
     setStartDate('');
@@ -150,6 +173,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
     setError(null);
     setIsStatusOpen(false);
     setIsStageOpen(false);
+    setIsPlanOpen(false);
     setIsPriorityOpen(false);
     setIsRepeatOpen(false);
     setIsAssigneeOpen(false);
@@ -158,9 +182,23 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
   const closeAllDropdowns = () => {
     setIsStatusOpen(false);
     setIsStageOpen(false);
+    setIsPlanOpen(false);
     setIsPriorityOpen(false);
     setIsRepeatOpen(false);
     setIsAssigneeOpen(false);
+  };
+
+  const handlePlanChange = (planId: string) => {
+    setSelectedPlanId(planId);
+    setIsPlanOpen(false);
+    if (planId === '') {
+      // Standalone — use inbox stage
+      setStageId(inboxStageId || '');
+    } else {
+      // Auto-select first stage of the chosen plan
+      const planStages = planOptions?.find((po) => po.plan.id === planId)?.stages || [];
+      setStageId(planStages[0]?.id || '');
+    }
   };
 
   const handleAddChecklist = () => {
@@ -188,7 +226,8 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
       return;
     }
 
-    if (!stageId && !hideStageSelector) {
+    const resolvedStageId = stageId || (planOptions && !selectedPlanId ? inboxStageId : '') || '';
+    if (!resolvedStageId) {
       setError('Please select a stage');
       return;
     }
@@ -197,7 +236,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
       setLoading(true);
       await onSubmit({
         title: title.trim(),
-        stageId,
+        stageId: resolvedStageId,
         status,
         priority,
         startDate: startDate || undefined,
@@ -258,7 +297,53 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
           </div>
 
           <div className="form-row">
-            {!hideStageSelector && (
+            {/* Plan selector — only shown when planOptions is provided (Tasks tab) */}
+            {planOptions && (
+            <div className="form-group">
+              <label className="form-label">Plan</label>
+              <div className="dropdown" ref={planMenuRef}>
+                <button
+                  type="button"
+                  className="dropdown-trigger"
+                  onClick={() => {
+                    closeAllDropdowns();
+                    setIsPlanOpen(true);
+                  }}
+                >
+                  <span>
+                    {selectedPlanId
+                      ? planOptions.find((po) => po.plan.id === selectedPlanId)?.plan.title || 'Select plan'
+                      : 'Standalone (no plan)'}
+                  </span>
+                  <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
+                </button>
+                {isPlanOpen && (
+                  <div className="dropdown-menu">
+                    <button
+                      type="button"
+                      className={`dropdown-option ${selectedPlanId === '' ? 'selected' : ''}`}
+                      onClick={() => handlePlanChange('')}
+                    >
+                      <span>Standalone (no plan)</span>
+                    </button>
+                    {planOptions.filter((po) => !po.plan.is_inbox).map((po) => (
+                      <button
+                        key={po.plan.id}
+                        type="button"
+                        className={`dropdown-option ${selectedPlanId === po.plan.id ? 'selected' : ''}`}
+                        onClick={() => handlePlanChange(po.plan.id)}
+                      >
+                        <span>{po.plan.title}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            )}
+
+            {/* Stage selector — shown when a real plan is selected, or in PlanDetail mode */}
+            {showStageSelector && (
             <div className="form-group">
               <label className="form-label">Stage</label>
               <div className="dropdown" ref={stageMenuRef}>
@@ -270,12 +355,12 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
                     setIsStageOpen(true);
                   }}
                 >
-                  <span>{stages.find((stage) => stage.id === stageId)?.title || 'Select stage'}</span>
+                  <span>{activeStages.find((stage) => stage.id === stageId)?.title || 'Select stage'}</span>
                   <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
                 </button>
                 {isStageOpen && (
                   <div className="dropdown-menu">
-                    {stages.map((stage) => (
+                    {activeStages.map((stage) => (
                       <button
                         key={stage.id}
                         type="button"
