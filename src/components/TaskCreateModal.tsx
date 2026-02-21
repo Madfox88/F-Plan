@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Stage, Task, ChecklistItem, User, TaskRepeatRule } from '../types/database';
-import { getUsers } from '../lib/database';
+import { useEffect, useRef, useState } from 'react';
+import type { Stage, Task, ChecklistItem, User, TaskRepeatRule, Tag } from '../types/database';
+import { getUsers, getTagsByWorkspace, getTaskTagIds } from '../lib/database';
+import { TagPicker } from './TagPicker';
 import { TaskStatusIndicator } from './TaskStatusIndicator';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import CalendarIcon from '../assets/icons/calendar.svg';
@@ -9,12 +10,6 @@ import PriorityImportantIcon from '../assets/icons/priority-important.svg';
 import PriorityMediumIcon from '../assets/icons/priority-medium.svg';
 import PriorityLowIcon from '../assets/icons/priority-low.svg';
 import './TaskCreateModal.css';
-
-export type TaskLabel = {
-  id: string;
-  name: string;
-  color: string;
-};
 
 export type TaskCreatePayload = {
   title: string;
@@ -26,13 +21,14 @@ export type TaskCreatePayload = {
   repeat: TaskRepeatRule;
   description?: string;
   checklists: ChecklistItem[];
-  labels: TaskLabel[];
+  tagIds: string[];
   assignedTo?: string | null;
 };
 
 interface TaskCreateModalProps {
   isOpen: boolean;
   planId: string;
+  workspaceId?: string;
   stages: Stage[];
   defaultStageId?: string;
   hideStageSelector?: boolean;
@@ -42,14 +38,7 @@ interface TaskCreateModalProps {
   onSubmit: (payload: TaskCreatePayload, existingTaskId?: string) => Promise<void>;
 }
 
-const defaultLabelSet: TaskLabel[] = [
-  { id: 'marketing', name: 'Marketing', color: '#ff7a7a' },
-  { id: 'admin', name: 'Admin', color: '#7aa2ff' },
-  { id: 'design', name: 'Design', color: '#7affb1' },
-  { id: 'learning', name: 'Learning', color: '#ffd37a' },
-];
-
-export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideStageSelector, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
+export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, defaultStageId, hideStageSelector, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
   const [title, setTitle] = useState('');
   const [stageId, setStageId] = useState('');
   const [status, setStatus] = useState<TaskCreatePayload['status']>('not_started');
@@ -59,10 +48,8 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
   const [repeat, setRepeat] = useState<TaskCreatePayload['repeat']>('none');
   const [description, setDescription] = useState('');
   const [checklists, setChecklists] = useState<ChecklistItem[]>([{ id: '0', text: '', completed: false }]);
-  const [labels, setLabels] = useState<TaskLabel[]>([]);
-  const [assignedLabelIds, setAssignedLabelIds] = useState<Set<string>>(new Set());
-  const [newLabelName, setNewLabelName] = useState('');
-  const [newLabelColor, setNewLabelColor] = useState('#7aa2ff');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -78,28 +65,17 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
   const repeatMenuRef = useRef<HTMLDivElement>(null);
   const assigneeMenuRef = useRef<HTMLDivElement>(null);
 
-  const labelStorageKey = useMemo(() => `task-labels:${planId}`, [planId]);
-
   useEffect(() => {
     if (!isOpen) return;
     getUsers().then(setUsers).catch(() => setUsers([]));
-  }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const stored = localStorage.getItem(labelStorageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as TaskLabel[];
-        setLabels(parsed);
-      } catch {
-        setLabels(defaultLabelSet);
-      }
-    } else {
-      setLabels(defaultLabelSet);
+    // Load workspace tags
+    if (workspaceId) {
+      getTagsByWorkspace(workspaceId)
+        .then((data) => setWorkspaceTags(data))
+        .catch(() => setWorkspaceTags([]));
     }
-  }, [isOpen, labelStorageKey]);
+  }, [isOpen, workspaceId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -128,26 +104,14 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
       });
       setChecklists(checklistItems.length ? checklistItems : [{ id: '0', text: '', completed: false }]);
 
-      const taskLabels = editingTask.labels || [];
-      setLabels((prev) => {
-        const merged = [...prev];
-        taskLabels.forEach((label) => {
-          if (!merged.some((existing) => existing.id === label.id)) {
-            merged.push(label);
-          }
-        });
-        return merged;
-      });
-      setAssignedLabelIds(new Set(taskLabels.map((label) => label.id)));
+      // Load tags from join table for editing task
+      getTaskTagIds(editingTask.id)
+        .then((ids) => setSelectedTagIds(ids))
+        .catch(() => setSelectedTagIds([]));
     } else {
       resetForm();
     }
   }, [isOpen, editingTask, defaultStageId, stages]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    localStorage.setItem(labelStorageKey, JSON.stringify(labels));
-  }, [labels, labelStorageKey, isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -181,9 +145,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
     setRepeat('none');
     setDescription('');
     setChecklists([{ id: '0', text: '', completed: false }]);
-    setAssignedLabelIds(new Set());
-    setNewLabelName('');
-    setNewLabelColor('#7aa2ff');
+    setSelectedTagIds([]);
     setAssignedTo(currentUserId || null);
     setError(null);
     setIsStatusOpen(false);
@@ -217,32 +179,6 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
     setChecklists(checklists.filter((_, i) => i !== index));
   };
 
-  const toggleLabel = (labelId: string) => {
-    const next = new Set(assignedLabelIds);
-    if (next.has(labelId)) {
-      next.delete(labelId);
-    } else {
-      next.add(labelId);
-    }
-    setAssignedLabelIds(next);
-  };
-
-  const handleCreateLabel = () => {
-    if (!newLabelName.trim()) return;
-    const id = `${newLabelName.trim().toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
-    const newLabel: TaskLabel = { id, name: newLabelName.trim(), color: newLabelColor };
-    setLabels([...labels, newLabel]);
-    setAssignedLabelIds(new Set([...assignedLabelIds, id]));
-    setNewLabelName('');
-  };
-
-  const handleRemoveLabel = (labelId: string) => {
-    setLabels(labels.filter((label) => label.id !== labelId));
-    const next = new Set(assignedLabelIds);
-    next.delete(labelId);
-    setAssignedLabelIds(next);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -256,8 +192,6 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
       setError('Please select a stage');
       return;
     }
-
-    const assignedLabels = labels.filter((label) => assignedLabelIds.has(label.id));
 
     try {
       setLoading(true);
@@ -277,7 +211,7 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
             text: item.text.trim(),
             completed: !!item.completed,
           })),
-        labels: assignedLabels,
+        tagIds: selectedTagIds,
         assignedTo: assignedTo || null,
       }, editingTask?.id);
       resetForm();
@@ -663,50 +597,18 @@ export function TaskCreateModal({ isOpen, planId, stages, defaultStageId, hideSt
           </div>
 
           <div className="form-group">
-            <label className="form-label">Labels</label>
-            <div className="label-create">
-              <input
-                className="form-input"
-                type="text"
-                value={newLabelName}
-                onChange={(e) => setNewLabelName(e.target.value)}
-                placeholder="New label"
+            <label className="form-label">Tags</label>
+            {workspaceId ? (
+              <TagPicker
+                workspaceTags={workspaceTags}
+                selectedTagIds={selectedTagIds}
+                onChange={setSelectedTagIds}
+                workspaceId={workspaceId}
+                onTagCreated={(tag) => setWorkspaceTags((prev) => [...prev, tag].sort((a, b) => a.label.localeCompare(b.label)))}
               />
-              <input
-                className="color-input"
-                type="color"
-                value={newLabelColor}
-                onChange={(e) => setNewLabelColor(e.target.value)}
-                title="Choose color"
-              />
-              <button type="button" className="btn-secondary" onClick={handleCreateLabel}>
-                <span>Add</span>
-              </button>
-            </div>
-
-            <div className="label-grid">
-              {labels.map((label) => (
-                <button
-                  key={label.id}
-                  type="button"
-                  className={`label-chip ${assignedLabelIds.has(label.id) ? 'active' : ''}`}
-                  onClick={() => toggleLabel(label.id)}
-                >
-                  <span className="label-color" style={{ backgroundColor: label.color }} />
-                  {label.name}
-                  <span
-                    className="label-remove"
-                    role="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveLabel(label.id);
-                    }}
-                  >
-                    ×
-                  </span>
-                </button>
-              ))}
-            </div>
+            ) : (
+              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)' }}>Tags managed in Settings → Tags</p>
+            )}
           </div>
 
           <div className="modal-footer">

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTagsByWorkspace } from '../lib/database';
+import { TagPicker } from './TagPicker';
+import type { Tag } from '../types/database';
 import './CreatePlanModal.css';
 
 interface CreatePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
+  workspaceId?: string;
   onSubmit: (
     title: string,
     description: string,
@@ -11,11 +15,12 @@ interface CreatePlanModalProps {
     useSuggestedStages: boolean,
     isDraft: boolean,
     customStages?: string[],
-    dueDate?: string
+    dueDate?: string,
+    tagIds?: string[]
   ) => Promise<void>;
 }
 
-export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalProps) {
+export function CreatePlanModal({ isOpen, onClose, workspaceId, onSubmit }: CreatePlanModalProps) {
   const [title, setTitle] = useState('');
   const [intent, setIntent] = useState('');
   const [description, setDescription] = useState('');
@@ -26,6 +31,17 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
   const [stageAddError, setStageAddError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    if (isOpen && workspaceId) {
+      setSelectedTagIds([]);
+      getTagsByWorkspace(workspaceId)
+        .then((data) => setWorkspaceTags(data))
+        .catch(() => setWorkspaceTags([]));
+    }
+  }, [isOpen, workspaceId]);
 
   const handleAddStage = () => {
     if (customStages.length >= 6) {
@@ -75,7 +91,8 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
         useSuggested,
         isDraft,
         customStagesToPass,
-        dueDate || undefined
+        dueDate || undefined,
+        selectedTagIds.length > 0 ? selectedTagIds : undefined
       );
       setTitle('');
       setIntent('');
@@ -172,6 +189,20 @@ export function CreatePlanModal({ isOpen, onClose, onSubmit }: CreatePlanModalPr
               disabled={loading}
             />
           </div>
+
+          {workspaceId && (
+            <div className="form-group">
+              <label className="form-label">Tags (optional)</label>
+              <TagPicker
+                workspaceTags={workspaceTags}
+                selectedTagIds={selectedTagIds}
+                onChange={setSelectedTagIds}
+                workspaceId={workspaceId}
+                onTagCreated={(tag) => setWorkspaceTags((prev) => [...prev, tag].sort((a, b) => a.label.localeCompare(b.label)))}
+                disabled={loading}
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label className="form-label">Start Mode</label>

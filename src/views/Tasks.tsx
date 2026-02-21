@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getAllActivePlansIncludingInbox, getOrCreateInboxPlan, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted } from '../lib/database';
-import type { Task, Plan, StageWithTasks, ChecklistItem, Stage } from '../types/database';
+import { getAllActivePlansIncludingInbox, getOrCreateInboxPlan, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted, setTaskTags, getTagsForTasks } from '../lib/database';
+import type { Task, Plan, StageWithTasks, ChecklistItem, Stage, Tag } from '../types/database';
 import { AnimatedCheckbox } from '../components/Checkbox';
 import { TaskCreateModal, type TaskCreatePayload } from '../components/TaskCreateModal';
 import { useCurrentUser } from '../context/UserContext';
@@ -78,6 +78,7 @@ export function Tasks() {
   const [inboxStageId, setInboxStageId] = useState<string | null>(null);
   const [stagesByPlan, setStagesByPlan] = useState<Record<string, Stage[]>>({});
   const [stageOptions, setStageOptions] = useState<Array<{ id: string; title: string; planId: string }>>([]);
+  const [taskTagsMap, setTaskTagsMap] = useState<Record<string, Tag[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -152,6 +153,17 @@ export function Tasks() {
         );
 
         setTasks(collected);
+
+        // Fetch tags from join table
+        try {
+          const taskIds = collected.map((t) => t.id);
+          if (taskIds.length > 0) {
+            const tagsMap = await getTagsForTasks(taskIds);
+            setTaskTagsMap(tagsMap);
+          }
+        } catch {
+          // Tags table may not exist yet — ignore
+        }
 
         const stageList = stagesPerPlan.flatMap(({ plan, stages }) =>
           stages.map((stage) => ({ id: stage.id, title: stage.title, planId: plan.id }))
@@ -327,13 +339,13 @@ export function Tasks() {
       if (planFilter !== 'all' && task.planId !== planFilter) return false;
 
       if (term) {
-        const labelText = (task.labels || []).map((l) => l.name.toLowerCase()).join(' ');
-        if (!task.title.toLowerCase().includes(term) && !labelText.includes(term)) return false;
+        const tagText = (taskTagsMap[task.id] || []).map((t) => t.label.toLowerCase()).join(' ');
+        if (!task.title.toLowerCase().includes(term) && !tagText.includes(term)) return false;
       }
 
       return true;
     });
-  }, [tasks, search, statusFilter, dueFilter, priorityFilter, planFilter]);
+  }, [tasks, search, statusFilter, dueFilter, priorityFilter, planFilter, taskTagsMap]);
 
   const handleCreateSubmit = useCallback(
     async (payload: TaskCreatePayload) => {
@@ -349,9 +361,19 @@ export function Tasks() {
           repeat: payload.repeat,
           description: payload.description,
           checklists: payload.checklists,
-          labels: payload.labels,
           assignedTo: payload.assignedTo || currentUserId || '',
         });
+
+        // Wire tags via join table
+        if (payload.tagIds && payload.tagIds.length > 0) {
+          try {
+            await setTaskTags(newTask.id, payload.tagIds);
+            const updatedMap = await getTagsForTasks([newTask.id]);
+            setTaskTagsMap((prev) => ({ ...prev, ...updatedMap }));
+          } catch {
+            // Tags table may not exist yet
+          }
+        }
 
         const stageOption = stageOptions.find((s) => s.id === payload.stageId);
         const planId = stageOption?.planId || createPlanId || plans[0]?.id || '';
@@ -566,6 +588,7 @@ export function Tasks() {
         defaultStageId={createStageId || (createPlanId ? stagesByPlan[createPlanId]?.[0]?.id : undefined)}
         hideStageSelector={createPlanId === inboxPlanId}
         currentUserId={currentUserId}
+        workspaceId={activeWorkspace?.id}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateSubmit}
       />
@@ -605,7 +628,8 @@ export function Tasks() {
                   const checklist = task.checklists || [];
                   const completedCount = checklist.filter((item) => item.completed).length;
                   const hasChecklist = checklist.length > 0;
-                  const hasLabels = (task.labels || []).length > 0;
+                  const taskTags = taskTagsMap[task.id] || [];
+                  const hasLabels = taskTags.length > 0;
                   const isExpanded = expandedId === task.id;
                   return (
                     <div
@@ -648,9 +672,9 @@ export function Tasks() {
                           </div>
                           {hasLabels ? (
                             <div className="task-card-tertiary">
-                              {(task.labels || []).map((label) => (
-                                <span key={label.id} className="pill label" style={{ backgroundColor: label.color }}>
-                                  {label.name}
+                              {taskTags.map((tag) => (
+                                <span key={tag.id} className={`goal-tag goal-tag--${tag.color}`}>
+                                  {tag.label}
                                 </span>
                               ))}
                             </div>

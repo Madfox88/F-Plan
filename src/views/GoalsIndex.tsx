@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getGoalsWithProgress, createGoal, linkGoalToPlan, completeGoal, reopenGoal, deleteGoal } from '../lib/database';
+import { getGoalsWithProgress, createGoal, linkGoalToPlan, setGoalTags, completeGoal, reopenGoal, deleteGoal } from '../lib/database';
 import type { GoalWithProgress } from '../lib/database';
-import type { GoalTag } from '../types/database';
+import type { Tag } from '../types/database';
 import { CreateGoalModal } from '../components/CreateGoalModal';
 import { GoalDetailModal } from '../components/GoalDetailModal';
 import SearchIcon from '../assets/icons/search.svg';
@@ -49,7 +49,7 @@ export function GoalsIndex() {
     description: string,
     planIds: string[],
     dueDate: string,
-    tags: GoalTag[]
+    tagIds: string[]
   ) => {
     if (!activeWorkspace) return;
     const goal = await createGoal(
@@ -57,8 +57,10 @@ export function GoalsIndex() {
       title,
       description || undefined,
       dueDate || undefined,
-      tags.length > 0 ? tags : undefined
     );
+    if (tagIds.length > 0) {
+      await setGoalTags(goal.id, tagIds);
+    }
     for (const planId of planIds) {
       await linkGoalToPlan(planId, goal.id);
     }
@@ -103,7 +105,7 @@ export function GoalsIndex() {
     const set = new Set<string>();
     for (const goal of goals) {
       if (goal.tags) {
-        for (const tag of goal.tags as GoalTag[]) {
+        for (const tag of goal.tags as Tag[]) {
           set.add(tag.label);
         }
       }
@@ -383,9 +385,9 @@ export function GoalsIndex() {
                 }) : ''}
               </span>
               {goal.tags && goal.tags.length > 0 &&
-                goal.tags.map((tag: GoalTag) => (
+                goal.tags.map((tag: Tag) => (
                   <span
-                    key={tag.label}
+                    key={tag.id}
                     className={`goal-pill goal-tag goal-tag--${tag.color}`}
                   >
                     {tag.label}

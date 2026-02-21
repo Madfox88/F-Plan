@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import type { Plan, StageWithTasks, Task } from '../types/database';
-import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, completePlan, reopenPlan, createStage, createTask, updateTask, deleteTask, setTaskCompleted, getLinkedGoalIdsForPlan, getGoalsByWorkspace } from '../lib/database';
+import type { Plan, StageWithTasks, Task, Tag } from '../types/database';
+import { getStagesByPlan, deletePlan, renamePlan, archivePlan, togglePlanPin, updatePlan, completePlan, reopenPlan, createStage, createTask, updateTask, deleteTask, setTaskCompleted, getLinkedGoalIdsForPlan, getGoalsByWorkspace, setTaskTags, getTagsForTasks } from '../lib/database';
 import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
 import { TaskCreateModal } from '../components/TaskCreateModal';
@@ -54,6 +54,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   const [error, setError] = useState<string | null>(null);
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [showCompletionPrompt, setShowCompletionPrompt] = useState(false);
+  const [taskTagsMap, setTaskTagsMap] = useState<Record<string, Tag[]>>({});
 
   const resolveTaskStatus = (task: { status: 'not_started' | 'in_progress' | 'completed' | null; completed: boolean }) => {
     if (task.status) return task.status;
@@ -269,6 +270,17 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
       const fetchedStages = await getStagesByPlan(planId);
       setStages(fetchedStages);
       checkAllTasksCompleted(fetchedStages);
+
+      // Fetch tags from join table
+      const allTaskIds = fetchedStages.flatMap((s) => (s.tasks || []).map((t) => t.id));
+      if (allTaskIds.length > 0) {
+        try {
+          const tagsMap = await getTagsForTasks(allTaskIds);
+          setTaskTagsMap(tagsMap);
+        } catch {
+          // Tags table may not exist yet
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stages');
     } finally {
@@ -352,12 +364,15 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
           repeat: payload.repeat,
           description: payload.description || null,
           checklists: payload.checklists,
-          labels: payload.labels,
           completed: payload.status === 'completed',
           assigned_to: payload.assignedTo || undefined,
         });
+        // Wire tags via join table
+        if (payload.tagIds) {
+          try { await setTaskTags(existingTaskId, payload.tagIds); } catch { /* migration not run */ }
+        }
       } else {
-        await createTask({
+        const newTask = await createTask({
           stageId: payload.stageId,
           title: payload.title,
           status: payload.status,
@@ -367,9 +382,12 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
           repeat: payload.repeat,
           description: payload.description,
           checklists: payload.checklists,
-          labels: payload.labels,
           assignedTo: payload.assignedTo || currentUserId || '',
         });
+        // Wire tags via join table
+        if (payload.tagIds && payload.tagIds.length > 0) {
+          try { await setTaskTags(newTask.id, payload.tagIds); } catch { /* migration not run */ }
+        }
       }
       setEditingTask(undefined);
       await fetchStages();
@@ -696,7 +714,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
             ? 'Low'
             : 'Medium'
       : 'Medium';
-    const labels = Array.isArray(task.labels) ? task.labels : [];
+    const labels = taskTagsMap[task.id] || [];
 
     const taskChecked = status === 'completed';
 
@@ -759,9 +777,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
             )}
           </div>
           <div className="task-meta-tags">
-            {labels.map((label) => (
-              <span key={label.id} className="task-label" style={{ backgroundColor: label.color }}>
-                {label.name}
+            {labels.map((tag) => (
+              <span key={tag.id} className={`goal-tag goal-tag--${tag.color}`}>
+                {tag.label}
               </span>
             ))}
           </div>
@@ -908,6 +926,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
         defaultStageId={selectedStageId}
         editingTask={editingTask}
         currentUserId={currentUserId}
+        workspaceId={currentPlan.workspace_id}
         onClose={() => {
           setIsTaskModalOpen(false);
           setSelectedStageId(undefined);

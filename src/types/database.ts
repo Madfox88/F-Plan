@@ -108,6 +108,17 @@ export type GoalTag = {
   color: GoalTagColor;
 };
 
+/** Unified workspace-scoped tag (shared across goals, plans, tasks) */
+export type TagColor = 'neutral' | 'blue' | 'green' | 'orange' | 'red' | 'purple';
+
+export type Tag = {
+  id: string;
+  workspace_id: string;
+  label: string;
+  color: TagColor;
+  created_at: string;
+};
+
 export type Goal = {
   id: string;
   workspace_id: string;

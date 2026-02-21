@@ -40,7 +40,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSettingsClick, onLogoutClick, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSettingsClick: _unused, onLogoutClick, isOpen, onClose }: SidebarProps) {
   const { activeWorkspace } = useWorkspace();
   const [pinnedPlans, setPinnedPlans] = useState<Plan[]>([]);
 
@@ -114,8 +114,8 @@ export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSe
 
       <div className="sidebar-footer">
         <button
-          className={`sidebar-footer-button${activeTab === 'profile' ? ' active' : ''}`}
-          onClick={() => { onSettingsClick?.(); onClose?.(); }}
+          className={`sidebar-footer-button${activeTab === 'settings' ? ' active' : ''}`}
+          onClick={() => handleNavClick('settings')}
         >
           <img src={SettingsSlidersIcon} alt="" className="sidebar-footer-icon" />
           <span>Settings</span>

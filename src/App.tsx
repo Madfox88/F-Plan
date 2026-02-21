@@ -10,7 +10,7 @@ import { PageHeaderCard } from './components/PageHeaderCard';
 import { CreatePlanModal } from './components/CreatePlanModal';
 import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
-import { WorkspaceSettingsModal } from './components/WorkspaceSettingsModal';
+
 import { PendingInvitationsBanner } from './components/PendingInvitationsBanner';
 import { PlansIndex } from './views/PlansIndex';
 import { LoginPage } from './views/LoginPage';
@@ -18,7 +18,7 @@ import { SignupPage } from './views/SignupPage';
 import { ForgotPasswordPage } from './views/ForgotPasswordPage';
 import { ResetPasswordPage } from './views/ResetPasswordPage';
 import { supabaseConfigured } from './lib/supabase';
-import { createPlan, createSuggestedStages, createCustomStages, getPlanById } from './lib/database';
+import { createPlan, createSuggestedStages, createCustomStages, getPlanById, setPlanTags } from './lib/database';
 import type { Plan } from './types/database';
 import './App.css';
 
@@ -30,6 +30,7 @@ const Tasks = lazy(() => import('./views/Tasks').then(m => ({ default: m.Tasks }
 const Calendar = lazy(() => import('./views/Calendar').then(m => ({ default: m.Calendar })));
 const FocusLog = lazy(() => import('./views/FocusLog').then(m => ({ default: m.FocusLog })));
 const Profile = lazy(() => import('./views/Profile').then(m => ({ default: m.Profile })));
+const Settings = lazy(() => import('./views/Settings').then(m => ({ default: m.Settings })));
 
 function LazyFallback() {
   return <div className="app-loading"><p>Loading…</p></div>;
@@ -39,7 +40,6 @@ function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
   const { displayName } = useCurrentUser();
   const { signOut } = useAuth();
-  const [isWorkspaceSettingsOpen, setIsWorkspaceSettingsOpen] = useState(false);
   const userName = displayName ? displayName.split(' ')[0] : 'User';
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('activeTab') || 'dashboard';
@@ -109,6 +109,10 @@ function AppContent() {
       title: 'Profile',
       subtitle: 'Your account details',
     },
+    settings: {
+      title: 'Settings',
+      subtitle: 'Manage your workspace',
+    },
   };
 
   const activePage = pageMeta[activeTab] ?? pageMeta.plans;
@@ -128,7 +132,8 @@ function AppContent() {
     useSuggestedStages: boolean,
     isDraft: boolean,
     customStages?: string[],
-    dueDate?: string
+    dueDate?: string,
+    tagIds?: string[]
   ) => {
     if (!activeWorkspace) return;
 
@@ -145,6 +150,9 @@ function AppContent() {
         await createSuggestedStages(newPlan.id);
       } else if (customStages && customStages.length > 0) {
         await createCustomStages(newPlan.id, customStages);
+      }
+      if (tagIds && tagIds.length > 0) {
+        await setPlanTags(newPlan.id, tagIds);
       }
       setSelectedPlanId(newPlan.id);
       setIsCreatePlanModalOpen(false);
@@ -165,7 +173,7 @@ function AppContent() {
         onTabChange={handleTabChange}
         onPlanSelect={handlePlanSelect}
         refreshKey={refreshKey}
-        onSettingsClick={() => setIsWorkspaceSettingsOpen(true)}
+        onSettingsClick={() => {}}
         onLogoutClick={() => signOut()}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -227,6 +235,7 @@ function AppContent() {
             )}
             {activeTab === 'focus' && <Suspense fallback={<LazyFallback />}><FocusLog /></Suspense>}
             {activeTab === 'profile' && <Suspense fallback={<LazyFallback />}><Profile /></Suspense>}
+            {activeTab === 'settings' && <Suspense fallback={<LazyFallback />}><Settings /></Suspense>}
           </div>
         )}
       </MainLayout>
@@ -235,6 +244,7 @@ function AppContent() {
         isOpen={isCreatePlanModalOpen}
         onClose={() => setIsCreatePlanModalOpen(false)}
         onSubmit={handleCreatePlan}
+        workspaceId={activeWorkspace?.id}
       />
 
       <CreateWorkspaceModal
@@ -248,10 +258,7 @@ function AppContent() {
         onClose={() => setRenameWorkspaceId(null)}
       />
 
-      <WorkspaceSettingsModal
-        isOpen={isWorkspaceSettingsOpen}
-        onClose={() => setIsWorkspaceSettingsOpen(false)}
-      />
+
     </div>
   );
 }

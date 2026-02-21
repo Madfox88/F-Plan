@@ -1,42 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { getActivePlans } from '../lib/database';
-import type { Plan } from '../types/database';
-import type { GoalTag, GoalTagColor } from '../types/database';
+import { getActivePlans, getTagsByWorkspace } from '../lib/database';
+import { TagPicker } from './TagPicker';
+import type { Plan, Tag } from '../types/database';
 import './CreateGoalModal.css';
-
-const TAG_COLORS: { value: GoalTagColor; hex: string }[] = [
-  { value: 'neutral', hex: '#9ca3af' },
-  { value: 'blue', hex: '#3b82f6' },
-  { value: 'green', hex: '#22c55e' },
-  { value: 'orange', hex: '#f97316' },
-  { value: 'red', hex: '#ef4444' },
-  { value: 'purple', hex: '#a855f7' },
-];
-
-function hexToTagColor(hex: string): GoalTagColor {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  let best: GoalTagColor = 'neutral';
-  let bestDist = Infinity;
-  for (const c of TAG_COLORS) {
-    const cr = parseInt(c.hex.slice(1, 3), 16);
-    const cg = parseInt(c.hex.slice(3, 5), 16);
-    const cb = parseInt(c.hex.slice(5, 7), 16);
-    const dist = (r - cr) ** 2 + (g - cg) ** 2 + (b - cb) ** 2;
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = c.value;
-    }
-  }
-  return best;
-}
 
 interface CreateGoalModalProps {
   isOpen: boolean;
   workspaceId: string;
   onClose: () => void;
-  onSubmit: (title: string, description: string, planIds: string[], dueDate: string, tags: GoalTag[]) => Promise<void>;
+  onSubmit: (title: string, description: string, planIds: string[], dueDate: string, tagIds: string[]) => Promise<void>;
 }
 
 export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
@@ -48,9 +20,8 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [tags, setTags] = useState<GoalTag[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [tagColorHex, setTagColorHex] = useState('#3b82f6');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [workspaceTags, setWorkspaceTags] = useState<Tag[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,9 +35,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
       setTitle('');
       setDescription('');
       setDueDate('');
-      setTags([]);
-      setTagInput('');
-      setTagColorHex('#3b82f6');
+      setSelectedTagIds([]);
       setError(null);
       setSelectedPlanIds(new Set());
 
@@ -76,6 +45,11 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
         .then((data) => setPlans(data))
         .catch(() => setPlans([]))
         .finally(() => setPlansLoading(false));
+
+      /* Load workspace tags */
+      getTagsByWorkspace(workspaceId)
+        .then((data) => setWorkspaceTags(data))
+        .catch(() => setWorkspaceTags([]));
     }
   }, [isOpen, workspaceId]);
 
@@ -91,31 +65,6 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
     });
   };
 
-  const addTag = () => {
-    const label = tagInput.trim();
-    if (!label) return;
-    if (label.length > 24) {
-      setError('Tag label must be 24 characters or fewer');
-      return;
-    }
-    if (tags.length >= 10) {
-      setError('Maximum 10 tags allowed');
-      return;
-    }
-    if (tags.some((t) => t.label.toLowerCase() === label.toLowerCase())) {
-      setError('Tag already exists');
-      return;
-    }
-    setError(null);
-    setTags((prev) => [...prev, { label, color: hexToTagColor(tagColorHex) }]);
-    setTagInput('');
-    setTagColorHex('#3b82f6');
-  };
-
-  const removeTag = (label: string) => {
-    setTags((prev) => prev.filter((t) => t.label !== label));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -127,7 +76,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
 
     setIsLoading(true);
     try {
-      await onSubmit(title.trim(), description.trim(), Array.from(selectedPlanIds), dueDate, tags);
+      await onSubmit(title.trim(), description.trim(), Array.from(selectedPlanIds), dueDate, selectedTagIds);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create goal');
@@ -208,56 +157,14 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
           {/* Tags */}
           <div className="form-group">
             <label>Tags (optional)</label>
-            <div className="tag-input-row">
-              <input
-                type="text"
-                className="tag-label-input"
-                placeholder="Tag label"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-                disabled={isLoading}
-                maxLength={24}
-              />
-              <input
-                className="color-input"
-                type="color"
-                value={tagColorHex}
-                onChange={(e) => setTagColorHex(e.target.value)}
-                title="Choose color"
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                className="btn-secondary tag-add-btn"
-                onClick={addTag}
-                disabled={isLoading || !tagInput.trim()}
-              >
-                <span>Add</span>
-              </button>
-            </div>
-            {tags.length > 0 && (
-              <div className="tag-pills">
-                {tags.map((tag) => (
-                  <span key={tag.label} className={`goal-tag goal-tag--${tag.color}`}>
-                    {tag.label}
-                    <button
-                      type="button"
-                      className="tag-remove-btn"
-                      onClick={() => removeTag(tag.label)}
-                      aria-label={`Remove ${tag.label}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+            <TagPicker
+              workspaceTags={workspaceTags}
+              selectedTagIds={selectedTagIds}
+              onChange={setSelectedTagIds}
+              workspaceId={workspaceId}
+              onTagCreated={(tag) => setWorkspaceTags((prev) => [...prev, tag].sort((a, b) => a.label.localeCompare(b.label)))}
+              disabled={isLoading}
+            />
           </div>
 
           {/* Plan picker */}

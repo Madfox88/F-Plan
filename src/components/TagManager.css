@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════
+   TagManager — workspace tag CRUD
+   ═══════════════════════════════════════════════════════ */
+
+.tag-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ── Create form ─────────────────────────────────────── */
+.tm-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.tm-create-input {
+  max-width: 320px;
+}
+
+.tm-color-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tm-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.tm-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.tm-color-swatch.active {
+  border-color: var(--text-primary);
+  transform: scale(1.2);
+}
+
+.tm-color-swatch-sm {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── List ────────────────────────────────────────────── */
+.tm-loading,
+.tm-empty {
+  text-align: center;
+  padding: var(--space-lg) 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.tm-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.tm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  transition: background var(--transition-fast);
+}
+
+.tm-row:hover {
+  background: var(--glass-bg-heavy);
+}
+
+/* ── Tag info ────────────────────────────────────────── */
+.tm-tag-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.tm-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tm-dot--neutral { background: #9ca3af; }
+.tm-dot--blue    { background: #3b82f6; }
+.tm-dot--green   { background: #22c55e; }
+.tm-dot--orange  { background: #f97316; }
+.tm-dot--red     { background: #ef4444; }
+.tm-dot--purple  { background: #a855f7; }
+
+.tm-tag-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Actions ─────────────────────────────────────────── */
+.tm-tag-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.tm-action-btn {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.5;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tm-action-btn:hover {
+  opacity: 1;
+  background: var(--glass-bg);
+}
+
+.tm-action-btn-danger:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* ── Inline confirm delete ───────────────────────────── */
+.tm-confirm-delete {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.tm-confirm-text {
+  font-size: var(--font-size-xs);
+  color: #ef4444;
+  font-weight: var(--font-weight-medium);
+}
+
+.tm-confirm-yes,
+.tm-confirm-no {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border: 1px solid var(--glass-border);
+  transition: all var(--transition-fast);
+}
+
+.tm-confirm-yes {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.tm-confirm-yes:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.tm-confirm-no {
+  background: none;
+  color: var(--text-secondary);
+}
+
+.tm-confirm-no:hover {
+  background: var(--glass-bg);
+}
+
+/* ── Inline edit form ────────────────────────────────── */
+.tm-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.tm-edit-input {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.tm-edit-actions {
+  display: flex;
+  gap: var(--space-sm);
+}

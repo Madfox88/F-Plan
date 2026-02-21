@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { Plan } from '../types/database';
-import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan } from '../lib/database';
+import type { Plan, Tag } from '../types/database';
+import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan, getTagsForPlans } from '../lib/database';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { PlanCardMenu } from '../components/PlanCardMenu';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
@@ -34,6 +34,7 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   const [linkGoalPlanId, setLinkGoalPlanId] = useState<string | null>(null);
   const [renamePlanId, setRenamePlanId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [planTagsMap, setPlanTagsMap] = useState<Record<string, Tag[]>>({});
 
   const loadPlans = useCallback(async () => {
     if (!activeWorkspace) return;
@@ -45,6 +46,17 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
         ? await getPlansWithMetadataByStatus(activeWorkspace.id, status)
         : await getActivePlansWithMetadata(activeWorkspace.id);
       setPlans(loadedPlans);
+
+      // Load tags for plans
+      const planIds = loadedPlans.map((p: PlanWithMetadata) => p.id);
+      if (planIds.length > 0) {
+        try {
+          const tagsMap = await getTagsForPlans(planIds);
+          setPlanTagsMap(tagsMap);
+        } catch {
+          // Tags table may not exist yet (pre-migration)
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load plans');
     } finally {
@@ -317,6 +329,13 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
                   </span>
                 )}
               </div>
+              {planTagsMap[plan.id] && planTagsMap[plan.id].length > 0 && (
+                <div className="plan-card-tags">
+                  {planTagsMap[plan.id].map((tag) => (
+                    <span key={tag.id} className={`goal-tag goal-tag--${tag.color}`}>{tag.label}</span>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

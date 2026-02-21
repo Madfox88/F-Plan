@@ -595,6 +595,14 @@ html[data-theme='dark'] .plan-pin-icon {
   color: var(--text-secondary);
 }
 
+/* ── Plan card tags ──────────────────────────────────── */
+.plan-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: var(--space-sm);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
