@@ -5,12 +5,14 @@ import { PageHeaderCard } from '../components/PageHeaderCard';
 import { PlanHeaderMenu } from '../components/PlanHeaderMenu';
 import { TaskCreateModal } from '../components/TaskCreateModal';
 import { useCurrentUser } from '../context/UserContext';
+import { useActivityLog } from '../hooks/useActivityLog';
 import type { TaskCreatePayload } from '../components/TaskCreateModal';
 import { TaskStatusIndicator } from '../components/TaskStatusIndicator';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
 import { AddStageModal } from '../components/AddStageModal';
 import { RenamePlanModal } from '../components/RenamePlanModal';
 import { AnimatedCheckbox } from '../components/Checkbox';
+import { ActivityFeed } from '../components/ActivityFeed';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import BoardsViewIcon from '../assets/icons/boards.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
@@ -37,6 +39,7 @@ interface PlanDetailProps {
 
 export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack }: PlanDetailProps) {
   const { userId: currentUserId } = useCurrentUser();
+  const log = useActivityLog();
   const [stages, setStages] = useState<StageWithTasks[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'boards' | 'grid'>('boards');
@@ -206,7 +209,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   };
 
   const handleRenameSubmit = async (newTitle: string) => {
+    const oldTitle = currentPlan.title;
     await renamePlan(planId, newTitle);
+    log('renamed', 'plan', planId, newTitle, { from: oldTitle, to: newTitle });
     setCurrentPlan({ ...currentPlan, title: newTitle });
     if (onPlanUpdated) onPlanUpdated();
   };
@@ -226,6 +231,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
       if (window.confirm('Unhide this plan?')) {
         updatePlan(planId, { status: 'active' })
           .then(() => {
+            log('unhidden', 'plan', planId, currentPlan.title);
             setCurrentPlan({ ...currentPlan, status: 'active' });
             if (onPlanUpdated) onPlanUpdated();
           })
@@ -236,6 +242,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
     if (window.confirm('Hide this plan?')) {
       archivePlan(planId)
         .then(() => {
+          log('hidden', 'plan', planId, currentPlan.title);
           setCurrentPlan({ ...currentPlan, status: 'archived' });
           if (onPlanUpdated) onPlanUpdated();
         })
@@ -247,6 +254,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
     if (!window.confirm('Are you sure you want to delete this plan? This action cannot be undone.')) return;
     deletePlan(planId)
       .then(() => {
+        log('deleted', 'plan', planId, currentPlan.title);
         if (onPlanDeleted) onPlanDeleted();
       })
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to delete plan'));
@@ -308,6 +316,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   const handleCompletePlan = async () => {
     try {
       await completePlan(planId);
+      log('completed', 'plan', planId, currentPlan.title);
       setCurrentPlan({ ...currentPlan, status: 'completed', completed_at: new Date().toISOString() });
       setShowCompletionPrompt(false);
       if (onPlanUpdated) onPlanUpdated();
@@ -319,6 +328,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   const handleReopenPlan = async () => {
     try {
       await reopenPlan(planId);
+      log('reopened', 'plan', planId, currentPlan.title);
       setCurrentPlan({ ...currentPlan, status: 'active', completed_at: null });
       if (onPlanUpdated) onPlanUpdated();
     } catch (err) {
@@ -332,7 +342,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
 
   const handleAddStageSubmit = async (stageName: string) => {
     try {
-      await createStage(planId, stageName);
+      const stage = await createStage(planId, stageName);
+      log('created', 'stage', stage.id, stageName, { plan: currentPlan.title });
       await fetchStages();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create stage');
@@ -367,6 +378,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
           completed: payload.status === 'completed',
           assigned_to: payload.assignedTo || undefined,
         });
+        log('edited', 'task', existingTaskId, payload.title, { plan: currentPlan.title });
         // Wire tags via join table
         if (payload.tagIds) {
           try { await setTaskTags(existingTaskId, payload.tagIds); } catch { /* migration not run */ }
@@ -384,6 +396,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
           checklists: payload.checklists,
           assignedTo: payload.assignedTo || currentUserId || '',
         });
+        log('created', 'task', newTask.id, payload.title, { plan: currentPlan.title });
         // Wire tags via join table
         if (payload.tagIds && payload.tagIds.length > 0) {
           try { await setTaskTags(newTask.id, payload.tagIds); } catch { /* migration not run */ }
@@ -399,7 +412,9 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
   const handleDeleteTask = async (taskId: string) => {
     if (!window.confirm('Delete this task?')) return;
     try {
+      const task = stages.flatMap((s) => s.tasks || []).find((t) => t.id === taskId);
       await deleteTask(taskId);
+      log('deleted', 'task', taskId, task?.title || '', { plan: currentPlan.title });
       await fetchStages();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
@@ -423,6 +438,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
         status: 'completed',
         checklists: updatedChecklists,
       });
+      log('completed', 'task', task.id, task.title, { plan: currentPlan.title });
       await fetchStages();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete task');
@@ -918,6 +934,12 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
           ))}
         </div>
       )}
+
+      {/* Activity History */}
+      <div className="plan-activity-section" style={{ marginTop: 24 }}>
+        <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: 8, color: 'var(--text-secondary, #aaa)' }}>Activity</h3>
+        <ActivityFeed entityType="plan" entityId={planId} limit={20} compact />
+      </div>
 
       <TaskCreateModal
         isOpen={isTaskModalOpen}

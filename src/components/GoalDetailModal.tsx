@@ -3,6 +3,7 @@ import { getLinkedPlansWithProgress, deleteGoal } from '../lib/database';
 import type { LinkedPlanWithProgress } from '../lib/database';
 import type { GoalWithProgress } from '../lib/database';
 import { LinkPlanModal } from './LinkPlanModal';
+import { ActivityFeed } from './ActivityFeed';
 import './GoalDetailModal.css';
 
 interface GoalDetailModalProps {
@@ -175,6 +176,14 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
                   ))}
                 </ul>
               )}
+            </div>
+
+            {/* Activity History */}
+            <div className="goal-detail-section">
+              <div className="goal-detail-section-header">
+                <h3>Activity</h3>
+              </div>
+              <ActivityFeed entityType="goal" entityId={goal.id} limit={20} compact />
             </div>
 
             {/* Delete section */}

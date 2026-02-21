@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import type { Plan, Tag } from '../types/database';
 import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan, getTagsForPlans } from '../lib/database';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useActivityLog } from '../hooks/useActivityLog';
 import { PlanCardMenu } from '../components/PlanCardMenu';
 import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
 import { RenamePlanModal } from '../components/RenamePlanModal';
@@ -26,6 +27,7 @@ interface PlanWithMetadata extends Plan {
 
 export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansIndexProps) {
   const { activeWorkspace } = useWorkspace();
+  const log = useActivityLog();
   const [plans, setPlans] = useState<PlanWithMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,7 +105,9 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
 
   const handleRenameSubmit = async (newTitle: string) => {
     if (!renamePlanId) return;
+    const oldTitle = plans.find((p) => p.id === renamePlanId)?.title ?? '';
     await renamePlan(renamePlanId, newTitle);
+    log('renamed', 'plan', renamePlanId, newTitle, { from: oldTitle, to: newTitle });
     await loadPlans();
   };
 
@@ -122,10 +126,11 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
   };
 
   const handleHidePlan = (planId: string, status: Plan['status']) => {
+    const plan = plans.find((p) => p.id === planId);
     if (status === 'archived') {
       if (window.confirm('Unhide this plan?')) {
         updatePlan(planId, { status: 'active' })
-          .then(() => { loadPlans(); setPlanTab('active'); })
+          .then(() => { log('unhidden', 'plan', planId, plan?.title || ''); loadPlans(); setPlanTab('active'); })
           .catch((err) => setError(err instanceof Error ? err.message : 'Failed to unhide plan'));
       }
       return;
@@ -133,14 +138,15 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
 
     if (window.confirm('Hide this plan?')) {
       archivePlan(planId)
-        .then(() => loadPlans())
+        .then(() => { log('hidden', 'plan', planId, plan?.title || ''); loadPlans(); })
         .catch((err) => setError(err instanceof Error ? err.message : 'Failed to hide plan'));
     }
   };
 
   const handleDeletePlan = (planId: string) => {
+    const plan = plans.find((p) => p.id === planId);
     if (window.confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
-      deletePlan(planId).then(() => loadPlans()).catch((err) => setError(err instanceof Error ? err.message : 'Failed to delete plan'));
+      deletePlan(planId).then(() => { log('deleted', 'plan', planId, plan?.title || ''); loadPlans(); }).catch((err) => setError(err instanceof Error ? err.message : 'Failed to delete plan'));
     }
   };
 

@@ -1,0 +1,11 @@
+/* ═══ Activity View (Global feed) ═══ */
+
+.activity-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.activity-view .activity-feed {
+  max-width: 720px;
+}

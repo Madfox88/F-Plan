@@ -12,6 +12,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityFeed } from '../components/ActivityFeed';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
 import type { CalendarEvent, Reminder, FocusSession, Plan, Goal, Task } from '../types/database';
@@ -585,6 +586,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </button>
           )}
         </div>
+      </div>
+
+      {/* ═══ CARD 5 — Recent Activity ═══ */}
+      <div className="dashboard-card glass">
+        <div className="dashboard-card-header">
+          <h3>Recent Activity</h3>
+          {onNavigate && (
+            <button className="dashboard-view-all" onClick={() => onNavigate('activity')}>
+              View all →
+            </button>
+          )}
+        </div>
+        <ActivityFeed limit={10} compact />
       </div>
 
       {/* ═══ Read-only popups ═══ */}

@@ -19,6 +19,7 @@ import { ForgotPasswordPage } from './views/ForgotPasswordPage';
 import { ResetPasswordPage } from './views/ResetPasswordPage';
 import { supabaseConfigured } from './lib/supabase';
 import { createPlan, createSuggestedStages, createCustomStages, getPlanById, setPlanTags } from './lib/database';
+import { useActivityLog } from './hooks/useActivityLog';
 import type { Plan } from './types/database';
 import './App.css';
 
@@ -29,6 +30,7 @@ const PlanDetail = lazy(() => import('./views/PlanDetail').then(m => ({ default:
 const Tasks = lazy(() => import('./views/Tasks').then(m => ({ default: m.Tasks })));
 const Calendar = lazy(() => import('./views/Calendar').then(m => ({ default: m.Calendar })));
 const FocusLog = lazy(() => import('./views/FocusLog').then(m => ({ default: m.FocusLog })));
+const Activity = lazy(() => import('./views/Activity').then(m => ({ default: m.Activity })));
 const Profile = lazy(() => import('./views/Profile').then(m => ({ default: m.Profile })));
 const Settings = lazy(() => import('./views/Settings').then(m => ({ default: m.Settings })));
 
@@ -40,6 +42,7 @@ function AppContent() {
   const { activeWorkspace, loading } = useWorkspace();
   const { displayName } = useCurrentUser();
   const { signOut } = useAuth();
+  const log = useActivityLog();
   const userName = displayName ? displayName.split(' ')[0] : 'User';
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('activeTab') || 'dashboard';
@@ -105,6 +108,10 @@ function AppContent() {
       title: 'Focus',
       subtitle: 'Session history and insights',
     },
+    activity: {
+      title: 'Activity',
+      subtitle: 'Workspace activity log',
+    },
     profile: {
       title: 'Profile',
       subtitle: 'Your account details',
@@ -154,6 +161,7 @@ function AppContent() {
       if (tagIds && tagIds.length > 0) {
         await setPlanTags(newPlan.id, tagIds);
       }
+      log('created', 'plan', newPlan.id, title);
       setSelectedPlanId(newPlan.id);
       setIsCreatePlanModalOpen(false);
     } catch (error) {
@@ -234,6 +242,7 @@ function AppContent() {
               <Suspense fallback={<LazyFallback />}><Calendar /></Suspense>
             )}
             {activeTab === 'focus' && <Suspense fallback={<LazyFallback />}><FocusLog /></Suspense>}
+            {activeTab === 'activity' && <Suspense fallback={<LazyFallback />}><Activity /></Suspense>}
             {activeTab === 'profile' && <Suspense fallback={<LazyFallback />}><Profile /></Suspense>}
             {activeTab === 'settings' && <Suspense fallback={<LazyFallback />}><Settings /></Suspense>}
           </div>

@@ -9,6 +9,7 @@ import PenSquareIcon from '../assets/icons/pen-square.svg';
 import TrashIcon from '../assets/icons/trash.svg';
 import SearchIcon from '../assets/icons/search.svg';
 import { useCompletionToast } from '../components/CompletionToast';
+import { useActivityLog } from '../hooks/useActivityLog';
 import '../components/CompletionAnimation.css';
 import './Tasks.css';
 
@@ -88,6 +89,7 @@ export function Tasks() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [completingId, setCompletingId] = useState<string | null>(null);
   const { toast, showToast } = useCompletionToast();
+  const log = useActivityLog();
   const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [planFilter, setPlanFilter] = useState<'all' | string>('all');
@@ -204,6 +206,9 @@ export function Tasks() {
     if (nextCompleted) {
       setCompletingId(taskId);
       showToast(`"${task.title}" completed!`);
+      log('completed', 'task', taskId, task.title, { plan: task.planTitle });
+    } else {
+      log('reopened', 'task', taskId, task.title, { plan: task.planTitle });
     }
 
     setUpdatingId(taskId);
@@ -280,6 +285,7 @@ export function Tasks() {
   };
 
   const handleSaveExpanded = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
     setUpdatingId(taskId);
     try {
       await updateTask(taskId, {
@@ -289,6 +295,7 @@ export function Tasks() {
         priority: editPriority,
         checklists: editChecklist,
       });
+      log('edited', 'task', taskId, editTitle, { plan: task?.planTitle || '' });
       setTasks((prev) =>
         prev.map((t) =>
           t.id === taskId
@@ -312,9 +319,11 @@ export function Tasks() {
   };
 
   const handleDeleteTask = async (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
     setUpdatingId(taskId);
     try {
       await deleteTask(taskId);
+      log('deleted', 'task', taskId, task?.title || '', { plan: task?.planTitle || '' });
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
       if (expandedId === taskId) setExpandedId(null);
     } catch (err) {
@@ -391,6 +400,7 @@ export function Tasks() {
           },
           ...prev,
         ]);
+        log('created', 'task', newTask.id, payload.title, { plan: planTitle });
         setShowCreateModal(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create task');

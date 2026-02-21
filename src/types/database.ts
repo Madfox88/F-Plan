@@ -198,3 +198,37 @@ export type PlanWithRelations = Plan & {
 export type StageWithTasks = Stage & {
   tasks?: Task[];
 };
+
+/* ── Activity Log (ACTIVITY_LOG) ── */
+export type ActivityAction =
+  | 'created'
+  | 'completed'
+  | 'reopened'
+  | 'edited'
+  | 'deleted'
+  | 'hidden'
+  | 'unhidden'
+  | 'moved'
+  | 'renamed'
+  | 'linked'
+  | 'unlinked';
+
+export type ActivityEntityType = 'goal' | 'plan' | 'task' | 'tag' | 'stage';
+
+export type ActivityLogEntry = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  action: ActivityAction;
+  entity_type: ActivityEntityType;
+  entity_id: string;
+  entity_title: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+/** Activity log entry enriched with user display info (UI-only) */
+export type ActivityLogEntryWithUser = ActivityLogEntry & {
+  user_display_name?: string;
+  user_avatar_url?: string | null;
+};

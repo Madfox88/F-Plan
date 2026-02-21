@@ -6,6 +6,7 @@ import type { Tag } from '../types/database';
 import { CreateGoalModal } from '../components/CreateGoalModal';
 import { GoalDetailModal } from '../components/GoalDetailModal';
 import { useCompletionToast } from '../components/CompletionToast';
+import { useActivityLog } from '../hooks/useActivityLog';
 import SearchIcon from '../assets/icons/search.svg';
 import TrashIcon from '../assets/icons/trash.svg';
 import '../components/CompletionAnimation.css';
@@ -30,6 +31,7 @@ export function GoalsIndex() {
   const [completionTab, setCompletionTab] = useState<'active' | 'completed'>('active');
   const [completingId, setCompletingId] = useState<string | null>(null);
   const { toast, showToast } = useCompletionToast();
+  const log = useActivityLog();
 
   const loadGoals = useCallback(async () => {
     if (!activeWorkspace) return;
@@ -69,6 +71,7 @@ export function GoalsIndex() {
     for (const planId of planIds) {
       await linkGoalToPlan(planId, goal.id);
     }
+    log('created', 'goal', goal.id, title);
     await loadGoals();
   };
 
@@ -80,6 +83,7 @@ export function GoalsIndex() {
       // Wait for ring + slide animation
       setTimeout(async () => {
         await completeGoal(goalId);
+        log('completed', 'goal', goalId, goal?.title || '');
         await loadGoals();
         setCompletingId(null);
       }, 800);
@@ -92,6 +96,8 @@ export function GoalsIndex() {
   const handleReopenGoal = async (goalId: string) => {
     try {
       await reopenGoal(goalId);
+      const goal = goals.find((g) => g.id === goalId);
+      log('reopened', 'goal', goalId, goal?.title || '');
       await loadGoals();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reopen goal');
@@ -105,7 +111,9 @@ export function GoalsIndex() {
 
   const handleCardDelete = async (goalId: string) => {
     try {
+      const goal = goals.find((g) => g.id === goalId);
       await deleteGoal(goalId);
+      log('deleted', 'goal', goalId, goal?.title || '');
       setConfirmDeleteId(null);
       await loadGoals();
     } catch (err) {
