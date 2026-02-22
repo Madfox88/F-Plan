@@ -144,29 +144,25 @@ function AppContent() {
   ) => {
     if (!activeWorkspace) return;
 
-    try {
-      const newPlan = await createPlan(
-        activeWorkspace.id,
-        title,
-        description,
-        intent,
-        isDraft ? 'draft' : 'active',
-        dueDate
-      );
-      if (useSuggestedStages) {
-        await createSuggestedStages(newPlan.id);
-      } else if (customStages && customStages.length > 0) {
-        await createCustomStages(newPlan.id, customStages);
-      }
-      if (tagIds && tagIds.length > 0) {
-        await setPlanTags(newPlan.id, tagIds);
-      }
-      log('created', 'plan', newPlan.id, title);
-      setSelectedPlanId(newPlan.id);
-      setIsCreatePlanModalOpen(false);
-    } catch (error) {
-      throw error;
+    const newPlan = await createPlan(
+      activeWorkspace.id,
+      title,
+      description,
+      intent,
+      isDraft ? 'draft' : 'active',
+      dueDate
+    );
+    if (useSuggestedStages) {
+      await createSuggestedStages(newPlan.id);
+    } else if (customStages && customStages.length > 0) {
+      await createCustomStages(newPlan.id, customStages);
     }
+    if (tagIds && tagIds.length > 0) {
+      await setPlanTags(newPlan.id, tagIds);
+    }
+    log('created', 'plan', newPlan.id, title);
+    setSelectedPlanId(newPlan.id);
+    setIsCreatePlanModalOpen(false);
   };
 
   return (

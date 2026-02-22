@@ -10,6 +10,7 @@
  */
 
 import type { TaskWithContext } from '../lib/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './TaskReadOnlyModal.css';
 
 interface TaskReadOnlyModalProps {
@@ -19,6 +20,8 @@ interface TaskReadOnlyModalProps {
 }
 
 export function TaskReadOnlyModal({ isOpen, task, onClose }: TaskReadOnlyModalProps) {
+  useEscapeKey(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const checklistItems = task.checklists || [];

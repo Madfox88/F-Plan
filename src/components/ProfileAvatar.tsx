@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './ProfileAvatar.css';
 import { useAvatar } from '../context/AvatarContext';
@@ -16,17 +16,21 @@ export function ProfileAvatar({ onProfileClick, onSignOut }: ProfileAvatarProps)
   const menuRef = useRef<HTMLDivElement>(null);
   const { avatarUrl } = useAvatar();
 
-  const menuPosition = useMemo(() => {
-    if (!isMenuOpen || !avatarRef.current) {
-      return null;
-    }
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- computing layout position from DOM */
+  useEffect(() => {
+    if (!isMenuOpen || !avatarRef.current) {
+      setMenuPosition(null);
+      return;
+    }
     const rect = avatarRef.current.getBoundingClientRect();
-    return {
+    setMenuPosition({
       top: rect.bottom + 6,
       right: window.innerWidth - rect.right,
-    };
+    });
   }, [isMenuOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -101,20 +105,24 @@ export function ProfileAvatar({ onProfileClick, onSignOut }: ProfileAvatarProps)
             <div
               className="profile-menu-item"
               role="button"
+              tabIndex={0}
               onClick={() => {
                 onProfileClick();
                 setIsMenuOpen(false);
               }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onProfileClick(); setIsMenuOpen(false); } }}
             >
               Profile
             </div>
             <div
               className="profile-menu-item"
               role="button"
+              tabIndex={0}
               onClick={() => {
                 setIsMenuOpen(false);
                 onSignOut();
               }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsMenuOpen(false); onSignOut(); } }}
             >
               Sign out
             </div>

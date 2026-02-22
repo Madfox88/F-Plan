@@ -1,4 +1,5 @@
 import type { Reminder } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface ReminderReadOnlyModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ function fmtDateTime(iso: string): string {
 }
 
 export function ReminderReadOnlyModal({ isOpen, reminder, onClose }: ReminderReadOnlyModalProps) {
+  useEscapeKey(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (

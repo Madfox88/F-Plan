@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './RenamePlanModal.css';
 
 interface RenamePlanModalProps {
@@ -55,6 +56,8 @@ export const RenamePlanModal: React.FC<RenamePlanModalProps> = ({
       setIsLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

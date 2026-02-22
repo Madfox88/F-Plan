@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getActivePlans, getTagsByWorkspace } from '../lib/database';
 import { TagPicker } from './TagPicker';
 import type { Plan, Tag } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './CreateGoalModal.css';
 
 interface CreateGoalModalProps {
@@ -84,6 +85,8 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
       setIsLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

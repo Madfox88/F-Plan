@@ -146,7 +146,7 @@ export function Profile() {
         getGoalsByWorkspace(wsId).catch(() => []),
         getEvents(wsId, farPast, farFuture).catch(() => []),
         getReminders(wsId, farPast, farFuture).catch(() => []),
-        getFocusSessionLog(userId, wsId, 10000, 0).catch(() => []),
+        getFocusSessionLog(userId, wsId, 1000, 0).catch(() => []),
       ]);
 
       // Fetch stages + tasks per plan

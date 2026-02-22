@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './AvatarCropperModal.css';
 
 interface AvatarCropperModalProps {
@@ -41,9 +42,11 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
     };
   };
 
+  /* eslint-disable react-hooks/exhaustive-deps -- derived state recalc on zoom/size change */
   useEffect(() => {
     setPosition((prev) => clampPosition(prev));
   }, [zoom, imageSize]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   useEffect(() => {
     setZoom(1);
@@ -74,6 +77,7 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clampPosition is stable (depends only on state/memo)
   }, [displayScale, imageSize]);
 
   const handlePointerDown = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -108,6 +112,8 @@ export function AvatarCropperModal({ isOpen, imageSrc, onClose, onConfirm }: Ava
       if (blob) onConfirm(blob);
     }, 'image/jpeg', 0.9);
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

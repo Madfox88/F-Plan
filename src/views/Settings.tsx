@@ -32,6 +32,7 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
 
   // ── Members state ─────────────────────────────────
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -486,21 +487,25 @@ export function Settings() {
                 </button>
               ) : (
                 <div className="settings-delete-confirm">
-                  <p>Are you sure? Type the workspace name to confirm:</p>
+                  <p>Are you sure? Type <strong>{activeWorkspace.name}</strong> to confirm:</p>
                   <input
                     className="settings-input"
                     placeholder={activeWorkspace.name}
-                    onChange={(e) => {
-                      if (e.target.value === activeWorkspace.name) {
-                        handleDelete();
-                      }
-                    }}
+                    value={deleteConfirmInput}
+                    onChange={(e) => setDeleteConfirmInput(e.target.value)}
                     autoFocus
                   />
                   <div className="settings-edit-actions" style={{ marginTop: 'var(--space-sm)' }}>
                     <button
+                      className="settings-button danger"
+                      onClick={handleDelete}
+                      disabled={deleteConfirmInput !== activeWorkspace.name}
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
                       className="settings-button secondary"
-                      onClick={() => setShowDeleteConfirm(false)}
+                      onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmInput(''); }}
                     >
                       Cancel
                     </button>

@@ -1,4 +1,5 @@
 import type { CalendarEvent } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface EventReadOnlyModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ function fmtDateTime(iso: string): string {
 }
 
 export function EventReadOnlyModal({ isOpen, event, onClose }: EventReadOnlyModalProps) {
+  useEscapeKey(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (

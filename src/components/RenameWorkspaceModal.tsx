@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './RenameWorkspaceModal.css';
 
 interface RenameWorkspaceModalProps {
@@ -53,6 +54,8 @@ export const RenameWorkspaceModal: React.FC<RenameWorkspaceModalProps> = ({
       setIsLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen || !workspace) return null;
 

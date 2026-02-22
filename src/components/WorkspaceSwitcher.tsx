@@ -26,6 +26,7 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
   const isAdmin = myRole === 'owner' || myRole === 'admin';
   const [isOpen, setIsOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [workspaceRoles, setWorkspaceRoles] = useState<Record<string, WorkspaceMemberRole>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -74,12 +75,17 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
     };
   }, []);
 
-  const handleDeleteWorkspace = async (workspaceId: string, e: React.MouseEvent) => {
+  const handleDeleteClick = (workspaceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setDeleteError(null);
+    setConfirmDeleteId((prev) => (prev === workspaceId ? null : workspaceId));
+  };
 
+  const handleConfirmDelete = async (workspaceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       await deleteWorkspace(workspaceId);
+      setConfirmDeleteId(null);
       setIsOpen(false);
     } catch (error) {
       setDeleteError(error instanceof Error ? error.message : 'Failed to delete workspace');
@@ -152,14 +158,26 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     >
                       <img src={PenSquareIcon} alt="" />
                     </button>
-                    <button
-                      className="action-button delete-button"
-                      onClick={(e) => handleDeleteWorkspace(workspace.id, e)}
-                      title="Delete"
-                      aria-label="Delete workspace"
-                    >
-                      <img src={TrashIcon} alt="" />
-                    </button>
+                    {confirmDeleteId === workspace.id ? (
+                      <button
+                        className="action-button delete-button confirm"
+                        onClick={(e) => handleConfirmDelete(workspace.id, e)}
+                        title="Click again to confirm delete"
+                        aria-label="Confirm delete workspace"
+                        style={{ color: 'var(--color-danger)', fontWeight: 600, fontSize: '0.7rem' }}
+                      >
+                        Confirm?
+                      </button>
+                    ) : (
+                      <button
+                        className="action-button delete-button"
+                        onClick={(e) => handleDeleteClick(workspace.id, e)}
+                        title="Delete"
+                        aria-label="Delete workspace"
+                      >
+                        <img src={TrashIcon} alt="" />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

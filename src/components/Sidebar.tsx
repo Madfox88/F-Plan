@@ -42,7 +42,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onSettingsClick: _unused, onLogoutClick, isOpen, onClose }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onPlanSelect, refreshKey, onLogoutClick, isOpen, onClose }: SidebarProps) {
   const { activeWorkspace } = useWorkspace();
   const [pinnedPlans, setPinnedPlans] = useState<Plan[]>([]);
 

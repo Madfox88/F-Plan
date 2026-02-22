@@ -36,7 +36,7 @@ export function useActivityLog() {
         metadata,
       });
     },
-    [activeWorkspace?.id, userId]
+    [activeWorkspace, userId]
   );
 
   return log;

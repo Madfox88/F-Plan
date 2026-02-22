@@ -11,6 +11,7 @@
 
 import calendarIcon from '../assets/icons/calendar.svg';
 import reminderIcon from '../assets/icons/reminder.svg';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './CalendarChooserModal.css';
 
 interface CalendarChooserModalProps {
@@ -20,6 +21,8 @@ interface CalendarChooserModalProps {
 }
 
 export function CalendarChooserModal({ isOpen, onClose, onSelect }: CalendarChooserModalProps) {
+  useEscapeKey(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (

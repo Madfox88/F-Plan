@@ -15,6 +15,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import type { Plan, Goal, FocusSession } from '../types/database';
 import {
   startFocusSession,
@@ -171,6 +172,8 @@ export function FocusSessionModal({
     setError(null);
     onClose();
   };
+
+  useEscapeKey(isOpen, handleClose);
 
   if (!isOpen) return null;
 

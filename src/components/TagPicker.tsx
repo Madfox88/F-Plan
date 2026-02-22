@@ -95,10 +95,10 @@ export const TagPicker: React.FC<TagPickerProps> = ({
       {/* Selected tags display + trigger */}
       <div
         className={`tag-picker-trigger${isOpen ? ' open' : ''}${disabled ? ' disabled' : ''}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={() => { if (!disabled) setIsOpen(!isOpen); }}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); !disabled && setIsOpen(!isOpen); } }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!disabled) setIsOpen(!isOpen); } }}
       >
         {selectedTags.length > 0 ? (
           <div className="tag-picker-chips">

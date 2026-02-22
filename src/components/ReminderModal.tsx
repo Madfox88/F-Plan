@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Reminder, RepeatRule } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 const REPEAT_OPTIONS: { value: RepeatRule; label: string }[] = [
   { value: 'none', label: 'None' },
@@ -84,6 +85,8 @@ export function ReminderModal({ isOpen, reminder, defaultAt, onClose, onSave, on
       setLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

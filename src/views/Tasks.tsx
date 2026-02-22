@@ -176,7 +176,12 @@ export function Tasks() {
 
         const mappedStages: Record<string, Stage[]> = {};
         stagesPerPlan.forEach(({ plan, stages }) => {
-          mappedStages[plan.id] = stages.map(({ tasks: _tasks, ...stage }) => stage as Stage);
+          // Strip nested tasks from stage objects (we already mapped them above)
+          mappedStages[plan.id] = stages.map((s) => {
+            const { tasks: _t, ...stage } = s;
+            void _t;
+            return stage as Stage;
+          });
         });
         setStagesByPlan(mappedStages);
       } catch (err) {
@@ -202,15 +207,6 @@ export function Tasks() {
     const nextCompleted = !task.completed;
     const nextStatus = nextCompleted ? 'completed' : 'not_started';
 
-    // Ring animation + toast when completing
-    if (nextCompleted) {
-      setCompletingId(taskId);
-      showToast(`"${task.title}" completed!`);
-      log('completed', 'task', taskId, task.title, { plan: task.planTitle });
-    } else {
-      log('reopened', 'task', taskId, task.title, { plan: task.planTitle });
-    }
-
     setUpdatingId(taskId);
     try {
       // Persist checklist items as all-completed (or restore) to DB
@@ -221,9 +217,14 @@ export function Tasks() {
       await setTaskCompleted(taskId, nextCompleted);
       await updateTask(taskId, { status: nextStatus, checklists: updatedChecklists });
 
+      // DB succeeded — now show animation + toast
       if (nextCompleted) {
-        // Wait for slide-out animation, then update state
+        setCompletingId(taskId);
+        showToast(`"${task.title}" completed!`);
+        log('completed', 'task', taskId, task.title, { plan: task.planTitle });
         await new Promise((resolve) => setTimeout(resolve, 800));
+      } else {
+        log('reopened', 'task', taskId, task.title, { plan: task.planTitle });
       }
 
       setTasks((prev) =>
@@ -406,7 +407,7 @@ export function Tasks() {
         setError(err instanceof Error ? err.message : 'Failed to create task');
       }
     },
-    [plans, stageOptions, stagesByPlan, currentUserId, inboxPlanId]
+    [plans, stageOptions, stagesByPlan, currentUserId, inboxPlanId, log]
   );
 
   const groupedTasks: GroupBucket[] = useMemo(() => {
@@ -768,7 +769,7 @@ export function Tasks() {
                               <select
                                 className="filter-select"
                                 value={editPriority}
-                                onChange={(e) => setEditPriority(e.target.value as PriorityFilter as any)}
+                                onChange={(e) => setEditPriority(e.target.value as 'urgent' | 'important' | 'medium' | 'low')}
                               >
                                 <option value="urgent">Urgent</option>
                                 <option value="important">Important</option>

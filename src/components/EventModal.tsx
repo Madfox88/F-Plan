@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { CalendarEvent, RepeatRule } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 const REPEAT_OPTIONS: { value: RepeatRule; label: string }[] = [
   { value: 'none', label: 'None' },
@@ -96,6 +97,8 @@ export function EventModal({ isOpen, event, defaultStart, onClose, onSave, onDel
       setLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

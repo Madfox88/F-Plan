@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './CreateWorkspaceModal.css';
 
 interface CreateWorkspaceModalProps {
@@ -40,6 +41,8 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({ isOp
       setIsLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

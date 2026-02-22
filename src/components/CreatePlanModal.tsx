@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTagsByWorkspace } from '../lib/database';
 import { TagPicker } from './TagPicker';
 import type { Tag } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './CreatePlanModal.css';
 
 interface CreatePlanModalProps {
@@ -109,6 +110,8 @@ export function CreatePlanModal({ isOpen, onClose, workspaceId, onSubmit }: Crea
       setLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

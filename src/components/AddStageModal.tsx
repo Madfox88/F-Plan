@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './AddStageModal.css';
 
 interface AddStageModalProps {
@@ -16,6 +17,7 @@ export const AddStageModal: React.FC<AddStageModalProps> = ({
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- resetting form state on open is idiomatic */
   useEffect(() => {
     if (isOpen) {
       setName('');
@@ -23,6 +25,7 @@ export const AddStageModal: React.FC<AddStageModalProps> = ({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +37,8 @@ export const AddStageModal: React.FC<AddStageModalProps> = ({
     onSubmit(trimmed);
     onClose();
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

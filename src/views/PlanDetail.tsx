@@ -204,7 +204,8 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
     return stages;
   }, [stages, groupingMode, planId]);
 
-  const handleRenamePlan = (_planId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleRenamePlan = (_id: string) => {
     setRenameModalOpen(true);
   };
 

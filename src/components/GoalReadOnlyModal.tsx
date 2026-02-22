@@ -10,6 +10,7 @@
 
 import type { GoalForCalendar } from '../lib/database';
 import type { GoalTag } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './GoalReadOnlyModal.css';
 
 interface GoalReadOnlyModalProps {
@@ -19,6 +20,8 @@ interface GoalReadOnlyModalProps {
 }
 
 export function GoalReadOnlyModal({ isOpen, goal, onClose }: GoalReadOnlyModalProps) {
+  useEscapeKey(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const tags = (goal.tags || []) as GoalTag[];

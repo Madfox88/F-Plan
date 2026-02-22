@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [lastEvent, setLastEvent] = useState<string | null>(null);
 
   /* On mount: resolve existing session + subscribe to changes */
+  /* eslint-disable react-hooks/set-state-in-effect -- initializing loading state based on config */
   useEffect(() => {
     if (!supabaseConfigured) {
       setLoading(false);
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   /* ── Actions ─────────────────────────────────── */
 
@@ -139,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 /* ── Hook ──────────────────────────────────────── */
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (ctx === undefined) {

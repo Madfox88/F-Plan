@@ -9,6 +9,7 @@ import PriorityUrgentIcon from '../assets/icons/priority-urgent.svg';
 import PriorityImportantIcon from '../assets/icons/priority-important.svg';
 import PriorityMediumIcon from '../assets/icons/priority-medium.svg';
 import PriorityLowIcon from '../assets/icons/priority-low.svg';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './TaskCreateModal.css';
 
 export type TaskCreatePayload = {
@@ -47,6 +48,7 @@ interface TaskCreateModalProps {
   onSubmit: (payload: TaskCreatePayload, existingTaskId?: string) => Promise<void>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, defaultStageId, hideStageSelector, planOptions, inboxStageId, editingTask, currentUserId, onClose, onSubmit }: TaskCreateModalProps) {
   const [title, setTitle] = useState('');
   const [stageId, setStageId] = useState('');
@@ -111,7 +113,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
       setDescription(editingTask.description || '');
       setAssignedTo(editingTask.assigned_to || currentUserId || '');
 
-      const checklistItems: ChecklistItem[] = (editingTask.checklists || []).map((item: any, index: number) => {
+      const checklistItems: ChecklistItem[] = (editingTask.checklists || []).map((item: ChecklistItem | string, index: number) => {
         if (typeof item === 'string') {
           return { id: `${index}-${Date.now()}`, text: item, completed: false };
         }
@@ -130,6 +132,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
     } else {
       resetForm();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- resetForm/currentUserId are stable; including them would cause TDZ error
   }, [isOpen, editingTask, defaultStageId, stages]);
 
   useEffect(() => {
@@ -261,6 +264,8 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
       setLoading(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

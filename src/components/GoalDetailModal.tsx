@@ -4,6 +4,7 @@ import type { LinkedPlanWithProgress } from '../lib/database';
 import type { GoalWithProgress } from '../lib/database';
 import { LinkPlanModal } from './LinkPlanModal';
 import { ActivityFeed } from './ActivityFeed';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './GoalDetailModal.css';
 
 interface GoalDetailModalProps {
@@ -66,6 +67,8 @@ export const GoalDetailModal: React.FC<GoalDetailModalProps> = ({
     loadLinkedPlans();
     onLinksChanged();
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

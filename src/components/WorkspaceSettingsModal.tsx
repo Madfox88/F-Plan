@@ -13,6 +13,7 @@ import {
 } from '../lib/database';
 import type { WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, User } from '../types/database';
 import TrashIcon from '../assets/icons/trash.svg';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './WorkspaceSettingsModal.css';
 
 type MemberRow = WorkspaceMember & { user: User };
@@ -226,6 +227,8 @@ export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
       setTransferring(false);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen || !activeWorkspace) return null;
 

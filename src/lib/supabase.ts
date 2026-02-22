@@ -9,6 +9,7 @@ const missingEnvError = new Error(
 
 const createOfflineQueryBuilder = () => {
   const result = { data: [] as unknown[], error: missingEnvError };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- offline mock must match Supabase's dynamic query builder shape
   const builder: any = {
     select: () => builder,
     insert: () => builder,
@@ -27,6 +28,7 @@ const createOfflineQueryBuilder = () => {
 
 const createOfflineStorage = () => ({
   list: async () => ({ data: [] as unknown[], error: missingEnvError }),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getPublicUrl: (_path: string) => ({ data: { publicUrl: '' }, error: missingEnvError }),
 });
 

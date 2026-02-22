@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getGoalsByWorkspace, getLinkedGoalIdsForPlan, linkGoalToPlan, unlinkGoalFromPlan } from '../lib/database';
 import type { Goal } from '../types/database';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import './LinkGoalFromPlanModal.css';
 
 interface LinkGoalFromPlanModalProps {
@@ -69,6 +70,8 @@ export const LinkGoalFromPlanModal: React.FC<LinkGoalFromPlanModalProps> = ({
       setUpdatingId(null);
     }
   };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

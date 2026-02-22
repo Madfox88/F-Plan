@@ -76,19 +76,20 @@ export function GoalsIndex() {
   };
 
   const handleCompleteGoal = async (goalId: string) => {
+    const goal = goals.find((g) => g.id === goalId);
     try {
-      const goal = goals.find((g) => g.id === goalId);
+      setError(null);
+      // Persist to DB first — animation is only cosmetic
+      await completeGoal(goalId);
+      log('completed', 'goal', goalId, goal?.title || '');
+      // Now show animation + toast (DB already succeeded)
       setCompletingId(goalId);
       showToast(`"${goal?.title || 'Goal'}" completed!`);
-      // Wait for ring + slide animation
-      setTimeout(async () => {
-        await completeGoal(goalId);
-        log('completed', 'goal', goalId, goal?.title || '');
-        await loadGoals();
-        setCompletingId(null);
-      }, 800);
+      await new Promise((r) => setTimeout(r, 800));
+      await loadGoals();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete goal');
+    } finally {
       setCompletingId(null);
     }
   };
@@ -148,7 +149,7 @@ export function GoalsIndex() {
   const toggleTagFilter = (label: string) => {
     setSelectedTags((prev) => {
       const next = new Set(prev);
-      next.has(label) ? next.delete(label) : next.add(label);
+      if (next.has(label)) { next.delete(label); } else { next.add(label); }
       return next;
     });
   };
