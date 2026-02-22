@@ -1,4 +1,4 @@
-import { ActivityFeed } from '../components/ActivityFeed';
+import { ActivityFeed } from '../components/activity/ActivityFeed';
 import './Activity.css';
 
 export function Activity() {

@@ -17,8 +17,8 @@ import {
   getTotalFocusMinutes,
   computeFocusStreak,
   computeAverageDailyFocus,
-} from '../lib/database';
-import type { FocusSessionLogEntry } from '../lib/database';
+} from '../lib/db';
+import type { FocusSessionLogEntry } from '../lib/db';
 import './FocusLog.css';
 
 /* ── Helpers ── */

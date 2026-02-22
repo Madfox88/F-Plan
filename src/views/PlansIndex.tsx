@@ -1,17 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Plan, Tag } from '../types/database';
-import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan, getTagsForPlans } from '../lib/database';
+import { getActivePlansWithMetadata, getPlansWithMetadataByStatus, togglePlanPin, deletePlan, renamePlan, archivePlan, updatePlan, getTagsForPlans } from '../lib/db';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useActivityLog } from '../hooks/useActivityLog';
-import { PlanCardMenu } from '../components/PlanCardMenu';
-import { LinkGoalFromPlanModal } from '../components/LinkGoalFromPlanModal';
-import { RenamePlanModal } from '../components/RenamePlanModal';
+import { PlanCardMenu } from '../components/plan/PlanCardMenu';
+import { LinkGoalFromPlanModal } from '../components/modals/LinkGoalFromPlanModal';
+import { RenamePlanModal } from '../components/plan/RenamePlanModal';
 import ListViewIcon from '../assets/icons/list-view.svg';
 import GridViewIcon from '../assets/icons/grid.svg';
 import SearchIcon from '../assets/icons/search.svg';
 import PinIcon from '../assets/icons/pin.svg';
 import PinFilledIcon from '../assets/icons/pin-filled.svg';
-import '../components/CompletionAnimation.css';
+import '../components/ui/CompletionAnimation.css';
 import './PlansIndex.css';
 
 interface PlansIndexProps {

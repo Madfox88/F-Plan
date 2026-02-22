@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useWorkspace } from '../context/WorkspaceContext';
-import { useCurrentUser } from '../context/UserContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { useCurrentUser } from '../../context/UserContext';
 import {
   getWorkspaceMembers,
   removeWorkspaceMember,
@@ -10,31 +10,35 @@ import {
   revokeWorkspaceInvitation,
   sendInvitationEmail,
   transferWorkspaceOwnership,
-} from '../lib/db';
-import { TagManager } from '../components/tasks/TagManager';
-import type { WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, User } from '../types/database';
-import TrashIcon from '../assets/icons/trash.svg';
-import './Settings.css';
-import '../components/workspace/WorkspaceSettingsModal.css';
+} from '../../lib/db';
+import type { WorkspaceMember, WorkspaceMemberRole, WorkspaceInvitation, User } from '../../types/database';
+import TrashIcon from '../../assets/icons/trash.svg';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
+import './WorkspaceSettingsModal.css';
 
 type MemberRow = WorkspaceMember & { user: User };
 
-type SubTab = 'workspace' | 'tags';
+interface WorkspaceSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-export function Settings() {
+export const WorkspaceSettingsModal: React.FC<WorkspaceSettingsModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const { activeWorkspace, myRole, renameWorkspace, deleteWorkspace, workspaces, refreshMyRole } = useWorkspace();
   const { userId, displayName } = useCurrentUser();
 
-  const [subTab, setSubTab] = useState<SubTab>('workspace');
+  const [tab, setTab] = useState<'general' | 'members'>('general');
 
-  // ── General state ─────────────────────────────────
+  // ── General tab state ─────────────────────────────
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
 
-  // ── Members state ─────────────────────────────────
+  // ── Members tab state ─────────────────────────────
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
 
@@ -54,16 +58,17 @@ export function Settings() {
   const isAdmin = myRole === 'owner' || myRole === 'admin';
   const isOwner = myRole === 'owner';
 
-  // Reset state when workspace changes
+  // Reset state on open
   useEffect(() => {
-    if (activeWorkspace) {
+    if (isOpen && activeWorkspace) {
       setName(activeWorkspace.name);
       setMessage(null);
       setShowDeleteConfirm(false);
+      setTab('general');
     }
-  }, [activeWorkspace]);
+  }, [isOpen, activeWorkspace]);
 
-  // Load members
+  // Load members + invitations when switching to members tab
   const loadMembers = useCallback(async () => {
     if (!activeWorkspace) return;
     setMembersLoading(true);
@@ -82,10 +87,10 @@ export function Settings() {
   }, [activeWorkspace]);
 
   useEffect(() => {
-    if (subTab === 'workspace') {
+    if (tab === 'members' && isOpen) {
       loadMembers();
     }
-  }, [subTab, loadMembers]);
+  }, [tab, isOpen, loadMembers]);
 
   // ── General handlers ──────────────────────────────
   const handleRename = async () => {
@@ -107,6 +112,7 @@ export function Settings() {
     setSaving(true);
     try {
       await deleteWorkspace(activeWorkspace.id);
+      onClose();
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Delete failed' });
       setSaving(false);
@@ -141,6 +147,7 @@ export function Settings() {
     e.preventDefault();
     if (!activeWorkspace || !userId || !inviteEmail.trim()) return;
 
+    // Check if email is already a member
     const alreadyMember = members.some(
       (m) => m.user.email.toLowerCase() === inviteEmail.trim().toLowerCase()
     );
@@ -157,6 +164,7 @@ export function Settings() {
         inviteRole,
         userId
       );
+      // Fire-and-forget email — don't block on it
       const emailSent = await sendInvitationEmail(
         inv.email,
         activeWorkspace.name,
@@ -196,6 +204,7 @@ export function Settings() {
       setCopiedInviteId(inviteId);
       setTimeout(() => setCopiedInviteId(null), 2000);
     } catch {
+      // Fallback for non-HTTPS / old browsers
       window.prompt('Copy this invite link:', link);
     }
   };
@@ -206,6 +215,7 @@ export function Settings() {
     setTransferring(true);
     try {
       await transferWorkspaceOwnership(activeWorkspace.id, newOwnerId);
+      // Refresh members to reflect the role swap
       await loadMembers();
       await refreshMyRole();
       setTransferTarget(null);
@@ -218,40 +228,49 @@ export function Settings() {
     }
   };
 
-  if (!activeWorkspace) return null;
+  useEscapeKey(isOpen, onClose);
+
+  if (!isOpen || !activeWorkspace) return null;
 
   return (
-    <div className="settings-page">
-      {/* Sub-tab navigation */}
-      <div className="settings-tab-bar">
-        <button
-          className={`settings-tab-btn${subTab === 'workspace' ? ' active' : ''}`}
-          onClick={() => setSubTab('workspace')}
-        >
-          Workspace
-        </button>
-        <button
-          className={`settings-tab-btn${subTab === 'tags' ? ' active' : ''}`}
-          onClick={() => setSubTab('tags')}
-        >
-          Tags
-        </button>
-      </div>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal-content ws-settings-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="modal-header">
+          <h2>Workspace Settings</h2>
+          <button className="close-button" onClick={onClose} aria-label="Close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M18 6L6 18M6 6L18 18" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
 
-      {/* ═══ Workspace sub-tab ═══ */}
-      {subTab === 'workspace' && (
-        <div className="settings-workspace-tab">
-          {/* Message banner */}
-          {message && (
-            <div className={`settings-message settings-message-${message.type}`}>
-              {message.text}
-            </div>
-          )}
+        {/* Tab bar */}
+        <div className="ws-settings-tabs">
+          <button
+            className={`ws-settings-tab ${tab === 'general' ? 'active' : ''}`}
+            onClick={() => setTab('general')}
+          >
+            General
+          </button>
+          <button
+            className={`ws-settings-tab ${tab === 'members' ? 'active' : ''}`}
+            onClick={() => setTab('members')}
+          >
+            Members
+          </button>
+        </div>
 
-          {/* General settings card */}
-          <div className="settings-card">
-            <h3 className="settings-section-title">General</h3>
+        {/* Message banner */}
+        {message && (
+          <div className={`settings-message settings-message-${message.type}`}>
+            {message.text}
+          </div>
+        )}
 
+        {/* ═══ General Tab ═══ */}
+        {tab === 'general' && (
+          <div className="ws-settings-body">
             {/* Workspace name */}
             <div className="settings-field">
               <label className="settings-label">Workspace Name</label>
@@ -298,12 +317,59 @@ export function Settings() {
                 <span className="settings-value ws-role-badge">{myRole ?? 'member'}</span>
               </div>
             </div>
+
+            {/* Danger zone — delete */}
+            {isOwner && (
+              <div className="settings-field settings-field-danger">
+                <label className="settings-label">Danger Zone</label>
+                <p className="settings-description">
+                  Deleting a workspace permanently removes all its plans, tasks, stages, events,
+                  and goals. This cannot be undone.
+                </p>
+                {!showDeleteConfirm ? (
+                  <button
+                    className="settings-button danger"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={workspaces.length <= 1}
+                  >
+                    Delete Workspace
+                  </button>
+                ) : (
+                  <div className="settings-delete-confirm">
+                    <p>Are you sure? Type the workspace name to confirm:</p>
+                    <input
+                      className="settings-input"
+                      placeholder={activeWorkspace.name}
+                      onChange={(e) => {
+                        if (e.target.value === activeWorkspace.name) {
+                          handleDelete();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <div className="settings-edit-actions" style={{ marginTop: 'var(--space-sm)' }}>
+                      <button
+                        className="settings-button secondary"
+                        onClick={() => setShowDeleteConfirm(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {workspaces.length <= 1 && (
+                  <p className="settings-description" style={{ marginTop: 'var(--space-xs)' }}>
+                    You cannot delete your last workspace.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+        )}
 
-          {/* Members card */}
-          <div className="settings-card">
-            <h3 className="settings-section-title">Members</h3>
-
+        {/* ═══ Members Tab ═══ */}
+        {tab === 'members' && (
+          <div className="ws-settings-body">
             {/* Invite form — admin/owner only */}
             {isAdmin && (
               <form className="ws-invite-form" onSubmit={handleSendInvite}>
@@ -401,167 +467,123 @@ export function Settings() {
                 <label className="settings-label">Members ({members.length})</label>
                 <div className="ws-members-list">
                   {members.map((member) => {
-                    const isSelf = member.user_id === userId;
-                    const isMemberOwner = member.role === 'owner';
-                    return (
-                      <div key={member.user_id} className="ws-member-row">
-                        <div className="ws-member-info">
-                          <div className="ws-member-avatar">
-                            {member.user.avatar_url ? (
-                              <img src={member.user.avatar_url} alt="" />
-                            ) : (
-                              <span>{member.user.display_name.charAt(0).toUpperCase()}</span>
-                            )}
-                          </div>
-                          <div className="ws-member-text">
-                            <span className="ws-member-name">
-                              {member.user.display_name}
-                              {isSelf && <span className="ws-member-you">(you)</span>}
-                            </span>
-                            <span className="ws-member-email">{member.user.email}</span>
-                          </div>
-                        </div>
-                        <div className="ws-member-actions">
-                          {isOwner && !isMemberOwner && !isSelf ? (
-                            <select
-                              className="ws-role-select"
-                              value={member.role}
-                              onChange={(e) =>
-                                handleRoleChange(member.user_id, e.target.value as WorkspaceMemberRole)
-                              }
-                            >
-                              <option value="admin">Admin</option>
-                              <option value="member">Member</option>
-                            </select>
+                  const isSelf = member.user_id === userId;
+                  const isMemberOwner = member.role === 'owner';
+
+                  return (
+                    <div key={member.user_id} className="ws-member-row">
+                      {/* Avatar + info */}
+                      <div className="ws-member-info">
+                        <div className="ws-member-avatar">
+                          {member.user.avatar_url ? (
+                            <img src={member.user.avatar_url} alt="" />
                           ) : (
-                            <span className={`ws-role-badge ws-role-${member.role}`}>
-                              {member.role}
-                            </span>
+                            <span>{member.user.display_name.charAt(0).toUpperCase()}</span>
                           )}
-                          {!isMemberOwner && !isSelf && (
-                            isOwner || (isAdmin && member.role === 'member')
-                          ) && (
-                            <button
-                              className="ws-member-remove"
-                              onClick={() => handleRemoveMember(member.user_id)}
-                              title="Remove member"
-                            >
-                              <img src={TrashIcon} alt="Remove" />
-                            </button>
-                          )}
-                          {isOwner && !isMemberOwner && !isSelf && (
-                            <button
-                              className="ws-transfer-btn"
-                              onClick={() => setTransferTarget(member.user_id)}
-                              title="Transfer ownership"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M4 12h16M13 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          )}
+                        </div>
+                        <div className="ws-member-text">
+                          <span className="ws-member-name">
+                            {member.user.display_name}
+                            {isSelf && <span className="ws-member-you">(you)</span>}
+                          </span>
+                          <span className="ws-member-email">{member.user.email}</span>
                         </div>
                       </div>
-                    );
-                  })}
+
+                      {/* Role badge / dropdown */}
+                      <div className="ws-member-actions">
+                        {/* Owner can promote/demote any non-owner, non-self member */}
+                        {isOwner && !isMemberOwner && !isSelf ? (
+                          <select
+                            className="ws-role-select"
+                            value={member.role}
+                            onChange={(e) =>
+                              handleRoleChange(member.user_id, e.target.value as WorkspaceMemberRole)
+                            }
+                          >
+                            <option value="admin">Admin</option>
+                            <option value="member">Member</option>
+                          </select>
+                        ) : (
+                          <span className={`ws-role-badge ws-role-${member.role}`}>
+                            {member.role}
+                          </span>
+                        )}
+
+                        {/* Remove button — owner can remove anyone except self;
+                            admin can only remove regular members */}
+                        {!isMemberOwner && !isSelf && (
+                          isOwner || (isAdmin && member.role === 'member')
+                        ) && (
+                          <button
+                            className="ws-member-remove"
+                            onClick={() => handleRemoveMember(member.user_id)}
+                            title="Remove member"
+                          >
+                            <img src={TrashIcon} alt="Remove" />
+                          </button>
+                        )}
+
+                        {/* Transfer ownership — owner only, to non-owners */}
+                        {isOwner && !isMemberOwner && !isSelf && (
+                          <button
+                            className="ws-transfer-btn"
+                            onClick={() => setTransferTarget(member.user_id)}
+                            title="Transfer ownership"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 12h16M13 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
                 </div>
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          {/* Danger zone card */}
-          {isOwner && (
-            <div className="settings-card settings-card-danger">
-              <h3 className="settings-section-title">Danger Zone</h3>
-              <p className="settings-description">
-                Deleting a workspace permanently removes all its plans, tasks, stages, events,
-                and goals. This cannot be undone.
+      {/* ── Transfer ownership confirmation overlay ── */}
+      {transferTarget && (() => {
+        const target = members.find((m) => m.user_id === transferTarget);
+        if (!target) return null;
+        return (
+          <div className="ws-transfer-overlay">
+            <div className="ws-transfer-dialog">
+              <h3 className="ws-transfer-title">Transfer ownership</h3>
+              <p className="ws-transfer-desc">
+                Are you sure you want to transfer ownership of{' '}
+                <strong>{activeWorkspace?.name}</strong> to{' '}
+                <strong>{target.user.display_name}</strong>?
               </p>
-              {!showDeleteConfirm ? (
+              <p className="ws-transfer-warn">
+                You will be downgraded to <em>admin</em>. This action cannot be undone
+                without the new owner's consent.
+              </p>
+              <div className="ws-transfer-actions">
                 <button
-                  className="settings-button danger"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={workspaces.length <= 1}
+                  className="btn btn-ghost"
+                  onClick={() => setTransferTarget(null)}
+                  disabled={transferring}
                 >
-                  Delete Workspace
+                  Cancel
                 </button>
-              ) : (
-                <div className="settings-delete-confirm">
-                  <p>Are you sure? Type <strong>{activeWorkspace.name}</strong> to confirm:</p>
-                  <input
-                    className="settings-input"
-                    placeholder={activeWorkspace.name}
-                    value={deleteConfirmInput}
-                    onChange={(e) => setDeleteConfirmInput(e.target.value)}
-                    autoFocus
-                  />
-                  <div className="settings-edit-actions" style={{ marginTop: 'var(--space-sm)' }}>
-                    <button
-                      className="settings-button danger"
-                      onClick={handleDelete}
-                      disabled={deleteConfirmInput !== activeWorkspace.name}
-                    >
-                      Confirm Delete
-                    </button>
-                    <button
-                      className="settings-button secondary"
-                      onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmInput(''); }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-              {workspaces.length <= 1 && (
-                <p className="settings-description" style={{ marginTop: 'var(--space-xs)' }}>
-                  You cannot delete your last workspace.
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Transfer ownership overlay */}
-          {transferTarget && (() => {
-            const target = members.find((m) => m.user_id === transferTarget);
-            if (!target) return null;
-            return (
-              <div className="settings-transfer-overlay">
-                <div className="settings-transfer-dialog">
-                  <h3 className="ws-transfer-title">Transfer ownership</h3>
-                  <p className="ws-transfer-desc">
-                    Are you sure you want to transfer ownership of{' '}
-                    <strong>{activeWorkspace?.name}</strong> to{' '}
-                    <strong>{target.user.display_name}</strong>?
-                  </p>
-                  <p className="ws-transfer-warn">
-                    You will be downgraded to <em>admin</em>. This action cannot be undone
-                    without the new owner's consent.
-                  </p>
-                  <div className="ws-transfer-actions">
-                    <button
-                      className="btn btn-ghost"
-                      onClick={() => setTransferTarget(null)}
-                      disabled={transferring}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleTransferOwnership(transferTarget)}
-                      disabled={transferring}
-                    >
-                      {transferring ? 'Transferring…' : 'Transfer ownership'}
-                    </button>
-                  </div>
-                </div>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleTransferOwnership(transferTarget)}
+                  disabled={transferring}
+                >
+                  {transferring ? 'Transferring…' : 'Transfer ownership'}
+                </button>
               </div>
-            );
-          })()}
-        </div>
-      )}
-
-      {/* ═══ Tags sub-tab ═══ */}
-      {subTab === 'tags' && <TagManager />}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
-}
+};

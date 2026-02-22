@@ -1,0 +1,70 @@
+# F-Plan — Project Conventions
+
+## File Placement Rules
+
+### Components (`src/components/`)
+| Folder | Purpose |
+|--------|---------|
+| `layout/` | App shells, navigation, page chrome (Header, Sidebar, Layout, PageHeaderCard) |
+| `modals/` | Shared overlays/dialogs not tied to a single entity (AddStageModal, CalendarChooserModal, etc.) |
+| `ui/` | Generic primitives (Checkbox, ThemeToggle, ErrorBoundary, TaskStatusIndicator) |
+| `tasks/` | Task-specific components & modals (TaskCreateModal, TagPicker, TagManager) |
+| `plan/` | Plan-specific components & modals (PlanCardMenu, PlanHeaderMenu, CreatePlanModal, RenamePlanModal) |
+| `goals/` | Goal-specific components & modals (CreateGoalModal) |
+| `workspace/` | Workspace management (WorkspaceSwitcher, WorkspaceSettingsModal, Create/Rename modals) |
+| `profile/` | User profile components (ProfileAvatar, AvatarCropperModal, PendingInvitationsBanner) |
+| `focus/` | Focus/pomodoro components (FocusTimer, FocusSessionModal) |
+| `activity/` | Activity feed components (ActivityFeed) |
+
+**Rule:** Every new component goes into the appropriate subfolder — never directly in `src/components/`.
+
+### Views (`src/views/`)
+Full-page views only — one per tab/route. Do not put reusable widgets here.
+
+### Data Layer (`src/lib/db/`)
+| File | Entity |
+|------|--------|
+| `workspaces.ts` | Workspace, members, invitations |
+| `plans.ts` | Plans CRUD |
+| `stages.ts` | Stages CRUD |
+| `tasks.ts` | Tasks CRUD + dashboard queries |
+| `goals.ts` | Goals CRUD + linking + progress |
+| `tags.ts` | Tags CRUD + entity-tag joins |
+| `events.ts` | Calendar events |
+| `reminders.ts` | Reminders |
+| `focus.ts` | Focus sessions + stats |
+| `users.ts` | User profiles + account deletion |
+| `activity.ts` | Activity log |
+| `index.ts` | Barrel re-export — always import from `../lib/db`, never sub-files |
+
+**Rule:** New DB functions go into the matching entity file. If a new entity is added, create a new file and add its re-export to `index.ts`.
+
+### Other folders
+| Folder | Contents |
+|--------|----------|
+| `context/` | React context providers (Auth, User, Workspace, Avatar) |
+| `hooks/` | Shared custom hooks used by 2+ components |
+| `types/` | TypeScript type definitions (database.ts) |
+| `lib/` | Supabase client, recurrence utils, schema verifier |
+| `styles/` | Global CSS (`global.css`, `theme.css`) |
+| `test/` | Test setup only — test files live next to source |
+| `assets/icons/` | SVG icons |
+
+### CSS
+- Component CSS lives **next to** its `.tsx` file in the same subfolder
+- Global styles go in `src/styles/`
+
+### Tests
+- Test files sit **next to** the source they test (e.g., `lib/recurrence.test.ts`)
+- Test setup remains in `src/test/setup.ts`
+
+## Naming Conventions
+- Components: PascalCase (`TaskCreateModal.tsx`)
+- Hooks: camelCase with `use` prefix (`useEscapeKey.ts`)
+- DB modules: lowercase entity name (`tasks.ts`, `goals.ts`)
+- CSS: match component name (`TaskCreateModal.css`)
+
+## Import Rules
+- Always import DB functions from `'../lib/db'` (barrel), not from individual module files
+- Always import types from `'../types/database'`
+- Use relative paths, not aliases

@@ -20,18 +20,15 @@ import {
   createReminder,
   updateReminder,
   deleteReminder,
-} from '../lib/database';
-import type {
-  TaskWithContext,
-  GoalForCalendar,
-} from '../lib/database';
+} from '../lib/db';
+import type { TaskWithContext, GoalForCalendar } from '../lib/db';
 import type { CalendarEvent, Reminder, RepeatRule } from '../types/database';
 import { expandEventOccurrences, expandRecurrences } from '../lib/recurrence';
-import { CalendarChooserModal } from '../components/CalendarChooserModal';
-import { EventModal } from '../components/EventModal';
-import { ReminderModal } from '../components/ReminderModal';
-import { TaskReadOnlyModal } from '../components/TaskReadOnlyModal';
-import { GoalReadOnlyModal } from '../components/GoalReadOnlyModal';
+import { CalendarChooserModal } from '../components/modals/CalendarChooserModal';
+import { EventModal } from '../components/modals/EventModal';
+import { ReminderModal } from '../components/modals/ReminderModal';
+import { TaskReadOnlyModal } from '../components/modals/TaskReadOnlyModal';
+import { GoalReadOnlyModal } from '../components/modals/GoalReadOnlyModal';
 import './Calendar.css';
 
 type CalendarView = 'month' | 'week' | 'day';

@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { deleteOwnAccount, getActivePlans, getStagesByPlan, getGoalsByWorkspace, getEvents, getReminders, getFocusSessionLog } from '../lib/database';
+import { deleteOwnAccount, getActivePlans, getStagesByPlan, getGoalsByWorkspace, getEvents, getReminders, getFocusSessionLog } from '../lib/db';
 import { useAvatar } from '../context/AvatarContext';
 import { useCurrentUser } from '../context/UserContext';
 import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { AvatarCropperModal } from '../components/AvatarCropperModal';
+import { AvatarCropperModal } from '../components/profile/AvatarCropperModal';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import './Profile.css';
 import './Settings.css';

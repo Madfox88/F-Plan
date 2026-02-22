@@ -3,25 +3,25 @@ import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { AvatarProvider } from './context/AvatarContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UserProvider, useCurrentUser } from './context/UserContext';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { MainLayout } from './components/Layout';
-import { PageHeaderCard } from './components/PageHeaderCard';
-import { CreatePlanModal } from './components/CreatePlanModal';
-import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
-import { RenameWorkspaceModal } from './components/RenameWorkspaceModal';
+import { Sidebar } from './components/layout/Sidebar';
+import { Header } from './components/layout/Header';
+import { MainLayout } from './components/layout/Layout';
+import { PageHeaderCard } from './components/layout/PageHeaderCard';
+import { CreatePlanModal } from './components/plan/CreatePlanModal';
+import { CreateWorkspaceModal } from './components/workspace/CreateWorkspaceModal';
+import { RenameWorkspaceModal } from './components/workspace/RenameWorkspaceModal';
 
-import { PendingInvitationsBanner } from './components/PendingInvitationsBanner';
+import { PendingInvitationsBanner } from './components/profile/PendingInvitationsBanner';
 import { PlansIndex } from './views/PlansIndex';
 import { LoginPage } from './views/LoginPage';
 import { SignupPage } from './views/SignupPage';
 import { ForgotPasswordPage } from './views/ForgotPasswordPage';
 import { ResetPasswordPage } from './views/ResetPasswordPage';
 import { supabaseConfigured } from './lib/supabase';
-import { createPlan, createSuggestedStages, createCustomStages, getPlanById, setPlanTags } from './lib/database';
+import { createPlan, createSuggestedStages, createCustomStages, getPlanById, setPlanTags } from './lib/db';
 import { useActivityLog } from './hooks/useActivityLog';
 import type { Plan } from './types/database';
-import './App.css';
+
 
 /* Lazy-loaded heavy views */
 const Dashboard = lazy(() => import('./views/Dashboard').then(m => ({ default: m.Dashboard })));

@@ -12,7 +12,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types/database';
-import { updateUser } from '../lib/database';
+import { updateUser } from '../lib/db';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 

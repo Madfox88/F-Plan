@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
-import { logActivity } from '../lib/database';
+import { logActivity } from '../lib/db';
 import type { ActivityAction, ActivityEntityType } from '../types/database';
 
 /**

@@ -1,15 +1,15 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getGoalsWithProgress, createGoal, linkGoalToPlan, setGoalTags, completeGoal, reopenGoal, deleteGoal } from '../lib/database';
-import type { GoalWithProgress } from '../lib/database';
+import { getGoalsWithProgress, createGoal, linkGoalToPlan, setGoalTags, completeGoal, reopenGoal, deleteGoal } from '../lib/db';
+import type { GoalWithProgress } from '../lib/db';
 import type { Tag } from '../types/database';
-import { CreateGoalModal } from '../components/CreateGoalModal';
-import { GoalDetailModal } from '../components/GoalDetailModal';
-import { useCompletionToast } from '../components/CompletionToast';
+import { CreateGoalModal } from '../components/goals/CreateGoalModal';
+import { GoalDetailModal } from '../components/modals/GoalDetailModal';
+import { useCompletionToast } from '../components/ui/CompletionToast';
 import { useActivityLog } from '../hooks/useActivityLog';
 import SearchIcon from '../assets/icons/search.svg';
 import TrashIcon from '../assets/icons/trash.svg';
-import '../components/CompletionAnimation.css';
+import '../components/ui/CompletionAnimation.css';
 import './GoalsIndex.css';
 
 type DueDateFilter = 'all' | 'none' | 'this_month' | 'next_month' | 'overdue';

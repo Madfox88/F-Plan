@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getAllActivePlansIncludingInbox, getOrCreateInboxPlan, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted, setTaskTags, getTagsForTasks } from '../lib/database';
+import { getAllActivePlansIncludingInbox, getOrCreateInboxPlan, getStagesByPlan, updateTask, createTask, deleteTask, setTaskCompleted, setTaskTags, getTagsForTasks } from '../lib/db';
 import type { Task, Plan, StageWithTasks, ChecklistItem, Stage, Tag } from '../types/database';
-import { AnimatedCheckbox } from '../components/Checkbox';
-import { TaskCreateModal, type TaskCreatePayload } from '../components/TaskCreateModal';
+import { AnimatedCheckbox } from '../components/ui/Checkbox';
+import { TaskCreateModal, type TaskCreatePayload } from '../components/tasks/TaskCreateModal';
 import { useCurrentUser } from '../context/UserContext';
 import PenSquareIcon from '../assets/icons/pen-square.svg';
 import TrashIcon from '../assets/icons/trash.svg';
 import SearchIcon from '../assets/icons/search.svg';
-import { useCompletionToast } from '../components/CompletionToast';
+import { useCompletionToast } from '../components/ui/CompletionToast';
 import { useActivityLog } from '../hooks/useActivityLog';
-import '../components/CompletionAnimation.css';
+import '../components/ui/CompletionAnimation.css';
 import './Tasks.css';
 
 type Grouping = 'due_date' | 'plan' | 'status' | 'priority';

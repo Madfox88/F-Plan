@@ -12,7 +12,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityFeed } from '../components/ActivityFeed';
+import { ActivityFeed } from '../components/activity/ActivityFeed';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useCurrentUser } from '../context/UserContext';
 import type { CalendarEvent, Reminder, FocusSession, Plan, Goal, Task } from '../types/database';
@@ -31,13 +31,13 @@ import {
   getActivePlans,
   getGoalsByWorkspace,
   getIncompleteTasksForUser,
-} from '../lib/database';
-import type { TaskWithContext, DashboardGoal } from '../lib/database';
-import { TaskReadOnlyModal } from '../components/TaskReadOnlyModal';
-import { GoalReadOnlyModal } from '../components/GoalReadOnlyModal';
-import { EventReadOnlyModal } from '../components/EventReadOnlyModal';
-import { ReminderReadOnlyModal } from '../components/ReminderReadOnlyModal';
-import { FocusTimer } from '../components/FocusTimer';
+} from '../lib/db';
+import type { TaskWithContext, DashboardGoal } from '../lib/db';
+import { TaskReadOnlyModal } from '../components/modals/TaskReadOnlyModal';
+import { GoalReadOnlyModal } from '../components/modals/GoalReadOnlyModal';
+import { EventReadOnlyModal } from '../components/modals/EventReadOnlyModal';
+import { ReminderReadOnlyModal } from '../components/modals/ReminderReadOnlyModal';
+import { FocusTimer } from '../components/focus/FocusTimer';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './Dashboard.css';
 

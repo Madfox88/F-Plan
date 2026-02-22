@@ -1,14 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/theme.css'
-import './components/ModalBase.css'
-import './index.css'
+import './components/modals/ModalBase.css'
+import './styles/global.css'
 import App from './App.tsx'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
 // DEV: Verify database schema
 if (import.meta.env.DEV) {
-  import('./utils/verifySchema').then(({ verifySchema }) => {
+  import('./lib/verifySchema').then(({ verifySchema }) => {
     verifySchema();
   });
 }

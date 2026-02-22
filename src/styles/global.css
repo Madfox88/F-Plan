@@ -1,0 +1,51 @@
+/* ── Global base styles ────────────────────────── */
+
+body {
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── App shell ────────────────────────────────── */
+
+.app-container {
+  width: 100%;
+  height: 100vh;
+  background-color: transparent;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.env-warning {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  background: var(--glass-bg-heavy);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}

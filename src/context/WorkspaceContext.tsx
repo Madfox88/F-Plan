@@ -7,7 +7,7 @@ import {
   updateWorkspace as updateWorkspaceInDB,
   deleteWorkspace as deleteWorkspaceInDB,
   getMyMembership,
-} from '../lib/database';
+} from '../lib/db';
 import { useAuth } from './AuthContext';
 
 interface WorkspaceContextType {
