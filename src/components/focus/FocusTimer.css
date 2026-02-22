@@ -1,122 +1,183 @@
 /* ═══════════════════════════════════════════
-   FocusTimer — Variant C  "Gradient Glow"
+   FocusTimer — Ring + Glow (V5 Purple → Blue)
    ═══════════════════════════════════════════
-   Bold gradient digits + soft diffused glow.
-   The glow only renders when --active is set.
+   SVG progress ring with pulsing radial glow.
+   Gradient: purple (#a78bfa) → blue (#60a5fa).
 */
 
+/* ── Color tokens ── */
+:root {
+  --focus-ring-start: #8b5cf6;
+  --focus-ring-end: #3b82f6;
+  --focus-glow-a: rgba(139, 92, 246, 0.20);
+  --focus-glow-b: rgba(96, 165, 250, 0.18);
+  --focus-digit-start: #8b5cf6;
+  --focus-digit-end: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --focus-ring-start: #a78bfa;
+  --focus-ring-end: #60a5fa;
+  --focus-glow-a: rgba(167, 139, 250, 0.22);
+  --focus-glow-b: rgba(96, 165, 250, 0.18);
+  --focus-digit-start: #c4b5fd;
+  --focus-digit-end: #93c5fd;
+}
+
 /* ── Container ── */
-.focus-glow-timer {
+.focus-ring-timer {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
 }
 
-/* ── Remaining / overtime label ── */
-.focus-glow-timer__remaining {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.3px;
+/* ── SVG ── */
+.focus-ring-timer__svg {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
 }
 
-.focus-glow-timer--overtime .focus-glow-timer__remaining {
-  color: #f43f5e;
+/* ── Track ring ── */
+.focus-ring-timer__track {
+  fill: none;
+  stroke: var(--glass-border, rgba(255, 255, 255, 0.18));
+  stroke-width: 7;
+  stroke-linecap: round;
 }
 
-/* ── Glow blob (behind digits) ── */
-.focus-glow-timer__glow {
+/* ── Progress ring ── */
+.focus-ring-timer__progress {
+  fill: none;
+  stroke: url(#focusRingGrad);
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.35));
+}
+
+/* ── Radial glow backdrop ── */
+.focus-ring-timer__glow {
   position: absolute;
-  width: 220px;
-  height: 80px;
   border-radius: 50%;
-  filter: blur(44px);
-  opacity: 0;
-  background: linear-gradient(135deg, #8b5cf6, #f43f5e);
+  background: radial-gradient(circle, var(--focus-glow-a) 0%, var(--focus-glow-b) 50%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+  opacity: 0;
   transition: opacity 0.6s ease;
 }
 
-.focus-glow-timer--active .focus-glow-timer__glow {
-  opacity: 0.35;
-  animation: focusGlowPulse 3s ease-in-out infinite;
+.focus-ring-timer--active .focus-ring-timer__glow {
+  opacity: 0.8;
+  animation: focusRingGlowPulse 3s ease-in-out infinite;
+}
+
+/* ── Center content ── */
+.focus-ring-timer__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
 }
 
 /* ── Digits ── */
-.focus-glow-timer__digits {
-  position: relative;
-  z-index: 1;
+.focus-ring-timer__digits {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -1.5px;
   line-height: 1;
-  /* Idle state — plain text color */
   color: var(--text-tertiary);
   transition: color 0.3s ease;
 }
 
-/* Active → gradient fill */
-.focus-glow-timer--active .focus-glow-timer__digits {
-  background: linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 100%);
+/* Active → gradient digits */
+.focus-ring-timer--active .focus-ring-timer__digits {
+  background: linear-gradient(135deg, var(--focus-digit-start) 0%, var(--focus-digit-end) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
 }
 
-/* ── Size: lg (default — Dashboard card / modal) ── */
-.focus-glow-timer--lg .focus-glow-timer__digits {
-  font-size: 56px;
-}
-.focus-glow-timer--lg .focus-glow-timer__glow {
-  width: 220px;
-  height: 80px;
-  filter: blur(44px);
+/* ── Remaining / overtime sub-label ── */
+.focus-ring-timer__sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  letter-spacing: 0.3px;
 }
 
-/* ── Size: sm ── */
-.focus-glow-timer--sm .focus-glow-timer__digits {
+.focus-ring-timer--overtime .focus-ring-timer__sub {
+  color: #f43f5e;
+}
+
+/* ═══════════════════════════════════════════
+   Size: lg (Dashboard card / modal)
+   ═══════════════════════════════════════════ */
+.focus-ring-timer--lg {
+  width: 180px;
+  height: 180px;
+}
+
+.focus-ring-timer--lg .focus-ring-timer__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.focus-ring-timer--lg .focus-ring-timer__digits {
   font-size: 36px;
+}
+
+.focus-ring-timer--lg .focus-ring-timer__glow {
+  width: 130px;
+  height: 130px;
+}
+
+/* ═══════════════════════════════════════════
+   Size: sm (compact)
+   ═══════════════════════════════════════════ */
+.focus-ring-timer--sm {
+  width: 120px;
+  height: 120px;
+}
+
+.focus-ring-timer--sm .focus-ring-timer__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.focus-ring-timer--sm .focus-ring-timer__digits {
+  font-size: 24px;
   letter-spacing: -1px;
 }
-.focus-glow-timer--sm .focus-glow-timer__glow {
-  width: 140px;
-  height: 50px;
-  filter: blur(32px);
+
+.focus-ring-timer--sm .focus-ring-timer__sub {
+  font-size: 10px;
 }
 
-/* ── Glow pulse animation ── */
-@keyframes focusGlowPulse {
+.focus-ring-timer--sm .focus-ring-timer__glow {
+  width: 85px;
+  height: 85px;
+}
+
+/* ═══════════════════════════════════════════
+   Glow pulse animation
+   ═══════════════════════════════════════════ */
+@keyframes focusRingGlowPulse {
   0%, 100% {
-    opacity: 0.30;
+    opacity: 0.7;
     transform: scale(1);
   }
   50% {
-    opacity: 0.42;
-    transform: scale(1.06);
+    opacity: 1;
+    transform: scale(1.08);
   }
-}
-
-/* ── Light theme — use darker gradient for contrast ── */
-:root .focus-glow-timer--active .focus-glow-timer__digits {
-  background: linear-gradient(135deg, #7c3aed 0%, #e11d48 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ── Dark theme — brighter pastel gradient ── */
-[data-theme="dark"] .focus-glow-timer--active .focus-glow-timer__digits {
-  background: linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-[data-theme="dark"] .focus-glow-timer--active .focus-glow-timer__glow {
-  opacity: 0.38;
 }
