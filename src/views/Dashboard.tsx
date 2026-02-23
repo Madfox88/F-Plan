@@ -437,27 +437,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             )}
           </div>
         )}
-
-        {/* ── Upcoming Deadlines (next 7 days) ── */}
-        {(upcomingTasks.length > 0 || upcomingGoals.length > 0) && (
-          <div className="upcoming-deadlines">
-            <span className="schedule-group-label">Upcoming This Week</span>
-            {upcomingTasks.map((t) => (
-              <button key={t.id} className="schedule-item" onClick={() => setSelectedTask(t)}>
-                <span className="schedule-dot schedule-dot--task" />
-                <span className="schedule-item-text">{t.title}</span>
-                <span className="schedule-item-meta">{relativeDate(t.due_date!)}</span>
-              </button>
-            ))}
-            {upcomingGoals.map((g) => (
-              <div key={g.id} className="schedule-item">
-                <span className="schedule-dot schedule-dot--goal" />
-                <span className="schedule-item-text">{g.title}</span>
-                <span className="schedule-item-meta">{relativeDate(g.due_date!)}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* ═══ CARD 2 — Active Goals Progress ═══ */}
@@ -488,54 +467,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ))}
           </div>
         )}
-
-        {/* ── Goal Milestones Timeline ── */}
-        {goalActivity.length > 0 && (
-          <div className="goal-milestones">
-            <span className="schedule-group-label">Recent Milestones</span>
-            <div className="milestones-timeline">
-              {goalActivity.slice(0, 6).map((a) => (
-                <div key={a.id} className="milestone-item">
-                  <div className="milestone-dot-line">
-                    <span className={`milestone-dot milestone-dot--${a.action}`} />
-                    <span className="milestone-line" />
-                  </div>
-                  <div className="milestone-content">
-                    <span className="milestone-text">
-                      <strong>{a.entity_title}</strong>{' '}
-                      {a.action === 'completed' ? 'completed ✓' : a.action === 'created' ? 'created' : a.action}
-                    </span>
-                    <span className="milestone-time">
-                      {new Date(a.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {activeGoals.length > 0 && (() => {
-          const milestones = activeGoals
-            .filter((g) => g.progress > 0 && g.progress < 100)
-            .map((g) => {
-              const next = [25, 50, 75, 100].find((m) => g.progress < m) ?? 100;
-              return { title: g.title, progress: g.progress, next };
-            })
-            .slice(0, 3);
-          if (milestones.length === 0) return null;
-          return (
-            <div className="goal-next-milestones">
-              <span className="schedule-group-label">Next Milestones</span>
-              {milestones.map((m, i) => (
-                <div key={i} className="next-milestone-row">
-                  <span className="next-milestone-title">{m.title}</span>
-                  <span className="next-milestone-badge">{m.progress}% → {m.next}%</span>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
       </div>
+
+      {/* ═══ CARD 3 — Recent Activity ═══ */}
       <div className="dashboard-card glass">
         <div className="dashboard-card-header">
           <h3>Recent Activity</h3>
@@ -546,42 +480,149 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           )}
         </div>
         <ActivityFeed limit={10} compact />
+      </div>
 
-        {/* ── Weekly Activity Heatmap ── */}
+      {/* ═══ CARD — Upcoming Deadlines ═══ */}
+      <div className="dashboard-card glass">
+        <h3>Upcoming Deadlines</h3>
+        {upcomingTasks.length === 0 && upcomingGoals.length === 0 ? (
+          <p className="text-secondary dash-empty">No upcoming deadlines this week.</p>
+        ) : (
+          <div className="upcoming-deadlines">
+            {upcomingTasks.map((t) => (
+              <button key={t.id} className="schedule-item" onClick={() => setSelectedTask(t)}>
+                <span className="schedule-dot schedule-dot--task" />
+                <span className="schedule-item-text">{t.title}</span>
+                <span className="schedule-item-meta">{relativeDate(t.due_date!)}</span>
+              </button>
+            ))}
+            {upcomingGoals.map((g) => (
+              <button
+                key={g.id}
+                className="schedule-item"
+                onClick={() =>
+                  setSelectedGoal({
+                    ...g,
+                    linkedPlanNames: g.linkedPlanNames ?? [],
+                    totalTasks: g.totalTasks ?? 0,
+                    completedTasks: g.completedTasks ?? 0,
+                    progress: g.progress ?? 0,
+                  })
+                }
+              >
+                <span className="schedule-dot schedule-dot--goal" />
+                <span className="schedule-item-text">{g.title}</span>
+                <span className="schedule-item-meta">{relativeDate(g.due_date!)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ═══ CARD — Goal Milestones ═══ */}
+      <div className="dashboard-card glass">
+        <h3>Goal Milestones</h3>
+        {goalActivity.length === 0 && activeGoals.length === 0 ? (
+          <p className="text-secondary dash-empty">No goal milestones yet.</p>
+        ) : (
+          <div className="goal-milestones">
+            {/* Recent milestone events */}
+            {goalActivity.length > 0 && (
+              <div className="milestones-timeline">
+                <span className="schedule-group-label">Recent Milestones</span>
+                {goalActivity.slice(0, 6).map((a) => (
+                  <div key={a.id} className="milestone-item">
+                    <div className="milestone-dot-line">
+                      <span
+                        className={`milestone-dot ${
+                          a.action === 'completed' ? 'milestone-dot--completed' : 'milestone-dot--created'
+                        }`}
+                      />
+                      <span className="milestone-line" />
+                    </div>
+                    <div className="milestone-content">
+                      <span className="milestone-text">
+                        {a.action === 'completed' ? '✓ Completed' : a.action === 'created' ? '+ Created' : `↻ ${a.action}`}{' '}
+                        <strong>{a.entity_title}</strong>
+                      </span>
+                      <span className="milestone-time">
+                        {new Date(a.created_at).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Next milestones: goals that are in-progress */}
+            {(() => {
+              const next = activeGoals.filter((g) => g.progress > 0 && g.progress < 100);
+              if (next.length === 0) return null;
+              return (
+                <div className="goal-next-milestones">
+                  <span className="schedule-group-label">Next Milestones</span>
+                  {next.slice(0, 4).map((g) => (
+                    <div key={g.id} className="next-milestone-row">
+                      <span className="next-milestone-title">{g.title}</span>
+                      <span className="next-milestone-badge">{g.progress}%</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </div>
+
+      {/* ═══ CARD — Weekly Activity Heatmap ═══ */}
+      <div className="dashboard-card glass">
+        <h3>7-Day Activity</h3>
         {(() => {
-          // Build 7-day buckets
-          const days: { key: string; label: string; actions: number; focus: number }[] = [];
+          /* Build 7-day buckets */
+          const buckets: Record<string, number> = {};
           for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
-            const key = localDateKey(d.toISOString());
-            const label = weekdayLabel(key);
-            const actions = weekActivity.filter((a) => localDateKey(a.created_at) === key).length;
-            const focus = weekFocusSessions
-              .filter((s) => localDateKey(s.started_at) === key)
-              .reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
-            days.push({ key, label, actions, focus });
+            buckets[localDateKey(d.toISOString())] = 0;
           }
-          const maxActions = Math.max(...days.map((d) => d.actions), 1);
+          weekActivity.forEach((a) => {
+            const k = localDateKey(a.created_at);
+            if (k in buckets) buckets[k]++;
+          });
+          weekFocusSessions.forEach((s) => {
+            const k = localDateKey(s.started_at);
+            if (k in buckets) buckets[k]++;
+          });
+
+          const days = Object.entries(buckets);
+          const maxVal = Math.max(...days.map(([, v]) => v), 1);
+
+          const intensity = (v: number): number => {
+            if (v === 0) return 0;
+            if (v <= maxVal * 0.25) return 1;
+            if (v <= maxVal * 0.5) return 2;
+            if (v <= maxVal * 0.75) return 3;
+            return 4;
+          };
+
           return (
             <div className="heatmap-section">
-              <span className="schedule-group-label">7-Day Activity</span>
               <div className="heatmap-grid">
-                {days.map((d) => {
-                  const intensity = Math.min(Math.round((d.actions / maxActions) * 4), 4);
-                  return (
-                    <div key={d.key} className="heatmap-col">
-                      <div className={`heatmap-cell heatmap-cell--${intensity}`} title={`${d.actions} actions, ${d.focus} min focus`} />
-                      <span className="heatmap-day">{d.label}</span>
-                      <span className="heatmap-count">{d.actions}</span>
-                    </div>
-                  );
-                })}
+                {days.map(([dateKey, count]) => (
+                  <div key={dateKey} className="heatmap-col">
+                    <div className={`heatmap-cell heatmap-cell--${intensity(count)}`} title={`${count} actions`} />
+                    <span className="heatmap-day">{weekdayLabel(dateKey)}</span>
+                    <span className="heatmap-count">{count}</span>
+                  </div>
+                ))}
               </div>
               <div className="heatmap-legend">
                 <span className="heatmap-legend-label">Less</span>
-                {[0, 1, 2, 3, 4].map((lvl) => (
-                  <div key={lvl} className={`heatmap-cell heatmap-cell--${lvl} heatmap-legend-cell`} />
+                {[0, 1, 2, 3, 4].map((l) => (
+                  <div key={l} className={`heatmap-legend-cell heatmap-cell--${l}`} />
                 ))}
                 <span className="heatmap-legend-label">More</span>
               </div>
