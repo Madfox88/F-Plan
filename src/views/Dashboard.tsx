@@ -1,9 +1,9 @@
 /**
  * Dashboard — Read-only intelligence surface (DASHBOARD_RULES.md)
  *
- * Card layout:
+ * Card layout (fixed 4-column grid):
  *   Row 1: Today's Schedule, Active Goals Progress, Recent Activity, Productivity Stats
- *   Row 2 (right-aligned): Focus Session (stacked below Productivity Stats)
+ *   Row 2: Upcoming Deadlines, Goal Milestones, 7-Day Activity Heatmap, Focus Session
  *
  * All data scoped to current user.
  * No creation, no editing, no comparisons.
@@ -482,7 +482,75 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <ActivityFeed limit={10} compact />
       </div>
 
-      {/* ═══ CARD — Upcoming Deadlines ═══ */}
+      {/* ═══ CARD 4 — Productivity Stats (Ring Gauges) ═══ */}
+      {(() => {
+        const C = 207.35;
+        const focusPct  = Math.min(avgDailyFocus / 60, 1) * 100;
+        const streakPct = Math.min(focusStreak / 7, 1) * 100;
+        const ring = (pct: number, color: string, glow: string) => (
+          <svg className="stat-ring-svg" viewBox="0 0 80 80">
+            <circle className="stat-ring-track" cx="40" cy="40" r="33" />
+            <circle
+              className="stat-ring-progress"
+              cx="40" cy="40" r="33"
+              strokeDasharray={C}
+              strokeDashoffset={C * (1 - Math.min(pct, 100) / 100)}
+              stroke={color}
+              style={{ filter: `drop-shadow(0 0 6px ${glow})` }}
+              transform="rotate(-90 40 40)"
+            />
+          </svg>
+        );
+        return (
+          <div className="dashboard-card glass">
+            <h3>Productivity Stats</h3>
+            <div className="stat-rings-grid">
+              <div className="stat-ring-tile">
+                <div className="stat-ring-wrap">
+                  {ring(completionRate, '#ff375f', 'rgba(255,55,95,0.35)')}
+                  <div className="stat-ring-center">
+                    <span className="stat-ring-value" style={{ color: '#ff375f' }}>{completionRate}</span>
+                    <span className="stat-ring-unit">%</span>
+                  </div>
+                </div>
+                <span className="stat-ring-label">Completion</span>
+              </div>
+              <div className="stat-ring-tile">
+                <div className="stat-ring-wrap">
+                  {ring(completionRate, '#30d158', 'rgba(48,209,88,0.35)')}
+                  <div className="stat-ring-center">
+                    <span className="stat-ring-value" style={{ color: '#30d158' }}>{completedCount}</span>
+                    <span className="stat-ring-unit">/ {assignedCount}</span>
+                  </div>
+                </div>
+                <span className="stat-ring-label">Tasks Done</span>
+              </div>
+              <div className="stat-ring-tile">
+                <div className="stat-ring-wrap">
+                  {ring(focusPct, '#5e5ce6', 'rgba(94,92,230,0.35)')}
+                  <div className="stat-ring-center">
+                    <span className="stat-ring-value" style={{ color: '#5e5ce6' }}>{avgDailyFocus}</span>
+                    <span className="stat-ring-unit">min</span>
+                  </div>
+                </div>
+                <span className="stat-ring-label">Avg Focus</span>
+              </div>
+              <div className="stat-ring-tile">
+                <div className="stat-ring-wrap">
+                  {ring(streakPct, '#ff9f0a', 'rgba(255,159,10,0.35)')}
+                  <div className="stat-ring-center">
+                    <span className="stat-ring-value" style={{ color: '#ff9f0a' }}>{focusStreak}</span>
+                    <span className="stat-ring-unit">{focusStreak === 1 ? 'day' : 'days'}</span>
+                  </div>
+                </div>
+                <span className="stat-ring-label">Streak</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ═══ CARD 5 — Upcoming Deadlines ═══ */}
       <div className="dashboard-card glass">
         <h3>Upcoming Deadlines</h3>
         {upcomingTasks.length === 0 && upcomingGoals.length === 0 ? (
@@ -631,78 +699,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         })()}
       </div>
 
-      {/* ═══ CARD 4 + 5 stacked column — Productivity Stats + Focus Session ═══ */}
-      <div className="dashboard-stack">
-        {/* ── Productivity Stats (Ring Gauges) ── */}
-        {(() => {
-          const C = 207.35; // 2π × 33 (ring circumference)
-          const focusPct  = Math.min(avgDailyFocus / 60, 1) * 100;   // goal: 60 min
-          const streakPct = Math.min(focusStreak / 7, 1) * 100;      // goal: 7 days
-          const ring = (pct: number, color: string, glow: string) => (
-            <svg className="stat-ring-svg" viewBox="0 0 80 80">
-              <circle className="stat-ring-track" cx="40" cy="40" r="33" />
-              <circle
-                className="stat-ring-progress"
-                cx="40" cy="40" r="33"
-                strokeDasharray={C}
-                strokeDashoffset={C * (1 - Math.min(pct, 100) / 100)}
-                stroke={color}
-                style={{ filter: `drop-shadow(0 0 6px ${glow})` }}
-                transform="rotate(-90 40 40)"
-              />
-            </svg>
-          );
-          return (
-            <div className="dashboard-card glass">
-              <h3>Productivity Stats</h3>
-              <div className="stat-rings-grid">
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
-                    {ring(completionRate, '#ff375f', 'rgba(255,55,95,0.35)')}
-                    <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#ff375f' }}>{completionRate}</span>
-                      <span className="stat-ring-unit">%</span>
-                    </div>
-                  </div>
-                  <span className="stat-ring-label">Completion</span>
-                </div>
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
-                    {ring(completionRate, '#30d158', 'rgba(48,209,88,0.35)')}
-                    <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#30d158' }}>{completedCount}</span>
-                      <span className="stat-ring-unit">/ {assignedCount}</span>
-                    </div>
-                  </div>
-                  <span className="stat-ring-label">Tasks Done</span>
-                </div>
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
-                    {ring(focusPct, '#5e5ce6', 'rgba(94,92,230,0.35)')}
-                    <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#5e5ce6' }}>{avgDailyFocus}</span>
-                      <span className="stat-ring-unit">min</span>
-                    </div>
-                  </div>
-                  <span className="stat-ring-label">Avg Focus</span>
-                </div>
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
-                    {ring(streakPct, '#ff9f0a', 'rgba(255,159,10,0.35)')}
-                    <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#ff9f0a' }}>{focusStreak}</span>
-                      <span className="stat-ring-unit">{focusStreak === 1 ? 'day' : 'days'}</span>
-                    </div>
-                  </div>
-                  <span className="stat-ring-label">Streak</span>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── Focus Session (inline) ── */}
-        <div className="dashboard-card glass focus-card">
+      {/* ═══ CARD 8 — Focus Session ═══ */}
+      <div className="dashboard-card glass focus-card">
           <h3>Focus Session</h3>
 
           {focusError && <div className="focus-inline-error">{focusError}</div>}
@@ -863,7 +861,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </button>
             )}
           </div>
-        </div>
       </div>
 
       {/* ═══ Read-only popups ═══ */}
