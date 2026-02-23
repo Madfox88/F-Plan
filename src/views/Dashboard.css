@@ -5,6 +5,8 @@
 .dashboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-auto-rows: minmax(600px, auto);
+  align-items: stretch;
   gap: var(--space-lg);
   animation: dashFadeIn 200ms ease-out;
 }
@@ -15,7 +17,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  min-height: 200px;
+  min-height: 600px;
 }
 
 .dashboard-card h3 {
@@ -50,6 +52,19 @@
 .dashboard-loading {
   align-items: center;
   justify-content: center;
+}
+
+/* Stacked column — Productivity Stats + Focus Session */
+.dashboard-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  grid-row: span 2;
+}
+
+.dashboard-stack .dashboard-card {
+  flex: 1;
+  min-height: 0;
 }
 
 .dash-empty {
@@ -208,6 +223,235 @@
 .goal-row-detail {
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════
+   Upcoming Deadlines (inside Schedule card)
+   ═══════════════════════════════════════════ */
+
+.upcoming-deadlines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.schedule-dot--goal {
+  background: var(--primary-color, #8b5cf6);
+}
+
+/* ═══════════════════════════════════════════
+   Goal Milestones (inside Goals card)
+   ═══════════════════════════════════════════ */
+
+.goal-milestones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.milestones-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.milestone-item {
+  display: flex;
+  gap: var(--space-sm);
+  min-height: 36px;
+}
+
+.milestone-dot-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 14px;
+  flex-shrink: 0;
+  padding-top: 5px;
+}
+
+.milestone-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.milestone-dot--completed {
+  background: var(--accent-success, #34d399);
+}
+
+.milestone-dot--created {
+  background: var(--accent-primary, #60a5fa);
+}
+
+.milestone-line {
+  width: 2px;
+  flex: 1;
+  background: var(--glass-border);
+  margin-top: 4px;
+}
+
+.milestone-item:last-child .milestone-line {
+  display: none;
+}
+
+.milestone-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-sm);
+  min-width: 0;
+}
+
+.milestone-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.milestone-text strong {
+  font-weight: var(--font-weight-semibold);
+}
+
+.milestone-time {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}
+
+/* Next milestones */
+.goal-next-milestones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.next-milestone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.next-milestone-title {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.next-milestone-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--accent-primary, #60a5fa);
+  background: rgba(96, 165, 250, 0.12);
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════
+   Weekly Activity Heatmap (inside Activity card)
+   ═══════════════════════════════════════════ */
+
+.heatmap-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.heatmap-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  transition: background 200ms ease;
+}
+
+.heatmap-cell--0 {
+  background: var(--glass-border);
+}
+
+.heatmap-cell--1 {
+  background: rgba(96, 165, 250, 0.25);
+}
+
+.heatmap-cell--2 {
+  background: rgba(96, 165, 250, 0.45);
+}
+
+.heatmap-cell--3 {
+  background: rgba(96, 165, 250, 0.65);
+}
+
+.heatmap-cell--4 {
+  background: rgba(96, 165, 250, 0.9);
+}
+
+.heatmap-day {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.heatmap-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* Legend */
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-top: var(--space-xs);
+}
+
+.heatmap-legend-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.heatmap-legend-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
 }
 
 /* ═══════════════════════════════════════════
