@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Productivity Stats — Layout Options</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #e2e8f0;
+    padding: 40px;
+    min-height: 100vh;
+  }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 40px; color: #fff; }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 1200px; margin: 0 auto; }
+  .option-label {
+    font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+    color: #a78bfa; margin-bottom: 12px; text-align: center;
+  }
+  .card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 32px;
+    backdrop-filter: blur(20px);
+    display: flex; flex-direction: column;
+    height: 580px;
+  }
+  .card h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+
+  /* ── Shared ring helper ── */
+  .ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+  .ring-center {
+    position: absolute; text-align: center; display: flex; flex-direction: column; align-items: center; line-height: 1;
+  }
+  .ring-value { font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+  .ring-unit { font-size: 13px; font-weight: 600; color: #94a3b8; margin-top: 2px; }
+  .ring-label { font-size: 13px; font-weight: 600; color: #94a3b8; letter-spacing: 0.2px; margin-top: 6px; text-align: center; }
+  svg circle.track { fill: none; stroke: rgba(255,255,255,0.08); stroke-linecap: round; }
+  svg circle.fill { fill: none; stroke-linecap: round; }
+
+  /* ════════════════════════════════
+     OPTION 1 — Featured + 2×2 Grid
+     ════════════════════════════════ */
+  .opt1-layout { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .opt1-hero { display: flex; flex-direction: column; align-items: center; }
+  .opt1-hero .ring-wrap { width: 160px; height: 160px; }
+  .opt1-hero .ring-value { font-size: 42px; }
+  .opt1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+  .opt1-tile { display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 16px 8px; border-radius: 12px; background: rgba(255,255,255,0.04); }
+  .opt1-tile .ring-wrap { width: 90px; height: 90px; }
+  .opt1-tile .ring-value { font-size: 24px; }
+
+  /* ════════════════════════════════
+     OPTION 2 — 5 Equal Rings Row
+     ════════════════════════════════ */
+  .opt2-layout { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
+  .opt2-row { display: flex; justify-content: space-around; align-items: flex-start; gap: 8px; }
+  .opt2-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .opt2-tile .ring-wrap { width: 80px; height: 80px; }
+  .opt2-tile .ring-value { font-size: 20px; }
+  .opt2-tile .ring-unit { font-size: 10px; }
+  .opt2-tile .ring-label { font-size: 11px; }
+
+  /* ════════════════════════════════
+     OPTION 3 — Horizontal Bars
+     ════════════════════════════════ */
+  .opt3-layout { flex: 1; display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+  .bar-row { display: flex; flex-direction: column; gap: 6px; }
+  .bar-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .bar-name { font-size: 14px; font-weight: 500; color: #cbd5e1; }
+  .bar-val { font-size: 14px; font-weight: 700; }
+  .bar-track { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+  /* ════════════════════════════════
+     OPTION 4 — Hero Ring + Stat Pills
+     ════════════════════════════════ */
+  .opt4-layout { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .opt4-hero { display: flex; flex-direction: column; align-items: center; }
+  .opt4-hero .ring-wrap { width: 180px; height: 180px; }
+  .opt4-hero .ring-value { font-size: 48px; }
+  .opt4-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .pill {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .pill-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .pill-info { display: flex; flex-direction: column; }
+  .pill-val { font-size: 20px; font-weight: 700; line-height: 1; }
+  .pill-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+</style>
+</head>
+<body>
+<h1>Productivity Stats — Layout Options</h1>
+<div class="options">
+
+  <!-- ══════ OPTION 1 ══════ -->
+  <div>
+    <div class="option-label">Option 1 — Featured + 2×2 Grid</div>
+    <div class="card">
+      <h3>Productivity Stats</h3>
+      <div class="opt1-layout">
+        <div class="opt1-hero">
+          <div class="ring-wrap" style="width:160px;height:160px">
+            <svg viewBox="0 0 80 80" width="100%" height="100%">
+              <circle class="track" cx="40" cy="40" r="33" stroke-width="7"/>
+              <circle class="fill" cx="40" cy="40" r="33" stroke-width="7" stroke="#00c7be"
+                stroke-dasharray="207" stroke-dashoffset="62" transform="rotate(-90 40 40)"
+                style="filter:drop-shadow(0 0 6px rgba(0,199,190,0.4))"/>
+            </svg>
+            <div class="ring-center">
+              <span class="ring-value" style="font-size:42px;color:#00c7be">3</span>
+              <span class="ring-unit">/ 5</span>
+            </div>
+          </div>
+          <span class="ring-label">Today's Pulse</span>
+        </div>
+        <div class="opt1-grid">
+          <div class="opt1-tile">
+            <div class="ring-wrap" style="width:90px;height:90px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="7"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="7" stroke="#ff375f"
+                  stroke-dasharray="207" stroke-dashoffset="52" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:24px;color:#ff375f">75</span><span class="ring-unit">%</span></div>
+            </div>
+            <span class="ring-label">Completion</span>
+          </div>
+          <div class="opt1-tile">
+            <div class="ring-wrap" style="width:90px;height:90px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="7"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="7" stroke="#30d158"
+                  stroke-dasharray="207" stroke-dashoffset="83" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:24px;color:#30d158">60</span><span class="ring-unit">%</span></div>
+            </div>
+            <span class="ring-label">Goals</span>
+          </div>
+          <div class="opt1-tile">
+            <div class="ring-wrap" style="width:90px;height:90px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="7"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="7" stroke="#5e5ce6"
+                  stroke-dasharray="207" stroke-dashoffset="124" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:24px;color:#5e5ce6">24</span><span class="ring-unit">min</span></div>
+            </div>
+            <span class="ring-label">Avg Focus</span>
+          </div>
+          <div class="opt1-tile">
+            <div class="ring-wrap" style="width:90px;height:90px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="7"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="7" stroke="#ff9f0a"
+                  stroke-dasharray="207" stroke-dashoffset="148" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:24px;color:#ff9f0a">3</span><span class="ring-unit">days</span></div>
+            </div>
+            <span class="ring-label">Streak</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ OPTION 2 ══════ -->
+  <div>
+    <div class="option-label">Option 2 — Equal Rings Row</div>
+    <div class="card">
+      <h3>Productivity Stats</h3>
+      <div class="opt2-layout">
+        <div class="opt2-row">
+          <div class="opt2-tile">
+            <div class="ring-wrap" style="width:80px;height:80px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="6"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="6" stroke="#00c7be"
+                  stroke-dasharray="207" stroke-dashoffset="62" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:20px;color:#00c7be">3</span><span class="ring-unit" style="font-size:10px">/ 5</span></div>
+            </div>
+            <span class="ring-label" style="font-size:11px">Pulse</span>
+          </div>
+          <div class="opt2-tile">
+            <div class="ring-wrap" style="width:80px;height:80px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="6"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="6" stroke="#ff375f"
+                  stroke-dasharray="207" stroke-dashoffset="52" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:20px;color:#ff375f">75</span><span class="ring-unit" style="font-size:10px">%</span></div>
+            </div>
+            <span class="ring-label" style="font-size:11px">Completion</span>
+          </div>
+          <div class="opt2-tile">
+            <div class="ring-wrap" style="width:80px;height:80px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="6"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="6" stroke="#30d158"
+                  stroke-dasharray="207" stroke-dashoffset="83" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:20px;color:#30d158">60</span><span class="ring-unit" style="font-size:10px">%</span></div>
+            </div>
+            <span class="ring-label" style="font-size:11px">Goals</span>
+          </div>
+          <div class="opt2-tile">
+            <div class="ring-wrap" style="width:80px;height:80px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="6"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="6" stroke="#5e5ce6"
+                  stroke-dasharray="207" stroke-dashoffset="124" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:20px;color:#5e5ce6">24</span><span class="ring-unit" style="font-size:10px">min</span></div>
+            </div>
+            <span class="ring-label" style="font-size:11px">Focus</span>
+          </div>
+          <div class="opt2-tile">
+            <div class="ring-wrap" style="width:80px;height:80px">
+              <svg viewBox="0 0 80 80" width="100%" height="100%">
+                <circle class="track" cx="40" cy="40" r="33" stroke-width="6"/>
+                <circle class="fill" cx="40" cy="40" r="33" stroke-width="6" stroke="#ff9f0a"
+                  stroke-dasharray="207" stroke-dashoffset="148" transform="rotate(-90 40 40)"/>
+              </svg>
+              <div class="ring-center"><span class="ring-value" style="font-size:20px;color:#ff9f0a">3</span><span class="ring-unit" style="font-size:10px">days</span></div>
+            </div>
+            <span class="ring-label" style="font-size:11px">Streak</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ OPTION 3 ══════ -->
+  <div>
+    <div class="option-label">Option 3 — Horizontal Bars</div>
+    <div class="card">
+      <h3>Productivity Stats</h3>
+      <div class="opt3-layout">
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Today's Pulse</span>
+            <span class="bar-val" style="color:#00c7be">3 / 5</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:60%;background:#00c7be"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Completion Rate</span>
+            <span class="bar-val" style="color:#ff375f">75%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:75%;background:#ff375f"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Goal Progress</span>
+            <span class="bar-val" style="color:#30d158">60%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:60%;background:#30d158"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Avg Focus</span>
+            <span class="bar-val" style="color:#5e5ce6">24 min</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:40%;background:#5e5ce6"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-header">
+            <span class="bar-name">Streak</span>
+            <span class="bar-val" style="color:#ff9f0a">3 days</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:43%;background:#ff9f0a"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ OPTION 4 ══════ -->
+  <div>
+    <div class="option-label">Option 4 — Hero Ring + Stat Pills</div>
+    <div class="card">
+      <h3>Productivity Stats</h3>
+      <div class="opt4-layout">
+        <div class="opt4-hero">
+          <div class="ring-wrap" style="width:180px;height:180px">
+            <svg viewBox="0 0 80 80" width="100%" height="100%">
+              <circle class="track" cx="40" cy="40" r="33" stroke-width="7"/>
+              <circle class="fill" cx="40" cy="40" r="33" stroke-width="7" stroke="#00c7be"
+                stroke-dasharray="207" stroke-dashoffset="62" transform="rotate(-90 40 40)"
+                style="filter:drop-shadow(0 0 8px rgba(0,199,190,0.4))"/>
+            </svg>
+            <div class="ring-center">
+              <span class="ring-value" style="font-size:48px;color:#00c7be">3</span>
+              <span class="ring-unit">/ 5</span>
+            </div>
+          </div>
+          <span class="ring-label">Today's Pulse</span>
+        </div>
+        <div class="opt4-pills">
+          <div class="pill">
+            <span class="pill-dot" style="background:#ff375f"></span>
+            <div class="pill-info">
+              <span class="pill-val" style="color:#ff375f">75%</span>
+              <span class="pill-label">Completion</span>
+            </div>
+          </div>
+          <div class="pill">
+            <span class="pill-dot" style="background:#30d158"></span>
+            <div class="pill-info">
+              <span class="pill-val" style="color:#30d158">60%</span>
+              <span class="pill-label">Goals</span>
+            </div>
+          </div>
+          <div class="pill">
+            <span class="pill-dot" style="background:#5e5ce6"></span>
+            <div class="pill-info">
+              <span class="pill-val" style="color:#5e5ce6">24 min</span>
+              <span class="pill-label">Avg Focus</span>
+            </div>
+          </div>
+          <div class="pill">
+            <span class="pill-dot" style="background:#ff9f0a"></span>
+            <div class="pill-info">
+              <span class="pill-val" style="color:#ff9f0a">3 days</span>
+              <span class="pill-label">Streak</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -5,6 +5,11 @@
   gap: var(--space-lg);
 }
 
+/* Parent gap handles spacing; remove tab-bar's own margin */
+.tasks-view > .completion-tab-bar {
+  margin-bottom: 0;
+}
+
 .tasks-header-row {
   display: flex;
   flex-direction: column;

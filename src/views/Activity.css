@@ -3,7 +3,7 @@
 .activity-view {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--space-lg);
 }
 
 .activity-view .activity-feed {

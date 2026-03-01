@@ -167,7 +167,8 @@ html[data-theme='dark'] .grouping-selector-icon {
   backdrop-filter: blur(var(--glass-blur-heavy));
   -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
   box-shadow: var(--shadow-lg);
-  padding: var(--space-xs);
+  padding: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -188,7 +189,7 @@ html[data-theme='dark'] .grouping-selector-icon {
   background: transparent;
   color: var(--text-primary);
   padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   cursor: pointer;
   text-align: left;
   font-size: var(--font-size-sm);

@@ -81,6 +81,24 @@
   --accent-primary: #60a5fa;
   --accent-success: #34d399;
   --accent-warning: #fbbf24;
+
+  /* Activity Semantic Colors (shade 600 — accessible on light backgrounds) */
+  --activity-green: #16a34a;
+  --activity-yellow: #ca8a04;
+  --activity-red: #dc2626;
+  --activity-blue: #2563eb;
+  --activity-purple: #7c3aed;
+  --activity-slate: #64748b;
+  --activity-cyan: #0284c7;
+  --activity-teal: #0d9488;
+  --activity-orange: #ea580c;
+
+  /* Activity badge backgrounds (10% opacity of the semantic color) */
+  --activity-green-bg: rgba(22, 163, 74, 0.10);
+  --activity-blue-bg: rgba(37, 99, 235, 0.10);
+  --activity-yellow-bg: rgba(202, 138, 4, 0.10);
+  --activity-purple-bg: rgba(124, 58, 237, 0.10);
+  --activity-cyan-bg: rgba(2, 132, 199, 0.10);
 }
 
 /* Dark Theme */
@@ -122,6 +140,24 @@
   --accent-primary: #93c5fd;
   --accent-success: #6ee7b7;
   --accent-warning: #fcd34d;
+
+  /* Activity Semantic Colors (shade 400 — accessible on dark backgrounds) */
+  --activity-green: #4ade80;
+  --activity-yellow: #fbbf24;
+  --activity-red: #f87171;
+  --activity-blue: #60a5fa;
+  --activity-purple: #a78bfa;
+  --activity-slate: #94a3b8;
+  --activity-cyan: #38bdf8;
+  --activity-teal: #34d399;
+  --activity-orange: #fb923c;
+
+  /* Activity badge backgrounds (10% opacity of the semantic color) */
+  --activity-green-bg: rgba(74, 222, 128, 0.10);
+  --activity-blue-bg: rgba(96, 165, 250, 0.10);
+  --activity-yellow-bg: rgba(251, 191, 36, 0.10);
+  --activity-purple-bg: rgba(167, 139, 250, 0.10);
+  --activity-cyan-bg: rgba(56, 189, 248, 0.10);
 }
 
 /* Global Styles */

@@ -39,7 +39,6 @@ import { TaskReadOnlyModal } from '../components/modals/TaskReadOnlyModal';
 import { GoalReadOnlyModal } from '../components/modals/GoalReadOnlyModal';
 import { EventReadOnlyModal } from '../components/modals/EventReadOnlyModal';
 import { ReminderReadOnlyModal } from '../components/modals/ReminderReadOnlyModal';
-import { FocusTimer } from '../components/focus/FocusTimer';
 import ChevronDownIcon from '../assets/icons/angle-small-down.svg';
 import './Dashboard.css';
 
@@ -389,6 +388,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </button>
           )}
         </div>
+        <div className="dashboard-card-body">
         {scheduleEmpty ? (
           <p className="text-secondary dash-empty">Nothing scheduled for today. Enjoy your day.</p>
         ) : (
@@ -437,6 +437,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {/* ═══ CARD 2 — Active Goals Progress ═══ */}
@@ -449,6 +450,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </button>
           )}
         </div>
+        <div className="dashboard-card-body">
         {activeGoals.length === 0 ? (
           <p className="text-secondary dash-empty">No active goals with your tasks yet.</p>
         ) : (
@@ -467,6 +469,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {/* ═══ CARD 3 — Recent Activity ═══ */}
@@ -479,7 +482,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </button>
           )}
         </div>
-        <ActivityFeed limit={10} compact />
+        <div className="dashboard-card-body">
+          <ActivityFeed limit={10} compact />
+        </div>
       </div>
 
       {/* ═══ CARD 4 — Productivity Stats (Ring Gauges) ═══ */}
@@ -510,9 +515,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         return (
           <div className="dashboard-card glass">
             <h3>Productivity Stats</h3>
-            <div className="stat-hero-layout">
+            <div className="dashboard-card-body">
+            <div className="stat-layout">
               {/* Hero ring — Today's Pulse */}
-              <div className="stat-hero-center">
+              <div className="stat-hero">
                 <div className="stat-ring-wrap stat-ring-wrap--lg">
                   {ring(todayPct, '#00c7be', 'rgba(0,199,190,0.4)', 'lg')}
                   <div className="stat-ring-center">
@@ -522,49 +528,50 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </div>
                 <span className="stat-ring-label">Today's Pulse</span>
               </div>
-              {/* Orbit — 4 smaller rings */}
-              <div className="stat-hero-orbit">
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
+              {/* 2×2 grid — secondary stats */}
+              <div className="stat-grid">
+                <div className="stat-tile">
+                  <div className="stat-ring-wrap stat-ring-wrap--sm">
                     {ring(completionRate, '#ff375f', 'rgba(255,55,95,0.35)', 'sm')}
                     <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#ff375f' }}>{completionRate}</span>
+                      <span className="stat-ring-value stat-ring-value--sm" style={{ color: '#ff375f' }}>{completionRate}</span>
                       <span className="stat-ring-unit">%</span>
                     </div>
                   </div>
                   <span className="stat-ring-label">Completion</span>
                 </div>
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
+                <div className="stat-tile">
+                  <div className="stat-ring-wrap stat-ring-wrap--sm">
                     {ring(goalProgressAvg, '#30d158', 'rgba(48,209,88,0.35)', 'sm')}
                     <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#30d158' }}>{goalProgressAvg}</span>
+                      <span className="stat-ring-value stat-ring-value--sm" style={{ color: '#30d158' }}>{goalProgressAvg}</span>
                       <span className="stat-ring-unit">%</span>
                     </div>
                   </div>
                   <span className="stat-ring-label">Goals</span>
                 </div>
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
+                <div className="stat-tile">
+                  <div className="stat-ring-wrap stat-ring-wrap--sm">
                     {ring(focusPct, '#5e5ce6', 'rgba(94,92,230,0.35)', 'sm')}
                     <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#5e5ce6' }}>{avgDailyFocus}</span>
+                      <span className="stat-ring-value stat-ring-value--sm" style={{ color: '#5e5ce6' }}>{avgDailyFocus}</span>
                       <span className="stat-ring-unit">min</span>
                     </div>
                   </div>
                   <span className="stat-ring-label">Avg Focus</span>
                 </div>
-                <div className="stat-ring-tile">
-                  <div className="stat-ring-wrap">
+                <div className="stat-tile">
+                  <div className="stat-ring-wrap stat-ring-wrap--sm">
                     {ring(streakPct, '#ff9f0a', 'rgba(255,159,10,0.35)', 'sm')}
                     <div className="stat-ring-center">
-                      <span className="stat-ring-value" style={{ color: '#ff9f0a' }}>{focusStreak}</span>
+                      <span className="stat-ring-value stat-ring-value--sm" style={{ color: '#ff9f0a' }}>{focusStreak}</span>
                       <span className="stat-ring-unit">{focusStreak === 1 ? 'day' : 'days'}</span>
                     </div>
                   </div>
                   <span className="stat-ring-label">Streak</span>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         );
@@ -573,6 +580,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* ═══ CARD 5 — Upcoming Deadlines ═══ */}
       <div className="dashboard-card glass">
         <h3>Upcoming Deadlines</h3>
+        <div className="dashboard-card-body">
         {upcomingTasks.length === 0 && upcomingGoals.length === 0 ? (
           <p className="text-secondary dash-empty">No upcoming deadlines this week.</p>
         ) : (
@@ -605,11 +613,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ))}
           </div>
         )}
+        </div>
       </div>
 
       {/* ═══ CARD — Goal Milestones ═══ */}
       <div className="dashboard-card glass">
         <h3>Goal Milestones</h3>
+        <div className="dashboard-card-body">
         {goalActivity.length === 0 && activeGoals.length === 0 ? (
           <p className="text-secondary dash-empty">No goal milestones yet.</p>
         ) : (
@@ -663,11 +673,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             })()}
           </div>
         )}
+        </div>
       </div>
 
       {/* ═══ CARD — 7-Day Activity (Ring + Daily List) ═══ */}
       <div className="dashboard-card glass activity-card">
         <h3>7-Day Activity</h3>
+        <div className="dashboard-card-body">
         {(() => {
           /* Build 7-day buckets */
           const buckets: Record<string, number> = {};
@@ -757,32 +769,42 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </>
           );
         })()}
+        </div>
       </div>
 
       {/* ═══ CARD 8 — Focus Session ═══ */}
       <div className="dashboard-card glass focus-card">
         <h3>Focus Session</h3>
+        <div className="dashboard-card-body">
         {focusError && <div className="focus-inline-error">{focusError}</div>}
-        {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
 
-        {/* Hero ring — oversized, centered, context inside */}
-        <FocusTimer
-          seconds={focusElapsed}
-          active={!!activeSession}
-          size="xl"
-          plannedMinutes={activeSession?.planned_duration_minutes}
-          contextLabel={activeSession ? activeContextLabel() : null}
-        />
+        {/* Active session — compact timer display */}
+        {activeSession && (
+          <div className="focus-timer-display">
+            <span className="focus-timer-time">
+              {String(Math.floor(focusElapsed / 3600)).padStart(2, '0')}:{String(Math.floor((focusElapsed % 3600) / 60)).padStart(2, '0')}:{String(focusElapsed % 60).padStart(2, '0')}
+            </span>
+            {activeSession.planned_duration_minutes && (
+              <span className="focus-timer-planned">of {activeSession.planned_duration_minutes} min</span>
+            )}
+            {activeContextLabel() && (
+              <span className="focus-timer-context">{activeContextLabel()}</span>
+            )}
+          </div>
+        )}
 
-        {/* Idle hint */}
+        {/* Idle state */}
         {!activeSession && !focusStarted && (
-          <p className="text-secondary focus-idle-hint">Start a focused work session.</p>
+          <div className="focus-idle">
+            <span className="focus-idle-icon">⏱</span>
+            <p className="text-secondary focus-idle-hint">Start a focused work session.</p>
+            {focusEndMsg && <p className="focus-discard-msg">{focusEndMsg}</p>}
+          </div>
         )}
 
         {/* Setup form — vertical stack */}
         {!activeSession && focusStarted && (
           <div className="focus-setup">
-            <div className="focus-setup-row">
             {/* Duration dropdown */}
             <div className="focus-form-group">
               <label className="focus-form-label">Duration</label>
@@ -858,7 +880,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 )}
               </div>
             </div>
-            </div>{/* end focus-setup-row */}
 
             {/* Context value dropdown */}
             {focusContextType !== 'none' && (
@@ -922,6 +943,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <span>Start Focus Session</span>
             </button>
           )}
+        </div>
         </div>
       </div>
 

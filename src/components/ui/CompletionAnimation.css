@@ -15,6 +15,7 @@
   height: 44px;
   box-sizing: border-box;
   align-items: center;
+  margin-bottom: var(--space-lg);
 }
 
 .completion-tab-btn {

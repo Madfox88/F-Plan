@@ -20,12 +20,11 @@
 
 /* ── Card shell ── */
 .dashboard-card {
-  padding: var(--space-lg);
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
   height: 600px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .dashboard-card h3 {
@@ -39,6 +38,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  padding: var(--space-xl) var(--space-xl) 0;
+}
+
+.dashboard-card > h3 {
+  flex-shrink: 0;
+  padding: var(--space-xl) var(--space-xl) 0;
+}
+
+.dashboard-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-md) var(--space-xl) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .dashboard-view-all {
@@ -60,6 +76,7 @@
 .dashboard-loading {
   align-items: center;
   justify-content: center;
+  padding: var(--space-xl);
 }
 
 
@@ -369,7 +386,7 @@
    7-Day Activity — Ring + Daily List
    ═══════════════════════════════════════════ */
 
-.activity-card {
+.activity-card .dashboard-card-body {
   align-items: center;
 }
 
@@ -515,63 +532,40 @@
 }
 
 /* ═══════════════════════════════════════════
-   Card 3 — Productivity Stats (Ring Gauges)
+   Card 3 — Productivity Stats (Featured + 2×2)
    ═══════════════════════════════════════════ */
 
-.stat-hero-layout {
+.stat-layout {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+/* Hero — featured ring */
+.stat-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-ring-wrap {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Hero — large center ring */
-.stat-hero-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  z-index: 1;
-}
-
 .stat-ring-wrap--lg {
-  width: 374px;
-  height: 374px;
+  width: 160px;
+  height: 160px;
 }
 
-.stat-ring-value--lg {
-  font-size: 82px;
-}
-
-/* Orbit — 4 small rings positioned in corners */
-.stat-hero-orbit {
-  position: absolute;
-  inset: 12px;
-  pointer-events: none;
-}
-
-.stat-hero-orbit .stat-ring-tile {
-  position: absolute;
-  pointer-events: auto;
-}
-
-.stat-hero-orbit .stat-ring-tile:nth-child(1) { top: 0;    left: 0;   }  /* top-left */
-.stat-hero-orbit .stat-ring-tile:nth-child(2) { top: 0;    right: 0;  }  /* top-right */
-.stat-hero-orbit .stat-ring-tile:nth-child(3) { bottom: 0; left: 0;   }  /* bottom-left */
-.stat-hero-orbit .stat-ring-tile:nth-child(4) { bottom: 0; right: 0;  }  /* bottom-right */
-
-.stat-ring-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.stat-ring-wrap {
-  position: relative;
-  width: 170px;
-  height: 170px;
+.stat-ring-wrap--sm {
+  width: 90px;
+  height: 90px;
 }
 
 .stat-ring-svg {
@@ -607,38 +601,59 @@
 }
 
 .stat-ring-value {
-  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1;
 }
 
+.stat-ring-value--lg {
+  font-size: 42px;
+}
+
+.stat-ring-value--sm {
+  font-size: 24px;
+}
+
 .stat-ring-unit {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
   margin-top: 2px;
 }
 
 .stat-ring-label {
-  font-size: 19px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.2px;
+  text-align: center;
 }
 
-/* ═══════════════════════════════════════════
-   Card 8 — Focus Session (Hero Ring layout)
-   ═══════════════════════════════════════════ */
+/* 2×2 grid of secondary stats */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  width: 100%;
+}
 
-.focus-card {
+.stat-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-md);
-  overflow: visible !important; /* dropdowns must escape the card */
+  gap: 4px;
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+}
+
+/* ═══════════════════════════════════════════
+   Card 8 — Focus Session
+   ═══════════════════════════════════════════ */
+
+.focus-card .dashboard-card-body {
+  align-items: center;
 }
 
 /* ── Dropdown chevron (needed when TaskCreateModal.css isn't loaded) ── */
@@ -652,13 +667,65 @@ html[data-theme='dark'] .focus-card .dropdown-chevron {
   filter: brightness(0) invert(1);
 }
 
-/* ── Idle hint ── */
+/* ── Idle state ── */
+.focus-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.focus-idle-icon {
+  font-size: 48px;
+  line-height: 1;
+  opacity: 0.5;
+}
+
 .focus-idle-hint {
   text-align: center;
   font-size: var(--font-size-sm);
 }
 
-/* ── Timer display is handled by <FocusTimer size="xl" /> — see FocusTimer.css ── */
+.focus-discard-msg {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* ── Active timer display ── */
+.focus-timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.focus-timer-time {
+  font-size: 48px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  line-height: 1;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.focus-timer-planned {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.focus-timer-context {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
 
 /* ── Active session ── */
 .focus-discard-hint {
@@ -678,14 +745,6 @@ html[data-theme='dark'] .focus-card .dropdown-chevron {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  width: 100%;
-}
-
-/* Duration + Link to — side by side */
-.focus-setup-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-sm);
   width: 100%;
 }
 

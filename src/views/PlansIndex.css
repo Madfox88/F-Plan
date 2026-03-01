@@ -144,6 +144,11 @@ html[data-theme='dark'] .search-icon-img {
   gap: var(--space-md);
 }
 
+/* Tab bars inside toolbar don't need their own bottom margin */
+.toolbar-actions .completion-tab-bar {
+  margin-bottom: 0;
+}
+
 /* Toggle icon (used inside completion-tab-btn) */
 .toggle-icon {
   width: 18px;
