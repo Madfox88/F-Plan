@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import type { ActivityLogEntryWithUser, ActivityEntityType } from '../../types/database';
 import { getActivityLog, getEntityActivityLog } from '../../lib/db';
 import { useWorkspace } from '../../context/WorkspaceContext';
+import { DatePicker } from '../ui/DatePicker';
 import './ActivityFeed.css';
 
 /* ── Helpers ── */
@@ -123,6 +124,16 @@ export function ActivityFeed({
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
+  /* ── Date filter state ── */
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const dateRange = useMemo<{ since?: string; until?: string }>(() => {
+    const since = dateFrom ? new Date(dateFrom).toISOString() : undefined;
+    const until = dateTo ? new Date(dateTo + 'T23:59:59').toISOString() : undefined;
+    return { since, until };
+  }, [dateFrom, dateTo]);
+
   const fetchEntries = useCallback(async (append = false) => {
     if (!activeWorkspace) return;
     try {
@@ -138,6 +149,8 @@ export function ActivityFeed({
           limit,
           offset: append ? offset : 0,
           entityType: effectiveType,
+          since: dateRange.since,
+          until: dateRange.until,
         });
         setHasMore(data.length === limit);
       }
@@ -153,22 +166,23 @@ export function ActivityFeed({
     } finally {
       setLoading(false);
     }
-  }, [activeWorkspace, entityType, entityId, limit, filterType, offset]);
+  }, [activeWorkspace, entityType, entityId, limit, filterType, offset, dateRange]);
 
   useEffect(() => {
     setOffset(0);
     fetchEntries(false);
-  }, [activeWorkspace, entityType, entityId, filterType]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeWorkspace, entityType, entityId, filterType, dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLoadMore = () => {
     const newOffset = offset + limit;
     setOffset(newOffset);
-    // fetchEntries with append will use the updated offset via the callback
     if (!activeWorkspace) return;
     getActivityLog(activeWorkspace.id, {
       limit,
       offset: newOffset,
       entityType: filterType === 'all' ? undefined : filterType,
+      since: dateRange.since,
+      until: dateRange.until,
     }).then((data) => {
       setEntries((prev) => [...prev, ...data]);
       setHasMore(data.length === limit);
@@ -201,14 +215,36 @@ export function ActivityFeed({
               {opt.label}
             </button>
           ))}
+
+          <span className="activity-filters-sep" />
+
+          <DatePicker
+            label="From"
+            value={dateFrom}
+            onChange={setDateFrom}
+            placeholder="Start date"
+          />
+          <DatePicker
+            label="To"
+            value={dateTo}
+            onChange={setDateTo}
+            placeholder="End date"
+          />
+          {(dateFrom || dateTo) && (
+            <button
+              className="activity-filter-btn activity-date-clear"
+              onClick={() => { setDateFrom(''); setDateTo(''); }}
+            >
+              Clear
+            </button>
+          )}
         </div>
       )}
 
       {entries.length === 0 ? (
         <div className="activity-empty">
-          <div className="activity-empty-icon">📋</div>
-          <p>No activity yet</p>
-          <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+          <p className="activity-empty__title">No activity yet</p>
+          <p className="activity-empty__message">
             Actions like creating, completing, and editing items will appear here.
           </p>
         </div>

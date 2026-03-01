@@ -169,9 +169,9 @@ export function FocusLog() {
 
       {/* ── Session list ── */}
       {sessions.length === 0 ? (
-        <div className="focus-log-empty glass">
-          <p className="text-secondary">No focus sessions recorded yet.</p>
-          <p className="text-tertiary">Start a session from the Dashboard to begin tracking.</p>
+        <div className="focus-log-empty">
+          <p className="focus-log-empty__title">No focus sessions recorded yet</p>
+          <p className="focus-log-empty__message">Start a session from the Dashboard to begin tracking.</p>
         </div>
       ) : (
         <div className="focus-log-list">

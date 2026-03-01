@@ -24,6 +24,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  height: 600px;
+  overflow-y: auto;
 }
 
 .dashboard-card h3 {
@@ -63,7 +65,11 @@
 
 
 .dash-empty {
-  margin: auto 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   font-style: italic;
 }
 
@@ -360,117 +366,212 @@
 }
 
 /* ═══════════════════════════════════════════
-   Weekly Activity Heatmap (inside Activity card)
+   7-Day Activity — Ring + Daily List
    ═══════════════════════════════════════════ */
 
-.heatmap-section {
+.activity-card {
+  align-items: center;
+}
+
+/* ── Ring gauge ── */
+.act-ring-wrap {
+  position: relative;
+  width: 38%;
+  aspect-ratio: 1;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--glass-border);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+.act-ring-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.heatmap-col {
+.act-ring-track {
+  fill: none;
+  stroke: var(--glass-border);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.act-ring-progress {
+  fill: none;
+  stroke: url(#actRingGrad);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.35));
+}
+
+.act-ring-glow {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.18) 0%, rgba(139, 92, 246, 0.14) 50%, transparent 70%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.act-ring-center {
+  position: absolute;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
 }
 
-.heatmap-cell {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--radius-sm);
-  transition: background 200ms ease;
+.act-ring-val {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.heatmap-cell--0 {
-  background: var(--glass-border);
-}
-
-.heatmap-cell--1 {
-  background: rgba(96, 165, 250, 0.25);
-}
-
-.heatmap-cell--2 {
-  background: rgba(96, 165, 250, 0.45);
-}
-
-.heatmap-cell--3 {
-  background: rgba(96, 165, 250, 0.65);
-}
-
-.heatmap-cell--4 {
-  background: rgba(96, 165, 250, 0.9);
-}
-
-.heatmap-day {
-  font-size: 10px;
-  font-weight: 600;
+.act-ring-label {
+  font-size: 13px;
   color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  margin-top: 3px;
 }
 
-.heatmap-count {
-  font-size: 10px;
+/* ── Daily rows ── */
+.act-day-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 2px;
+  flex: 1;
+}
+
+.act-day-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  transition: background 150ms ease-out;
+}
+
+.act-day-row:hover {
+  background: var(--glass-bg-heavy, rgba(32, 32, 36, 0.72));
+}
+
+.act-day-row--today {
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+}
+
+.act-day-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.act-day-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.act-day-row--today .act-day-name {
+  color: rgba(96, 165, 250, 1);
+}
+
+.act-day-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--glass-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.act-day-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.7), rgba(96, 165, 250, 1));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.act-day-count {
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--text-secondary);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
-/* Legend */
-.heatmap-legend {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  justify-content: flex-end;
-  margin-top: var(--space-xs);
-}
-
-.heatmap-legend-label {
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.heatmap-legend-cell {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+.act-day-row--today .act-day-count {
+  color: var(--text-primary);
 }
 
 /* ═══════════════════════════════════════════
    Card 3 — Productivity Stats (Ring Gauges)
    ═══════════════════════════════════════════ */
 
-.stat-rings-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-md);
-  margin-top: var(--space-sm);
+.stat-hero-layout {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* Hero — large center ring */
+.stat-hero-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+}
+
+.stat-ring-wrap--lg {
+  width: 374px;
+  height: 374px;
+}
+
+.stat-ring-value--lg {
+  font-size: 82px;
+}
+
+/* Orbit — 4 small rings positioned in corners */
+.stat-hero-orbit {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+}
+
+.stat-hero-orbit .stat-ring-tile {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.stat-hero-orbit .stat-ring-tile:nth-child(1) { top: 0;    left: 0;   }  /* top-left */
+.stat-hero-orbit .stat-ring-tile:nth-child(2) { top: 0;    right: 0;  }  /* top-right */
+.stat-hero-orbit .stat-ring-tile:nth-child(3) { bottom: 0; left: 0;   }  /* bottom-left */
+.stat-hero-orbit .stat-ring-tile:nth-child(4) { bottom: 0; right: 0;  }  /* bottom-right */
 
 .stat-ring-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .stat-ring-wrap {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 170px;
+  height: 170px;
 }
 
 .stat-ring-svg {
@@ -506,14 +607,14 @@
 }
 
 .stat-ring-value {
-  font-size: 22px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1;
 }
 
 .stat-ring-unit {
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -522,45 +623,47 @@
 }
 
 .stat-ring-label {
-  font-size: var(--font-size-xs);
+  font-size: 19px;
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: 0.2px;
 }
 
 /* ═══════════════════════════════════════════
-   Card 4 — Focus Session
+   Card 8 — Focus Session (Hero Ring layout)
    ═══════════════════════════════════════════ */
 
 .focus-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-md);
+  overflow: visible !important; /* dropdowns must escape the card */
 }
 
-/* Timer display is now handled by <FocusTimer /> component — see FocusTimer.css */
-
-/* ── Inline active session ── */
-
-.focus-inline-active {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  width: 100%;
+/* ── Dropdown chevron (needed when TaskCreateModal.css isn't loaded) ── */
+.focus-card .dropdown-chevron {
+  opacity: 0.6;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+html[data-theme='dark'] .focus-card .dropdown-chevron {
+  filter: brightness(0) invert(1);
 }
 
-.focus-context-hint {
+/* ── Idle hint ── */
+.focus-idle-hint {
+  text-align: center;
   font-size: var(--font-size-sm);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
+/* ── Timer display is handled by <FocusTimer size="xl" /> — see FocusTimer.css ── */
+
+/* ── Active session ── */
 .focus-discard-hint {
   font-size: var(--font-size-xs);
+  text-align: center;
 }
 
 .focus-end-btn {
@@ -570,12 +673,19 @@
   filter: brightness(1.1);
 }
 
-/* ── Inline setup form ── */
-
-.focus-inline-setup {
+/* ── Setup form — vertical stack ── */
+.focus-setup {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  width: 100%;
+}
+
+/* Duration + Link to — side by side */
+.focus-setup-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
   width: 100%;
 }
 
@@ -583,6 +693,25 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  width: 100%;
+}
+
+.focus-card .dropdown {
+  width: 100%;
+}
+
+.focus-card .dropdown-trigger {
+  width: 100%;
+}
+
+.focus-card .dropdown-menu {
+  z-index: 100;
+}
+
+.focus-card .dropdown-empty {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
 }
 
 .focus-form-label {
@@ -608,17 +737,19 @@
   box-shadow: 0 0 0 2px var(--glass-highlight);
 }
 
-/* ── Actions row — pinned bottom-left ── */
-
-.focus-inline-actions {
+/* ── Actions — pinned bottom, full-width ── */
+.focus-bottom-bar {
   display: flex;
   gap: var(--space-sm);
-  margin-top: auto;         /* push to card bottom */
-  align-self: flex-start;   /* left-align */
+  width: 100%;
+  margin-top: auto;
+}
+.focus-bottom-bar .btn-primary,
+.focus-bottom-bar .btn-secondary {
+  flex: 1;
 }
 
 /* ── Feedback messages ── */
-
 .focus-inline-error {
   font-size: var(--font-size-sm);
   color: var(--danger, #ef4444);

@@ -213,16 +213,16 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
               Hidden
             </button>
           </div>
-          <div className="view-toggle">
+          <div className="completion-tab-bar">
             <button
-              className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              className={`completion-tab-btn ${viewMode === 'list' ? 'active' : ''}`}
               onClick={() => setViewMode('list')}
               title="List view"
             >
               <img src={ListViewIcon} alt="" className="toggle-icon" />
             </button>
             <button
-              className={`toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              className={`completion-tab-btn ${viewMode === 'grid' ? 'active' : ''}`}
               onClick={() => setViewMode('grid')}
               title="Grid view"
             >
@@ -243,9 +243,6 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
               <>
                 <p className="empty-title">No active plans</p>
                 <p className="empty-message">Plans help you organize your work into stages and track progress on your goals.</p>
-                <button className="btn-primary btn-large" onClick={onCreatePlan}>
-                  <span>+ Create Your First Plan</span>
-                </button>
               </>
             )}
             {planTab === 'completed' && (

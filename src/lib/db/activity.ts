@@ -35,7 +35,7 @@ export async function logActivity(params: {
 /** Fetch recent activity for an entire workspace (global feed). */
 export async function getActivityLog(
   workspaceId: string,
-  options?: { limit?: number; offset?: number; entityType?: ActivityEntityType }
+  options?: { limit?: number; offset?: number; entityType?: ActivityEntityType; since?: string; until?: string }
 ): Promise<ActivityLogEntryWithUser[]> {
   let query = supabase
     .from('activity_log')
@@ -45,6 +45,12 @@ export async function getActivityLog(
 
   if (options?.entityType) {
     query = query.eq('entity_type', options.entityType);
+  }
+  if (options?.since) {
+    query = query.gte('created_at', options.since);
+  }
+  if (options?.until) {
+    query = query.lte('created_at', options.until);
   }
   if (options?.limit) {
     query = query.limit(options.limit);

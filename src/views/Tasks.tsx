@@ -569,7 +569,7 @@ export function Tasks() {
         </div>
       </div>
 
-      <div className="completion-tab-bar" style={{ margin: '0 0 12px 0' }}>
+      <div className="completion-tab-bar">
         <button
           className={`completion-tab-btn ${statusFilter === 'active' ? 'active' : ''}`}
           onClick={() => setStatusFilter('active')}

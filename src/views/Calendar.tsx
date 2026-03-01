@@ -648,15 +648,17 @@ export function Calendar() {
           <h2>{headerTitle}</h2>
         </div>
         <div className="calendar-toolbar-right">
-          {(['month', 'week', 'day'] as CalendarView[]).map((v) => (
-            <button
-              key={v}
-              className={`calendar-view-btn${view === v ? ' active' : ''}`}
-              onClick={() => setView(v)}
-            >
-              {v.charAt(0).toUpperCase() + v.slice(1)}
-            </button>
-          ))}
+          <div className="completion-tab-bar">
+            {(['month', 'week', 'day'] as CalendarView[]).map((v) => (
+              <button
+                key={v}
+                className={`completion-tab-btn${view === v ? ' active' : ''}`}
+                onClick={() => setView(v)}
+              >
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

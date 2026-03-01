@@ -43,7 +43,7 @@
 .focus-ring-timer__track {
   fill: none;
   stroke: var(--glass-border, rgba(255, 255, 255, 0.18));
-  stroke-width: 7;
+  stroke-width: 12;
   stroke-linecap: round;
 }
 
@@ -51,7 +51,7 @@
 .focus-ring-timer__progress {
   fill: none;
   stroke: url(#focusRingGrad);
-  stroke-width: 7;
+  stroke-width: 12;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
   filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.35));
@@ -61,7 +61,7 @@
 .focus-ring-timer__glow {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--focus-glow-a) 0%, var(--focus-glow-b) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.18) 0%, rgba(139, 92, 246, 0.14) 50%, transparent 70%);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
@@ -117,6 +117,47 @@
 
 .focus-ring-timer--overtime .focus-ring-timer__sub {
   color: #f43f5e;
+}
+
+/* ═══════════════════════════════════════════
+   Context label inside ring
+   ═══════════════════════════════════════════ */
+.focus-ring-timer__ctx {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════
+   Size: xl (Hero Ring — oversized, card-dominant)
+   ═══════════════════════════════════════════ */
+.focus-ring-timer--xl {
+  width: 38%;
+  aspect-ratio: 1;
+}
+
+.focus-ring-timer--xl .focus-ring-timer__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.focus-ring-timer--xl .focus-ring-timer__digits {
+  font-size: 48px;
+  letter-spacing: -2px;
+}
+
+.focus-ring-timer--xl .focus-ring-timer__sub {
+  font-size: 13px;
+}
+
+.focus-ring-timer--xl .focus-ring-timer__glow {
+  width: 70%;
+  height: 70%;
 }
 
 /* ═══════════════════════════════════════════

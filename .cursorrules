@@ -53,6 +53,9 @@ Full-page views only — one per tab/route. Do not put reusable widgets here.
 ### CSS
 - Component CSS lives **next to** its `.tsx` file in the same subfolder
 - Global styles go in `src/styles/`
+- Follow `docs/rules/SEARCH_RULES.md` for all search/filter toolbars
+- Follow `docs/rules/TAB_BAR_RULES.md` for all tab bars and filter pill rows
+- Follow `docs/rules/DATE_PICKER_RULES.md` for all date inputs (never use native `<input type="date">`)
 
 ### Tests
 - Test files sit **next to** the source they test (e.g., `lib/recurrence.test.ts`)

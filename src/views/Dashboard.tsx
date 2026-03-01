@@ -485,10 +485,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* ═══ CARD 4 — Productivity Stats (Ring Gauges) ═══ */}
       {(() => {
         const C = 207.35;
+        const goalProgressAvg = activeGoals.length > 0
+          ? Math.round(activeGoals.reduce((s, g) => s + g.progress, 0) / activeGoals.length)
+          : 0;
+        const todayDone = todayTasks.filter((t) => t.completed).length;
+        const todayTotal = todayTasks.length;
+        const todayPct = todayTotal > 0 ? Math.round((todayDone / todayTotal) * 100) : 0;
         const focusPct  = Math.min(avgDailyFocus / 60, 1) * 100;
         const streakPct = Math.min(focusStreak / 7, 1) * 100;
-        const ring = (pct: number, color: string, glow: string) => (
-          <svg className="stat-ring-svg" viewBox="0 0 80 80">
+        const ring = (pct: number, color: string, glow: string, size: 'lg' | 'sm') => (
+          <svg className={`stat-ring-svg stat-ring-svg--${size}`} viewBox="0 0 80 80">
             <circle className="stat-ring-track" cx="40" cy="40" r="33" />
             <circle
               className="stat-ring-progress"
@@ -504,46 +510,60 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         return (
           <div className="dashboard-card glass">
             <h3>Productivity Stats</h3>
-            <div className="stat-rings-grid">
-              <div className="stat-ring-tile">
-                <div className="stat-ring-wrap">
-                  {ring(completionRate, '#ff375f', 'rgba(255,55,95,0.35)')}
+            <div className="stat-hero-layout">
+              {/* Hero ring — Today's Pulse */}
+              <div className="stat-hero-center">
+                <div className="stat-ring-wrap stat-ring-wrap--lg">
+                  {ring(todayPct, '#00c7be', 'rgba(0,199,190,0.4)', 'lg')}
                   <div className="stat-ring-center">
-                    <span className="stat-ring-value" style={{ color: '#ff375f' }}>{completionRate}</span>
-                    <span className="stat-ring-unit">%</span>
+                    <span className="stat-ring-value stat-ring-value--lg" style={{ color: '#00c7be' }}>{todayDone}</span>
+                    <span className="stat-ring-unit">/ {todayTotal}</span>
                   </div>
                 </div>
-                <span className="stat-ring-label">Completion</span>
+                <span className="stat-ring-label">Today's Pulse</span>
               </div>
-              <div className="stat-ring-tile">
-                <div className="stat-ring-wrap">
-                  {ring(completionRate, '#30d158', 'rgba(48,209,88,0.35)')}
-                  <div className="stat-ring-center">
-                    <span className="stat-ring-value" style={{ color: '#30d158' }}>{completedCount}</span>
-                    <span className="stat-ring-unit">/ {assignedCount}</span>
+              {/* Orbit — 4 smaller rings */}
+              <div className="stat-hero-orbit">
+                <div className="stat-ring-tile">
+                  <div className="stat-ring-wrap">
+                    {ring(completionRate, '#ff375f', 'rgba(255,55,95,0.35)', 'sm')}
+                    <div className="stat-ring-center">
+                      <span className="stat-ring-value" style={{ color: '#ff375f' }}>{completionRate}</span>
+                      <span className="stat-ring-unit">%</span>
+                    </div>
                   </div>
+                  <span className="stat-ring-label">Completion</span>
                 </div>
-                <span className="stat-ring-label">Tasks Done</span>
-              </div>
-              <div className="stat-ring-tile">
-                <div className="stat-ring-wrap">
-                  {ring(focusPct, '#5e5ce6', 'rgba(94,92,230,0.35)')}
-                  <div className="stat-ring-center">
-                    <span className="stat-ring-value" style={{ color: '#5e5ce6' }}>{avgDailyFocus}</span>
-                    <span className="stat-ring-unit">min</span>
+                <div className="stat-ring-tile">
+                  <div className="stat-ring-wrap">
+                    {ring(goalProgressAvg, '#30d158', 'rgba(48,209,88,0.35)', 'sm')}
+                    <div className="stat-ring-center">
+                      <span className="stat-ring-value" style={{ color: '#30d158' }}>{goalProgressAvg}</span>
+                      <span className="stat-ring-unit">%</span>
+                    </div>
                   </div>
+                  <span className="stat-ring-label">Goals</span>
                 </div>
-                <span className="stat-ring-label">Avg Focus</span>
-              </div>
-              <div className="stat-ring-tile">
-                <div className="stat-ring-wrap">
-                  {ring(streakPct, '#ff9f0a', 'rgba(255,159,10,0.35)')}
-                  <div className="stat-ring-center">
-                    <span className="stat-ring-value" style={{ color: '#ff9f0a' }}>{focusStreak}</span>
-                    <span className="stat-ring-unit">{focusStreak === 1 ? 'day' : 'days'}</span>
+                <div className="stat-ring-tile">
+                  <div className="stat-ring-wrap">
+                    {ring(focusPct, '#5e5ce6', 'rgba(94,92,230,0.35)', 'sm')}
+                    <div className="stat-ring-center">
+                      <span className="stat-ring-value" style={{ color: '#5e5ce6' }}>{avgDailyFocus}</span>
+                      <span className="stat-ring-unit">min</span>
+                    </div>
                   </div>
+                  <span className="stat-ring-label">Avg Focus</span>
                 </div>
-                <span className="stat-ring-label">Streak</span>
+                <div className="stat-ring-tile">
+                  <div className="stat-ring-wrap">
+                    {ring(streakPct, '#ff9f0a', 'rgba(255,159,10,0.35)', 'sm')}
+                    <div className="stat-ring-center">
+                      <span className="stat-ring-value" style={{ color: '#ff9f0a' }}>{focusStreak}</span>
+                      <span className="stat-ring-unit">{focusStreak === 1 ? 'day' : 'days'}</span>
+                    </div>
+                  </div>
+                  <span className="stat-ring-label">Streak</span>
+                </div>
               </div>
             </div>
           </div>
@@ -645,12 +665,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         )}
       </div>
 
-      {/* ═══ CARD — Weekly Activity Heatmap ═══ */}
-      <div className="dashboard-card glass">
+      {/* ═══ CARD — 7-Day Activity (Ring + Daily List) ═══ */}
+      <div className="dashboard-card glass activity-card">
         <h3>7-Day Activity</h3>
         {(() => {
           /* Build 7-day buckets */
           const buckets: Record<string, number> = {};
+          const todayKey = localDateKey(new Date().toISOString());
           for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -667,8 +688,20 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
           const days = Object.entries(buckets);
           const maxVal = Math.max(...days.map(([, v]) => v), 1);
+          const total = days.reduce((s, [, v]) => s + v, 0);
+          const WEEKLY_TARGET = 70;
+          const ringRatio = Math.min(total / WEEKLY_TARGET, 1);
+          const R = 80;
+          const C = 2 * Math.PI * R; // ≈ 502.65
 
-          const intensity = (v: number): number => {
+          const INTENSITY_COLORS = [
+            'rgba(96, 165, 250, 0.15)',
+            'rgba(96, 165, 250, 0.30)',
+            'rgba(96, 165, 250, 0.50)',
+            'rgba(96, 165, 250, 0.70)',
+            'rgba(96, 165, 250, 1)',
+          ];
+          const intensityIdx = (v: number): number => {
             if (v === 0) return 0;
             if (v <= maxVal * 0.25) return 1;
             if (v <= maxVal * 0.5) return 2;
@@ -677,190 +710,219 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           };
 
           return (
-            <div className="heatmap-section">
-              <div className="heatmap-grid">
-                {days.map(([dateKey, count]) => (
-                  <div key={dateKey} className="heatmap-col">
-                    <div className={`heatmap-cell heatmap-cell--${intensity(count)}`} title={`${count} actions`} />
-                    <span className="heatmap-day">{weekdayLabel(dateKey)}</span>
-                    <span className="heatmap-count">{count}</span>
-                  </div>
-                ))}
+            <>
+              {/* Ring gauge */}
+              <div className="act-ring-wrap">
+                <div className="act-ring-glow" />
+                <svg className="act-ring-svg" viewBox="0 0 200 200">
+                  <defs>
+                    <linearGradient id="actRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#a78bfa" />
+                      <stop offset="100%" stopColor="#60a5fa" />
+                    </linearGradient>
+                  </defs>
+                  <circle className="act-ring-track" cx="100" cy="100" r={R} strokeWidth="12" />
+                  <circle
+                    className="act-ring-progress"
+                    cx="100" cy="100" r={R}
+                    strokeWidth="12"
+                    strokeDasharray={C}
+                    strokeDashoffset={C * (1 - ringRatio)}
+                    transform="rotate(-90 100 100)"
+                  />
+                </svg>
+                <div className="act-ring-center">
+                  <span className="act-ring-val">{total}</span>
+                  <span className="act-ring-label">actions</span>
+                </div>
               </div>
-              <div className="heatmap-legend">
-                <span className="heatmap-legend-label">Less</span>
-                {[0, 1, 2, 3, 4].map((l) => (
-                  <div key={l} className={`heatmap-legend-cell heatmap-cell--${l}`} />
-                ))}
-                <span className="heatmap-legend-label">More</span>
+
+              {/* Daily rows */}
+              <div className="act-day-list">
+                {days.map(([dateKey, count]) => {
+                  const isToday = dateKey === todayKey;
+                  const pct = Math.max((count / maxVal) * 100, 3);
+                  return (
+                    <div key={dateKey} className={`act-day-row${isToday ? ' act-day-row--today' : ''}`}>
+                      <span className="act-day-dot" style={{ background: INTENSITY_COLORS[intensityIdx(count)] }} />
+                      <span className="act-day-name">{weekdayLabel(dateKey)}</span>
+                      <div className="act-day-bar-track">
+                        <div className="act-day-bar-fill" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="act-day-count">{count}</span>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            </>
           );
         })()}
       </div>
 
       {/* ═══ CARD 8 — Focus Session ═══ */}
       <div className="dashboard-card glass focus-card">
-          <h3>Focus Session</h3>
+        <h3>Focus Session</h3>
+        {focusError && <div className="focus-inline-error">{focusError}</div>}
+        {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
 
-          {focusError && <div className="focus-inline-error">{focusError}</div>}
-          {focusEndMsg && <div className="focus-inline-success">{focusEndMsg}</div>}
+        {/* Hero ring — oversized, centered, context inside */}
+        <FocusTimer
+          seconds={focusElapsed}
+          active={!!activeSession}
+          size="xl"
+          plannedMinutes={activeSession?.planned_duration_minutes}
+          contextLabel={activeSession ? activeContextLabel() : null}
+        />
 
-          {/* Timer — always visible */}
-          <FocusTimer
-            seconds={focusElapsed}
-            active={!!activeSession}
-            plannedMinutes={activeSession?.planned_duration_minutes}
-          />
+        {/* Idle hint */}
+        {!activeSession && !focusStarted && (
+          <p className="text-secondary focus-idle-hint">Start a focused work session.</p>
+        )}
 
-          {activeSession ? (
-            /* ── Active session ── */
-            <div className="focus-inline-active">
-              <p className="text-secondary focus-context-hint">
-                {activeContextLabel() ? `Focused on: ${activeContextLabel()}` : 'Free focus — no specific context'}
-              </p>
-              <p className="text-tertiary focus-discard-hint">Sessions under 5 min are discarded.</p>
-            </div>
-          ) : focusStarted ? (
-            /* ── Setup form ── */
-            <div className="focus-inline-setup">
-              {/* Duration dropdown */}
-              <div className="focus-form-group">
-                <label className="focus-form-label">Duration</label>
-                <div className="dropdown" ref={durationRef}>
-                  <button
-                    type="button"
-                    className="dropdown-trigger"
-                    onClick={() => { closeAllFocusDropdowns(); setIsDurationOpen(!isDurationOpen); }}
-                  >
-                    <span>{durationLabel}</span>
-                    <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
-                  </button>
-                  {isDurationOpen && (
-                    <div className="dropdown-menu">
-                      {DURATION_PRESETS.map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          className={`dropdown-option${focusDuration === m ? ' dropdown-option-active' : ''}`}
-                          onClick={() => { setFocusDuration(m); setCustomDuration(''); setIsDurationOpen(false); }}
-                        >
-                          {m} min
-                        </button>
-                      ))}
+        {/* Setup form — vertical stack */}
+        {!activeSession && focusStarted && (
+          <div className="focus-setup">
+            <div className="focus-setup-row">
+            {/* Duration dropdown */}
+            <div className="focus-form-group">
+              <label className="focus-form-label">Duration</label>
+              <div className="dropdown" ref={durationRef}>
+                <button
+                  type="button"
+                  className="dropdown-trigger"
+                  onClick={() => { closeAllFocusDropdowns(); setIsDurationOpen(!isDurationOpen); }}
+                >
+                  <span>{durationLabel}</span>
+                  <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
+                </button>
+                {isDurationOpen && (
+                  <div className="dropdown-menu">
+                    {DURATION_PRESETS.map((m) => (
                       <button
+                        key={m}
                         type="button"
-                        className={`dropdown-option${focusDuration === null ? ' dropdown-option-active' : ''}`}
-                        onClick={() => { setFocusDuration(null); setIsDurationOpen(false); }}
+                        className={`dropdown-option${focusDuration === m ? ' dropdown-option-active' : ''}`}
+                        onClick={() => { setFocusDuration(m); setCustomDuration(''); setIsDurationOpen(false); }}
                       >
-                        Custom
+                        {m} min
                       </button>
-                    </div>
-                  )}
-                </div>
-                {focusDuration === null && (
-                  <input
-                    type="number"
-                    className="focus-custom-input"
-                    placeholder="Minutes"
-                    min={1}
-                    max={480}
-                    value={customDuration}
-                    onChange={(e) => setCustomDuration(e.target.value)}
-                  />
-                )}
-              </div>
-
-              {/* Context type dropdown */}
-              <div className="focus-form-group">
-                <label className="focus-form-label">Link to (optional)</label>
-                <div className="dropdown" ref={ctxTypeRef}>
-                  <button
-                    type="button"
-                    className="dropdown-trigger"
-                    onClick={() => { closeAllFocusDropdowns(); setIsCtxTypeOpen(!isCtxTypeOpen); }}
-                  >
-                    <span>{contextTypeLabel(focusContextType)}</span>
-                    <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
-                  </button>
-                  {isCtxTypeOpen && (
-                    <div className="dropdown-menu">
-                      {(['none', 'plan', 'goal', 'task'] as const).map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          className={`dropdown-option${focusContextType === v ? ' dropdown-option-active' : ''}`}
-                          onClick={() => { setFocusContextType(v); setFocusContextId(''); setIsCtxTypeOpen(false); }}
-                        >
-                          {contextTypeLabel(v)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Context value dropdown */}
-              {focusContextType !== 'none' && (
-                <div className="focus-form-group">
-                  <label className="focus-form-label">
-                    {focusContextType === 'plan' ? 'Select plan' : focusContextType === 'goal' ? 'Select goal' : 'Select task'}
-                  </label>
-                  <div className="dropdown" ref={ctxValRef}>
+                    ))}
                     <button
                       type="button"
-                      className="dropdown-trigger"
-                      onClick={() => { closeAllFocusDropdowns(); setIsCtxValOpen(!isCtxValOpen); }}
+                      className={`dropdown-option${focusDuration === null ? ' dropdown-option-active' : ''}`}
+                      onClick={() => { setFocusDuration(null); setIsDurationOpen(false); }}
                     >
-                      <span>{contextValueLabel()}</span>
-                      <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
+                      Custom
                     </button>
-                    {isCtxValOpen && (
-                      <div className="dropdown-menu">
-                        {contextValueItems().length === 0 ? (
-                          <div className="dropdown-empty">{contextEmptyLabel()}</div>
-                        ) : (
-                          contextValueItems().map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className={`dropdown-option${focusContextId === item.id ? ' dropdown-option-active' : ''}`}
-                              onClick={() => { setFocusContextId(item.id); setIsCtxValOpen(false); }}
-                            >
-                              {item.title}
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
                   </div>
-                </div>
+                )}
+              </div>
+              {focusDuration === null && (
+                <input
+                  type="number"
+                  className="focus-custom-input"
+                  placeholder="Minutes"
+                  min={1}
+                  max={480}
+                  value={customDuration}
+                  onChange={(e) => setCustomDuration(e.target.value)}
+                />
               )}
             </div>
-          ) : (
-            /* ── Idle hint ── */
-            <p className="text-secondary">Start a focused work session.</p>
-          )}
 
-          {/* ── Actions — always pinned at bottom ── */}
-          <div className="focus-inline-actions">
-            {activeSession ? (
-              <button className="btn-primary focus-end-btn" onClick={handleEndSession} disabled={focusLoading}>
-                <span>{focusLoading ? 'Ending…' : 'End Session'}</span>
-              </button>
-            ) : focusStarted ? (
-              <>
-                <button className="btn-secondary" onClick={handleCancelSetup}><span>Cancel</span></button>
-                <button className="btn-primary" onClick={handleStartSession} disabled={focusLoading}>
-                  <span>{focusLoading ? 'Starting…' : 'Start'}</span>
+            {/* Context type dropdown */}
+            <div className="focus-form-group">
+              <label className="focus-form-label">Link to (optional)</label>
+              <div className="dropdown" ref={ctxTypeRef}>
+                <button
+                  type="button"
+                  className="dropdown-trigger"
+                  onClick={() => { closeAllFocusDropdowns(); setIsCtxTypeOpen(!isCtxTypeOpen); }}
+                >
+                  <span>{contextTypeLabel(focusContextType)}</span>
+                  <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
                 </button>
-              </>
-            ) : (
-              <button className="btn-primary" onClick={handleShowSetup}>
-                <span>Start Focus Session</span>
-              </button>
+                {isCtxTypeOpen && (
+                  <div className="dropdown-menu">
+                    {(['none', 'plan', 'goal', 'task'] as const).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        className={`dropdown-option${focusContextType === v ? ' dropdown-option-active' : ''}`}
+                        onClick={() => { setFocusContextType(v); setFocusContextId(''); setIsCtxTypeOpen(false); }}
+                      >
+                        {contextTypeLabel(v)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            </div>{/* end focus-setup-row */}
+
+            {/* Context value dropdown */}
+            {focusContextType !== 'none' && (
+              <div className="focus-form-group">
+                <label className="focus-form-label">
+                  {focusContextType === 'plan' ? 'Select plan' : focusContextType === 'goal' ? 'Select goal' : 'Select task'}
+                </label>
+                <div className="dropdown" ref={ctxValRef}>
+                  <button
+                    type="button"
+                    className="dropdown-trigger"
+                    onClick={() => { closeAllFocusDropdowns(); setIsCtxValOpen(!isCtxValOpen); }}
+                  >
+                    <span>{contextValueLabel()}</span>
+                    <img src={ChevronDownIcon} alt="" className="dropdown-chevron" />
+                  </button>
+                  {isCtxValOpen && (
+                    <div className="dropdown-menu">
+                      {contextValueItems().length === 0 ? (
+                        <div className="dropdown-empty">{contextEmptyLabel()}</div>
+                      ) : (
+                        contextValueItems().map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`dropdown-option${focusContextId === item.id ? ' dropdown-option-active' : ''}`}
+                            onClick={() => { setFocusContextId(item.id); setIsCtxValOpen(false); }}
+                          >
+                            {item.title}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
+        )}
+
+        {/* Active hint */}
+        {activeSession && (
+          <p className="text-tertiary focus-discard-hint">Sessions under 5 min are discarded.</p>
+        )}
+
+        {/* Actions — pinned bottom */}
+        <div className="focus-bottom-bar">
+          {activeSession ? (
+            <button className="btn-primary focus-end-btn" onClick={handleEndSession} disabled={focusLoading}>
+              <span>{focusLoading ? 'Ending…' : 'End Session'}</span>
+            </button>
+          ) : focusStarted ? (
+            <>
+              <button className="btn-secondary" onClick={handleCancelSetup}><span>Cancel</span></button>
+              <button className="btn-primary" onClick={handleStartSession} disabled={focusLoading}>
+                <span>{focusLoading ? 'Starting…' : 'Start'}</span>
+              </button>
+            </>
+          ) : (
+            <button className="btn-primary" onClick={handleShowSetup}>
+              <span>Start Focus Session</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ═══ Read-only popups ═══ */}

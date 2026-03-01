@@ -144,26 +144,7 @@ html[data-theme='dark'] .search-icon-img {
   gap: var(--space-md);
 }
 
-.view-toggle {
-  display: flex;
-  gap: 4px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-}
-
-.toggle-btn {
-  padding: var(--space-sm) var(--space-md);
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  font-size: var(--font-size-lg);
-}
-
+/* Toggle icon (used inside completion-tab-btn) */
 .toggle-icon {
   width: 18px;
   height: 18px;
@@ -171,8 +152,8 @@ html[data-theme='dark'] .search-icon-img {
   transition: opacity var(--transition-fast);
 }
 
-.toggle-btn:hover .toggle-icon,
-.toggle-btn.active .toggle-icon {
+.completion-tab-btn:hover .toggle-icon,
+.completion-tab-btn.active .toggle-icon {
   opacity: 1;
 }
 
@@ -180,14 +161,8 @@ html[data-theme='dark'] .toggle-icon {
   filter: brightness(0) invert(1);
 }
 
-.toggle-btn:hover {
-  color: var(--text-primary);
-}
-
-.toggle-btn.active {
-  background: var(--glass-bg-heavy);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
+.completion-tab-btn.active .toggle-icon {
+  filter: brightness(0) invert(1);
 }
 
 /* Active/Hidden toggle */
@@ -369,32 +344,42 @@ html[data-theme='dark'] .toggle-icon {
 }
 
 .plans-empty {
+  position: fixed;
+  top: 80px;
+  left: 240px;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.plans-empty .empty-container {
+  pointer-events: auto;
 }
 
 .empty-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   text-align: center;
-  max-width: 400px;
+  max-width: 360px;
 }
 
-.empty-title {
+.plans-empty .empty-title {
   margin: 0;
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 
-.empty-message {
+.plans-empty .empty-message {
   margin: 0;
   color: var(--text-secondary);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   line-height: 1.5;
 }
 

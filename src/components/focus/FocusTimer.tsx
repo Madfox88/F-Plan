@@ -13,10 +13,12 @@ interface FocusTimerProps {
   seconds: number;
   /** Whether the session is currently running — controls glow + ring */
   active?: boolean;
-  /** Visual size — lg (default) for card/modal, sm for compact contexts */
-  size?: 'lg' | 'sm';
+  /** Visual size — xl for Hero Ring, lg (default) for card/modal, sm for compact */
+  size?: 'xl' | 'lg' | 'sm';
   /** Planned duration in minutes — when set, shows remaining time + ring progress */
   plannedMinutes?: number | null;
+  /** Optional context label shown below the sub-label (e.g. "Goal: Launch MVP") */
+  contextLabel?: string | null;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -28,10 +30,10 @@ function formatTime(totalSeconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-const R = 62; // ring radius
-const C = 2 * Math.PI * R; // ≈ 389.56 circumference
+const R = 80; // ring radius
+const C = 2 * Math.PI * R; // ≈ 502.65 circumference
 
-export function FocusTimer({ seconds, active = false, size = 'lg', plannedMinutes }: FocusTimerProps) {
+export function FocusTimer({ seconds, active = false, size = 'lg', plannedMinutes, contextLabel }: FocusTimerProps) {
   const targetSeconds = plannedMinutes ? plannedMinutes * 60 : null;
   const remaining = targetSeconds ? Math.max(0, targetSeconds - seconds) : null;
   const overtime = targetSeconds ? seconds > targetSeconds : false;
@@ -48,21 +50,21 @@ export function FocusTimer({ seconds, active = false, size = 'lg', plannedMinute
       <div className="focus-ring-timer__glow" aria-hidden="true" />
 
       {/* SVG ring */}
-      <svg className="focus-ring-timer__svg" viewBox="0 0 150 150">
+      <svg className="focus-ring-timer__svg" viewBox="0 0 200 200">
         <defs>
           <linearGradient id="focusRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="var(--focus-ring-start)" />
             <stop offset="100%" stopColor="var(--focus-ring-end)" />
           </linearGradient>
         </defs>
-        <circle className="focus-ring-timer__track" cx="75" cy="75" r={R} />
+        <circle className="focus-ring-timer__track" cx="100" cy="100" r={R} />
         {active && (
           <circle
             className="focus-ring-timer__progress"
-            cx="75" cy="75" r={R}
+            cx="100" cy="100" r={R}
             strokeDasharray={C}
             strokeDashoffset={offset}
-            transform="rotate(-90 75 75)"
+            transform="rotate(-90 100 100)"
           />
         )}
       </svg>
@@ -77,6 +79,7 @@ export function FocusTimer({ seconds, active = false, size = 'lg', plannedMinute
         ) : !active ? (
           <span className="focus-ring-timer__sub">Ready</span>
         ) : null}
+        {contextLabel && <span className="focus-ring-timer__ctx">{contextLabel}</span>}
       </div>
     </div>
   );

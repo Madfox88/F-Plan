@@ -286,7 +286,7 @@ export function GoalsIndex() {
         </button>
       </div>
 
-      <div className="completion-tab-bar" style={{ marginBottom: 20 }}>
+      <div className="completion-tab-bar">
         <button
           className={`completion-tab-btn ${completionTab === 'active' ? 'active' : ''}`}
           onClick={() => setCompletionTab('active')}

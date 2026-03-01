@@ -1,0 +1,202 @@
+/* ═══ DatePicker ═══ */
+
+.dp {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dp-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ── Trigger button ── */
+.dp-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.dp-trigger:hover {
+  background: var(--glass-bg-heavy);
+}
+
+.dp-trigger:focus-visible {
+  outline: none;
+  border-color: var(--color-active);
+}
+
+.dp-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.dp-trigger-placeholder {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.dp-trigger-text {
+  white-space: nowrap;
+}
+
+/* ── Dropdown panel ── */
+.dp-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  width: 264px;
+  padding: 12px;
+  background: var(--glass-bg-heavy);
+  backdrop-filter: blur(var(--glass-blur-heavy, 32px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy, 32px));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  animation: dpFadeIn 0.15s ease-out;
+}
+
+@keyframes dpFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header (month nav) ── */
+.dp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dp-month-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.dp-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.dp-nav:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+.dp-nav svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── Grid layout ── */
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+/* Weekday headers */
+.dp-weekday {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-tertiary);
+  padding: 4px 0;
+  user-select: none;
+}
+
+.dp-days {
+  margin-top: 2px;
+}
+
+/* ── Day cells ── */
+.dp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.dp-cell:hover:not(.dp-empty) {
+  background: var(--glass-bg);
+}
+
+.dp-empty {
+  cursor: default;
+}
+
+.dp-today {
+  border-color: var(--color-active);
+  font-weight: var(--font-weight-semibold);
+}
+
+.dp-selected {
+  background: var(--color-active) !important;
+  color: #fff !important;
+  font-weight: var(--font-weight-semibold);
+  border-color: var(--color-active) !important;
+}
+
+/* ── Footer ── */
+.dp-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.dp-today-btn {
+  padding: 4px 14px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-active);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.dp-today-btn:hover {
+  background: var(--glass-bg);
+}

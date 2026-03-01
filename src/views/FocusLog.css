@@ -73,11 +73,37 @@
 /* ── Empty state ── */
 
 .focus-log-empty {
-  padding: var(--space-xl);
-  text-align: center;
+  position: fixed;
+  top: 80px;
+  left: 240px;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-xs);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.focus-log-empty > * {
+  pointer-events: auto;
+}
+
+.focus-log-empty__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.focus-log-empty__message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 /* ── Session list ── */

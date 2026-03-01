@@ -3,6 +3,7 @@
 .activity-feed {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: 2px;
 }
 
@@ -136,16 +137,37 @@
 
 /* Empty state */
 .activity-empty {
+  position: fixed;
+  top: 80px;
+  left: 240px;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 32px 16px;
-  color: var(--text-tertiary, #888);
-  font-size: 0.9rem;
+  gap: var(--space-xs);
+  pointer-events: none;
+  z-index: 1;
 }
 
-.activity-empty-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-  opacity: 0.5;
+.activity-empty > * {
+  pointer-events: auto;
+}
+
+.activity-empty__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.activity-empty__message {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 /* Loading skeleton */
@@ -190,32 +212,51 @@
 .activity-filters {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 0 12px;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .activity-filter-btn {
-  background: transparent;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 0.8rem;
-  color: var(--text-secondary, #aaa);
+  height: 44px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  font-family: var(--font-family);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .activity-filter-btn:hover {
-  border-color: var(--text-secondary, #888);
-  color: var(--text-primary, #e0e0e0);
+  color: var(--text-primary);
+  background: var(--glass-bg-heavy);
 }
 
 .activity-filter-btn.active {
-  background: var(--accent, #ffd95e);
-  color: #1a1a2e;
-  border-color: var(--accent, #ffd95e);
+  background: var(--glass-bg-heavy);
+  border-color: var(--glass-border-heavy);
+  color: var(--color-active);
   font-weight: 600;
+}
+
+/* Vertical separator between entity filters and date pickers */
+.activity-filters-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+}
+
+.activity-date-clear {
+  height: 44px;
+  padding: 0 12px;
 }
 
 /* Load-more button */
