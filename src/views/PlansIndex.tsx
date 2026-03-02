@@ -11,6 +11,7 @@ import GridViewIcon from '../assets/icons/grid.svg';
 import SearchIcon from '../assets/icons/search.svg';
 import PinIcon from '../assets/icons/pin.svg';
 import PinFilledIcon from '../assets/icons/pin-filled.svg';
+import StatusIndicator from '../components/ui/StatusIndicator';
 import '../components/ui/CompletionAnimation.css';
 import './PlansIndex.css';
 
@@ -338,7 +339,10 @@ export function PlansIndex({ onCreatePlan, onSelectPlan, onPinToggle }: PlansInd
                 {planTab === 'completed' && plan.completed_at ? (
                   <span className="completed-stamp">✅ Completed {new Date(plan.completed_at).toLocaleDateString()}</span>
                 ) : (
-                  <span className="plan-status" data-status={plan.status}>{plan.status}</span>
+                  <span className="plan-status" data-status={plan.status}>
+                    <StatusIndicator status={plan.status} size="sm" />
+                    {plan.status}
+                  </span>
                 )}
                 {plan.due_date && (
                   <span className="plan-due-pill">

@@ -9,6 +9,7 @@ import { useCompletionToast } from '../components/ui/CompletionToast';
 import { useActivityLog } from '../hooks/useActivityLog';
 import SearchIcon from '../assets/icons/search.svg';
 import TrashIcon from '../assets/icons/trash.svg';
+import StatusIndicator from '../components/ui/StatusIndicator';
 import '../components/ui/CompletionAnimation.css';
 import './GoalsIndex.css';
 
@@ -393,7 +394,13 @@ export function GoalsIndex() {
               </div>
             )}
 
-            <h3 className="goal-card-title">{goal.title}</h3>
+            <div className="goal-card-title-row">
+              <StatusIndicator
+                status={isCompleted ? 'completed' : goal.progress > 0 ? 'in_progress' : 'not_started'}
+                size="sm"
+              />
+              <h3 className="goal-card-title">{goal.title}</h3>
+            </div>
 
             {goal.description && (
               <p className="goal-card-description">{goal.description}</p>

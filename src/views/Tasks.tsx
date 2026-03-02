@@ -10,6 +10,7 @@ import TrashIcon from '../assets/icons/trash.svg';
 import SearchIcon from '../assets/icons/search.svg';
 import { useCompletionToast } from '../components/ui/CompletionToast';
 import { useActivityLog } from '../hooks/useActivityLog';
+import StatusIndicator from '../components/ui/StatusIndicator';
 import '../components/ui/CompletionAnimation.css';
 import './Tasks.css';
 
@@ -673,6 +674,7 @@ export function Tasks() {
                             onToggle={() => handleToggleComplete(task.id)}
                             disabled={updatingId === task.id}
                           />
+                          <StatusIndicator status={status} size="sm" />
                         </div>
                         <div className="task-card-main">
                           <div className="task-card-title" title={task.title}>{task.title}</div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getActivePlans, getTagsByWorkspace } from '../../lib/db';
 import { TagPicker } from '../tasks/TagPicker';
+import { DatePicker } from '../ui/DatePicker';
 import type { Plan, Tag } from '../../types/database';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import './CreateGoalModal.css';
@@ -144,15 +145,11 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
 
           {/* Target date */}
           <div className="form-group">
-            <label htmlFor="goal-due-date">Target date (optional)</label>
-            <input
-              id="goal-due-date"
-              type="date"
+            <label>Target date (optional)</label>
+            <DatePicker
               value={dueDate}
-              onChange={(e) => {
-                setDueDate(e.target.value);
-                e.target.blur();
-              }}
+              onChange={setDueDate}
+              placeholder="Pick a target date"
               disabled={isLoading}
             />
           </div>

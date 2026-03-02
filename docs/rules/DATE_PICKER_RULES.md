@@ -106,6 +106,27 @@
 
 ---
 
+## 8.5 Modal Integration Rules
+
+When DatePicker is used inside any modal (Create Goal, Create Plan, Task Create, etc.):
+
+- The trigger must visually match modal inputs (`var(--radius-sm)`, same border rhythm).
+- Wrapper should be full width in form rows:
+
+```css
+.your-modal .dp { width: 100%; }
+.your-modal .dp-trigger {
+  width: 100%;
+  justify-content: flex-start;
+}
+```
+
+- Use `disabled` state during submit/loading, same as other fields.
+- Never fallback to native `input[type="date"]` in modals.
+- Follow modal contrast requirements from `docs/rules/MODAL_RULES.md`.
+
+---
+
 ## 9. Do-Nots
 
 | ❌ Don't | ✅ Do |

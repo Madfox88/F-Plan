@@ -416,6 +416,7 @@ html[data-theme='dark'] .toggle-icon {
 
 .plan-card {
   position: relative;
+  z-index: 1;
   padding: var(--space-xl);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -426,8 +427,13 @@ html[data-theme='dark'] .toggle-icon {
 }
 
 .plan-card:hover {
+  z-index: 20;
   border-color: var(--glass-border-heavy);
   background: var(--glass-bg-heavy);
+}
+
+.plan-card:focus-within {
+  z-index: 20;
 }
 
 .plan-card:focus-visible {
@@ -548,7 +554,9 @@ html[data-theme='dark'] .plan-pin-icon {
 }
 
 .plan-status {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 2px 8px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);

@@ -12,6 +12,7 @@ interface DatePickerProps {
   onChange: (val: string) => void;
   label?: string;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 /** Pad single-digit numbers with a leading zero. */
@@ -29,7 +30,7 @@ function formatDisplay(iso: string) {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function DatePicker({ value, onChange, label, placeholder = 'Pick a date' }: DatePickerProps) {
+export function DatePicker({ value, onChange, label, placeholder = 'Pick a date', disabled = false }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -103,6 +104,7 @@ export function DatePicker({ value, onChange, label, placeholder = 'Pick a date'
       <button
         type="button"
         className="dp-trigger"
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
       >
         <svg className="dp-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">

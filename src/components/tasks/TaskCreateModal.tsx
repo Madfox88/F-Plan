@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Plan, Stage, Task, ChecklistItem, User, TaskRepeatRule, Tag } from '../../types/database';
 import { getUsers, getTagsByWorkspace, getTaskTagIds } from '../../lib/db';
 import { TagPicker } from './TagPicker';
-import { TaskStatusIndicator } from '../ui/TaskStatusIndicator';
+import StatusIndicator from '../ui/StatusIndicator';
 import ChevronDownIcon from '../../assets/icons/angle-small-down.svg';
 import CalendarIcon from '../../assets/icons/calendar.svg';
 import PriorityUrgentIcon from '../../assets/icons/priority-urgent.svg';
@@ -394,7 +394,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
                     setIsStatusOpen(true);
                   }}
                 >
-                  <TaskStatusIndicator status={status} />
+                  <StatusIndicator status={status} size="sm" />
                   <span>
                     {status === 'not_started'
                       ? 'Not started'
@@ -414,7 +414,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
                         setIsStatusOpen(false);
                       }}
                     >
-                      <TaskStatusIndicator status="not_started" />
+                      <StatusIndicator status="not_started" size="sm" />
                       <span>Not started</span>
                     </button>
                     <button
@@ -425,7 +425,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
                         setIsStatusOpen(false);
                       }}
                     >
-                      <TaskStatusIndicator status="in_progress" />
+                      <StatusIndicator status="in_progress" size="sm" />
                       <span>In progress</span>
                     </button>
                     <button
@@ -436,7 +436,7 @@ export function TaskCreateModal({ isOpen, planId: _planId, workspaceId, stages, 
                         setIsStatusOpen(false);
                       }}
                     >
-                      <TaskStatusIndicator status="completed" />
+                      <StatusIndicator status="completed" size="sm" />
                       <span>Completed</span>
                     </button>
                   </div>

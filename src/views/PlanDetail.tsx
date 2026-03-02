@@ -7,7 +7,7 @@ import { TaskCreateModal } from '../components/tasks/TaskCreateModal';
 import { useCurrentUser } from '../context/UserContext';
 import { useActivityLog } from '../hooks/useActivityLog';
 import type { TaskCreatePayload } from '../components/tasks/TaskCreateModal';
-import { TaskStatusIndicator } from '../components/ui/TaskStatusIndicator';
+import StatusIndicator from '../components/ui/StatusIndicator';
 import { LinkGoalFromPlanModal } from '../components/modals/LinkGoalFromPlanModal';
 import { AddStageModal } from '../components/modals/AddStageModal';
 import { RenamePlanModal } from '../components/plan/RenamePlanModal';
@@ -756,7 +756,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
             <p className="task-title" title={task.title}>{task.title}</p>
           </div>
           <div className="task-priority-wrap">
-            <TaskStatusIndicator status={status} />
+            <StatusIndicator status={status} size="sm" />
             <span className={`task-priority ${task.priority || 'medium'}`}>{priorityLabel}</span>
           </div>
         </div>
@@ -918,7 +918,7 @@ export function PlanDetail({ planId, plan, onPlanUpdated, onPlanDeleted, onBack 
                 <ul className="plan-grid-tasks">
                   {stage.tasks.slice(0, stagePreviewLimit).map((task) => (
                     <li key={task.id} className="plan-grid-task">
-                      <TaskStatusIndicator status={resolveTaskStatus(task)} />
+                      <StatusIndicator status={resolveTaskStatus(task)} size="sm" />
                       <span>{task.title}</span>
                     </li>
                   ))}

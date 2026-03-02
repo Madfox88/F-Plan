@@ -249,6 +249,7 @@ html[data-theme='dark'] .tasks-header-top .search-icon-img {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   padding-top: 4px;
 }
 

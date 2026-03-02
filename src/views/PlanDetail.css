@@ -794,9 +794,9 @@ html[data-theme='dark'] .view-switcher-icon {
   margin-left: 0;
 }
 
-.task-priority-wrap .task-status-indicator {
+.task-priority-wrap .status-indicator {
   transform: translateX(-8px);
-  display: inline-block;
+  display: inline-flex;
 }
 
 .task-labels {
@@ -914,7 +914,7 @@ html[data-theme='dark'] .view-switcher-icon {
   justify-content: center;
 }
 
-.plan-detail-wrapper .task-card .task-status-indicator {
+.plan-detail-wrapper .task-card .status-indicator {
   transform: translateX(-8px) scale(0.9);
 }
 

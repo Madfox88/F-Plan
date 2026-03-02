@@ -1,0 +1,129 @@
+.status-indicator {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Sizes */
+.status-indicator--sm {
+  width: 20px;
+  height: 20px;
+}
+
+.status-indicator--md {
+  width: 36px;
+  height: 36px;
+}
+
+.status-indicator--lg {
+  width: 44px;
+  height: 44px;
+}
+
+/* Core dot */
+.status-indicator__core {
+  position: relative;
+  border-radius: 50%;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.status-indicator--sm .status-indicator__core {
+  width: 8px;
+  height: 8px;
+}
+
+.status-indicator--md .status-indicator__core {
+  width: 10px;
+  height: 10px;
+}
+
+.status-indicator--lg .status-indicator__core {
+  width: 12px;
+  height: 12px;
+}
+
+/* Pulsing ring */
+.status-indicator__ring {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.status-indicator--sm .status-indicator__ring {
+  width: 8px;
+  height: 8px;
+}
+
+.status-indicator--md .status-indicator__ring {
+  width: 10px;
+  height: 10px;
+}
+
+.status-indicator--lg .status-indicator__ring {
+  width: 12px;
+  height: 12px;
+}
+
+/* Not Started State - Darker gray for better visibility */
+.status-indicator--not-started .status-indicator__core {
+  background: #718096;
+}
+
+.status-indicator--not-started .status-indicator__ring {
+  border: 2px solid #718096;
+  animation: none;
+}
+
+/* In Progress State - Orange with pulse animation */
+.status-indicator--in-progress .status-indicator__core {
+  background: #ed8936;
+}
+
+.status-indicator--in-progress .status-indicator__ring {
+  border: 2px solid #ed8936;
+  animation: pulseRing 2s infinite;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+/* Completed State - Bigger and green */
+.status-indicator--completed .status-indicator__core {
+  background: #48bb78;
+  transform: scale(1.4);
+}
+
+.status-indicator--completed .status-indicator__ring {
+  border: 2px solid #48bb78;
+  animation: none;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .status-indicator--not-started .status-indicator__core {
+  background: #4a5568;
+}
+
+[data-theme="light"] .status-indicator--not-started .status-indicator__ring {
+  border-color: #4a5568;
+}
+
+/* Dark theme keeps the base colors */
+[data-theme="dark"] .status-indicator--not-started .status-indicator__core {
+  background: #a0aec0;
+}
+
+[data-theme="dark"] .status-indicator--not-started .status-indicator__ring {
+  border-color: #a0aec0;
+}

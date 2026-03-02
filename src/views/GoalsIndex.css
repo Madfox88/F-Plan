@@ -359,6 +359,17 @@ html[data-theme='dark'] .goals-toolbar .search-icon-img {
   background: var(--glass-bg-heavy);
 }
 
+.goal-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+}
+
+.goal-card-title-row .goal-card-title {
+  margin: 0;
+}
+
 .goal-card-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
